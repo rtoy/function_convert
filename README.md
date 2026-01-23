@@ -1,2 +1,2 @@
 # function_convert
-Maxima Common Lisp code for apply identities 
+Maxima Common Lisp code for applying function identities.
