@@ -72,10 +72,15 @@ Many systems (Maple, Mathematica, SymPy) provide built‑in expansions or rewrit
 
 Possibly, `function_convert` will provide a simple, uniform, and user-extensible way to do such conversions.
 
-
 ## Installation
 
 Place the package file in a directory on Maxima’s search path and load it with `load("function_convert");`
+
+## History
+
+Initially, the aim of this project was to add a `sinc` function to Maxima. That led to the question of converting expressions from `sinc` form to trigonometric form. I realized that with only a bit more work, the conversion utility could be made much more broadly useful.
+
+For historical reasons only, the original `sinc` package still resides in this repository.
 
 
 
