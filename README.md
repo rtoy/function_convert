@@ -1,8 +1,7 @@
 # function_convert
 
-Maxima Common Lisp code for applying function identities.
 
-`function_convert` is a Maxima package for performing semantic function-to-function conversions on Maxima expressions.
+The file `function_convert` is a Maxima package for performing semantic function-to-function conversions on Maxima expressions.
 
 A conversion rule has the form `f => g`, where `f` is  the source function and `g` is either a target function name
  or a lambda expression.
