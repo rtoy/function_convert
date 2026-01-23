@@ -3,18 +3,18 @@
 
 The file `function_convert` is a Maxima package for performing semantic function-to-function conversions on Maxima expressions.
 
-A conversion rule has the form `f => g`, where `f` is  the source function and `g` is either a target function name
+A conversion rule has the form `f => g`, where `f` is the source function and `g` is either a target function 
  or a lambda expression.
 
 The operator `=>` indicates a *semantic* conversion, not a literal renaming.  For example, the rule
  `sinc => sin` does not replace the symbol `sinc` by `sin`.  Instead, it applies the
 identity `sinc(x) = sin(x)/x` so that occurrences `sinc(x)` are rewritten as `sin(x)/x`.
 
-The package makes it easy to expand special functions, replace function calls with equivalent expressions, or define custom transformations without using pattern matching.
+The package makes it easy to convert between equivalent special functions and to define custom transformations without using pattern matching.
 
 ## Features
 
-- Convert function calls using built-in identities
+- Convert function using built-in identities
 - Support user-defined conversions via lambda expressions
 - Apply multiple conversions left-to-right
 - Simple, readable syntax using `=>`
@@ -49,7 +49,7 @@ The package makes it easy to expand special functions, replace function calls wi
 A conversion rule has the form `f => g` where:
 
 - `f` is the source function
-- `g` is either a target function name (using a built-in identity) or a lambda expression of one argument
+- `g` is either a target function (using a built-in identity) or a lambda expression of one argument
 
 The operator `=>` indicates a semantic conversion, not a literal renaming.
 
@@ -62,6 +62,20 @@ The function `function_convert` validates each rule and signals an error for mal
 Users may define new conversions by supplying a lambda expression using `function_convert(expr, f => lambda([u], some_expression_in_u));`
 
 No modification of Maxima’s simplifier or pattern matcher is required.
+
+## Algorithm and Implementation 
+
+The function `function_convert` walks an expression tree and replaces function calls according to well-defined rules. As such, it is relatively simple code that is repeated in Maxima hundreds of times. It isn’t a pattern matcher or a general rewrite engine. 
+
+The built-in rules reside in a global hashtable, so it should be possible to do something like function_convert(help) and get a list of all built-in conversions. Even if somebody defined a new conversion function in some other package (even in share), it would still be listed once the package is loaded.
+
+## Limitations & Bugs
+
+For a rule to work correctly, the source function must be the name of a simplifying Maxima function. It 
+would be useful to allow the source function to be a collection, say `trig` that matches all trigonometric 
+functions, but the code doesn't allow this. Fixing this would require allowing the source function to be a predicate-it's doable.
+
+At the top-level of `convert_function,` there is a bit of code that converts to the internal name of an operator. I suspect that this code has some limitations.
 
 ## Motivation
 
@@ -78,6 +92,19 @@ Place the package file in a directory on Maxima’s search path and load it with
 Initially, the aim of this project was to add a `sinc` function to Maxima. That led to the question of converting expressions from `sinc` form to trigonometric form. I realized that with only a bit more work, the conversion utility could be made much more broadly useful.
 
 For historical reasons only, the original `sinc` package still resides in this repository.
+
+## To Do
+
+- make a self-documenting feature--I'm not sure how this would work, but maybe `function_convert()` would print all the built-in rules. And if each rule had a docstring, along with rule, it could print the associated docstring. To make this work effectively, I think that the macro that defines a rule should automatically name the rule.
+
+- build a library of useful core rules
+
+- regression tests
+
+- documentation
+
+
+
 
 
 
