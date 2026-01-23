@@ -57,7 +57,7 @@ The operator `=>` indicates a semantic conversion, not a literal renaming.
 
 ## Error Checking
 
-`function_convert` validates each rule and signals an error for malformed conversions, such as missing arguments or invalid lambda expressions.
+The function `function_convert` validates each rule and signals an error for malformed conversions, such as missing arguments or invalid lambda expressions.
 
 ## Extensibility
 
