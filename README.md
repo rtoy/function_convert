@@ -27,8 +27,7 @@ The package makes it easy to expand special functions, replace function calls wi
 (%i8)	function_convert(1+sinc(x), 'sinc => 'sin);
 (%o8)	sin(x)/x+1
 
-(%i9)	function_convert( (x!)!, "!" => 'gamma);
-	
+(%i9)	function_convert( (x!)!, "!" => 'gamma);	
 (%9)	gamma(gamma(x+1)+1)
 ```
 
