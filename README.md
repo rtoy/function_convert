@@ -17,7 +17,7 @@ The package makes it easy to convert between equivalent special functions and to
 - Convert function using built-in identities
 - Support user-defined conversions via lambda expressions
 - Apply multiple conversions left-to-right
-- Simple, readable syntax using `=>`
+- Simple, readable syntax for conversions using `=>`
 - Extensible without modifying Maxima internals or using Common Lisp
 
 ## Basic Usage
@@ -44,6 +44,18 @@ The package makes it easy to convert between equivalent special functions and to
 (%o12)	-((%i*(%e^(%i*x)-%e^(-(%i*x))))/(2*x))
 ```
 
+### Listing all built-in converions
+
+To print all the built-in converter fuctions, use `list_converters`
+```maxima
+(%i34) list_converters();
+sinc => sin : Convert sinc(x) into sin(x)/x.
+csc => sin : Convert csc(x) into 1/sin(x).
+cos => exp : Convert cos(x) to exponential form.
+tan => sin : Convert tan(x) into sin(x)/cos(x).
+sin => exp : Convert sin(x) to exponential form.
+factorial => gamma : Convert x! into gamma(1+x).
+```
 ## Syntax
 
 A conversion rule has the form `f => g` where:
@@ -65,9 +77,7 @@ No modification of Maxima’s simplifier or pattern matcher is required.
 
 ## Algorithm and Implementation 
 
-The function `function_convert` walks an expression tree and replaces function calls according to well-defined rules. As such, it is relatively simple code that is repeated in Maxima hundreds of times. It isn’t a pattern matcher or a general rewrite engine. 
-
-The built-in rules reside in a global hashtable, so it should be possible to do something like function_convert(help) and get a list of all built-in conversions. Even if somebody defined a new conversion function in some other package (even in share), it would still be listed once the package is loaded.
+The function `function_convert` walks an expression tree and replaces function calls according to well-defined rules. As such, it is simple code that is repeated in Maxima hundreds of times. It isn’t a pattern matcher or a general rewrite engine. 
 
 ## Limitations & Bugs
 
@@ -95,13 +105,11 @@ For historical reasons only, the original `sinc` package still resides in this r
 
 ## To Do
 
-- make a self-documenting feature--I'm not sure how this would work, but maybe `function_convert()` would print all the built-in rules. And if each rule had a docstring, along with rule, it could print the associated docstring. To make this work effectively, I think that the macro that defines a rule should automatically name the rule.
+- [x] build a self-documenting feature
+- [ ] build a library of useful core rules
+- [ ] regression tests
+- [ ] documentation
 
-- build a library of useful core rules
-
-- regression tests
-
-- documentation
 
 
 

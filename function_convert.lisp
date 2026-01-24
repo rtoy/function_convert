@@ -1,16 +1,64 @@
 (in-package :maxima)
 
 (defun lambda-p (e)
-  (and (consp e) (eq 'lambda (caar e))))
+"Return true when `e` is a Maxima lambda form."
+  (and (consp e)
+       (consp (car e))
+       (eq (caar e) 'lambda)))
 
-(defmvar *function-convert-hash* (make-hash-table :test 'equal))
+(defun converter-key (from to)
+  "Return a key for the converter registry."
+  (cons from to))
 
-(defmacro define-function-converter (name (from to) args &body body)
-  `(progn
-     (defun ,name ,args
-       ,@body)
-     (setf (gethash (list ',from ',to) *function-convert-hash*)
-           #',name)))
+(defmvar *function-convert-hash*
+  (make-hash-table :test 'equal)
+  "Hash table mapping (FROM . TO) operator pairs to converter functions.")
+
+(defun register-converter (from to fn)
+  "Register FN as the converter from FROM to TO."
+  (setf (gethash (converter-key from to) *function-convert-hash*) fn))
+
+(defun lookup-converter (from to)
+  "Return the converter function from FROM to TO, or NIL if none exists."
+  (gethash (converter-key from to) *function-convert-hash*))
+
+(defun unregister-converter (from to)
+  "Remove any converter registered from FROM to TO."
+  (remhash (converter-key from to) *function-convert-hash*))
+
+(defun list-converters ()
+  "Return a list of entries describing all registered converters.
+Each entry has the form:
+  ((FROM . TO) FUNCTION-SYMBOL DOCSTRING)"
+  (let (acc)
+    (maphash
+     (lambda (key fn)
+       (push (list key
+                   fn
+                   (documentation fn 'function))
+             acc))
+     *function-convert-hash*)
+    acc))
+
+(defmfun $list_converters ()
+  (dolist (entry (list-converters))
+    (destructuring-bind ((from . to) fn doc) entry
+      (mtell "~M => ~M : ~M~%" from to doc))))
+
+(defmacro define-converter ((from to) lambda-list &body body)
+  "Define a converter from FROM to TO, automatically naming the function
+CONVERTER-FROM-TO, installing it in the converter registry, and returning
+the function symbol."
+  (let* ((fname (intern (format nil "CONVERTER-~A-~A"
+                                from
+                                to)
+                        :maxima)))
+    `(progn
+       (defun ,fname ,lambda-list
+         ,@body)
+       (register-converter ',from ',to #',fname)
+       ',fname)))
+
 
 #|
 Possible user documentation:
@@ -105,7 +153,7 @@ Malformed conversion rules cause an error.
                (eq (caar e) op-old)
                (symbolp op-new)
                ;; bind converter fn inside conjunction--it's OK!
-               (let ((fn (gethash (list op-old op-new) *function-convert-hash*)))
+               (let ((fn (lookup-converter op-old op-new)))
                  (and fn
                    (funcall fn (mapcar (lambda (q) (function-convert q op-old op-new)) (cdr e)))))))
 
@@ -129,46 +177,53 @@ Malformed conversion rules cause an error.
 ;;; Starter Library of Function Converters for function_convert
 ;;; ------------------------------------------------------------
 
-(define-function-converter sinc-to-sin (%sinc %sin) (x)
-    (let ((z (car x)))
-       (div (ftake '%sin z) z)))
-
-(define-function-converter factorial-to-gamma (mfactorial %gamma) (e)
-  (let ((z (car e))) (ftake '%gamma (add 1 z))))
-
-(define-function-converter csc-to-sin (%csc %sin) (e)
-    (let ((z (car e))) (div 1 (ftake '%sin z))))
-
-;; sinc → sin
-(define-function-converter sinc-to-sin (%sinc %sin) (x)
+(define-converter (%sinc %sin) (x)
+  "Convert sinc(x) into sin(x)/x."
   (let ((z (car x)))
     (div (ftake '%sin z) z)))
 
-;;; ------------------------------------------------------------
-;;; Trig → Exponential
-;;; ------------------------------------------------------------
+(define-converter (mfactorial %gamma) (x)
+ "Convert x! into gamma(1+x)."
+  (let ((z (car x))) (ftake '%gamma (add 1 z))))
 
-;; sin → exp
-(define-function-converter sin-to-exp (%sin %exp) (x)
+(define-converter (%csc %sin) (x)
+  "Convert csc(x) into 1/sin(x)."
+    (let ((z (car x))) (div 1 (ftake '%sin z))))
+
+;; tan → sin/cos
+(define-converter (%tan %sin) (x)
+"Convert tan(x) into sin(x)/cos(x)."
+  (let ((z (car x)))
+    (div (ftake '%sin z)
+         (ftake '%cos z))))
+
+(define-converter (%sin %exp) (x)
+  "Convert sin(x) to exponential form."
   (let ((z (car x)))
     (div
       (sub (ftake '%exp (mul '$%i z))
            (ftake '%exp (mul (neg '$%i) z)))
       (mul 2 '$%i))))
 
-;; cos → exp
-(define-function-converter cos-to-exp (%cos %exp) (x)
+(define-converter (%cos %exp) (x)
+"Convert cos(x) to exponential form."
   (let ((z (car x)))
     (div
       (add (ftake '%exp (mul '$%i z))
            (ftake '%exp (mul (neg '$%i) z)))
       2)))
 
-;; tan → sin/cos
-(define-function-converter tan-to-sin-cos (%tan %sin) (x)
-  (let ((z (car x)))
-    (div (ftake '%sin z)
-         (ftake '%cos z))))
+#| 
+
+;;; ------------------------------------------------------------
+;;; Trig → Exponential
+;;; ------------------------------------------------------------
+
+
+
+
+
+
 
 ;;; ------------------------------------------------------------
 ;;; Hyperbolic → Exponential
@@ -200,10 +255,7 @@ Malformed conversion rules cause an error.
 ;;; Factorial Family
 ;;; ------------------------------------------------------------
 
-;; factorial → gamma
-(define-function-converter factorial-to-gamma ($factorial $gamma) (x)
-  (let ((z (car x)))
-    (ftake '$gamma (add z 1))))
+
 
 ;; double_factorial → gamma (analytic continuation)
 ;(define-function-converter dfact-to-gamma ($double_factorial $gamma) (x)
@@ -275,3 +327,4 @@ Malformed conversion rules cause an error.
          (mul (ftake '$factorial k)
               (ftake '$factorial (sub n k))))))
 
+|#
