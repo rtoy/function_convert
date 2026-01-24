@@ -43,7 +43,8 @@ Each entry has the form:
 (defmfun $list_converters ()
   (dolist (entry (list-converters))
     (destructuring-bind ((from . to) fn doc) entry
-      (mtell "~M => ~M : ~M~%" from to doc))))
+      (mtell "~M => ~M : ~M~%" from to doc)))
+  '$done)
 
 (defmacro define-converter ((from to) lambda-list &body body)
   "Define a converter from FROM to TO, automatically naming the function
