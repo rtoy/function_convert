@@ -56,6 +56,7 @@ tan => sin : Convert tan(x) into sin(x)/cos(x).
 sin => exp : Convert sin(x) to exponential form.
 factorial => gamma : Convert x! into gamma(1+x).
 ```
+If a package defines new conversions, these conversions will be listed once the package is loaded.
 ## Syntax
 
 A conversion rule has the form `f => g` where:
