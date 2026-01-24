@@ -79,7 +79,7 @@ the function symbol."
                   (consp x)
                   (eq (caar x) '$=>)
                   (or (symbolp (second x)) (stringp (second x)))
-                  (or (symbolp (third x)) (lambda-p (third x))))
+                  (or (symbolp (third x)) (stringp (third x)) (lambda-p (third x))))
                 (merror "Bad transformation ~M" x))))
     ;; check that the arguments in fun-subs-list are legitimate.
     (every #'check-subs fun-subs-list)
@@ -156,32 +156,16 @@ the function symbol."
            (ftake '%exp (mul (neg '$%i) z)))
       2)))
 
-#| 
-
-;;; ------------------------------------------------------------
-;;; Trig → Exponential
-;;; ------------------------------------------------------------
-
-
-
-
-
-
-
-;;; ------------------------------------------------------------
-;;; Hyperbolic → Exponential
-;;; ------------------------------------------------------------
-
-;; sinh → exp
-(define-function-converter sinh-to-exp (%sinh %exp) (x)
+(define-converter (%sinh %exp) (x)
+"Convert sinh(x) to exponential form."
   (let ((z (car x)))
     (div
       (sub (ftake '%exp z)
            (ftake '%exp (neg z)))
       2)))
 
-;; cosh → exp
-(define-function-converter cosh-to-exp (%cosh %exp) (x)
+(define-converter (%cosh %exp) (x)
+"Convert cosh(x) to exponential form."
   (let ((z (car x)))
     (div
       (add (ftake '%exp z)
@@ -189,85 +173,28 @@ the function symbol."
       2)))
 
 ;; tanh → sinh/cosh
-(define-function-converter tanh-to-sinh-cosh (%tanh %sinh) (x)
+(define-converter (%tanh %sinh) (x)
+"Convert tanh(x) to sinh(x)/cosh(x)."
   (let ((z (car x)))
     (div (ftake '%sinh z)
          (ftake '%cosh z))))
 
-;;; ------------------------------------------------------------
-;;; Factorial Family
-;;; ------------------------------------------------------------
-
-
-
-;; double_factorial → gamma (analytic continuation)
-;(define-function-converter dfact-to-gamma ($double_factorial $gamma) (x)
-;  (let ((z (car x)))
-;;    (mul (pow 2 (div z 2))
-  ;       (div (ftake '$gamma (add (div z 2) 1))
-  ;            (sqrt '$%pi)))))
-
-
-
-;;; ------------------------------------------------------------
-;;; Logarithm Base Conversions
-;;; ------------------------------------------------------------
-
-;; log_b(x) → log(x)/log(b)
-(define-function-converter logb-to-log (%logb %log) (x)
-  (let ((z (car x))
-        (b (cadr x)))
-    (div (ftake '%log z)
-         (ftake '%log b))))
-
+;; double_factorial → gamma
+;(define-converter ('%genfact %gamma) (x)
+; (let ((z (car x))) ($makegamma x)))
+    
 ;; log10(x) → log(x)/log(10)
-(define-function-converter log10-to-log (%log10 %log) (x)
+(define-converter ($log10 %log) (x)
   (let ((z (car x)))
-    (div (ftake '%log z)
-         (ftake '%log 10))))
+    (div (ftake '%log z)  (ftake '%log 10))))
 
-;;; ------------------------------------------------------------
-;;; Inverse Trig → Logarithmic
-;;; ------------------------------------------------------------
+;; I could do logarc transformations, but for now, let's not.
 
-;; asin → log
-(define-function-converter asin-to-log (%asin %log) (x)
-  (let ((z (car x)))
-    (mul (neg '$%i)
-         (ftake '%log
-                (add (mul '$%i z)
-                     (sqrt (sub 1 (mul z z))))))))
-
-;; atan → log
-(define-function-converter atan-to-log (%atan %log) (x)
-  (let ((z (car x)))
-    (mul (div '$%i 2)
-         (ftake '%log
-                (div (add '$%i z)
-                     (sub '$%i z))))))
-
-;;; ------------------------------------------------------------
-;;; Chebyshev Polynomials
-;;; ------------------------------------------------------------
-
-;; T_n(x) → cos(n arccos(x))
-(define-function-converter chebyshev-t-to-cos (%chebyshev_t %cos) (x)
-  (let ((n (car x))
-        (z (cadr x)))
-    (ftake '%cos (mul n (ftake '%acos z)))))
-
-;; U_n(x) → sin((n+1) arccos(x)) / sqrt(1−x²)
-(define-function-converter chebyshev-u-to-sin (%chebyshev_u %sin) (x)
-  (let ((n (car x))
-        (z (cadr x)))
-    (div (ftake '%sin (mul (add n 1) (ftake '%acos z)))
-         (sqrt (sub 1 (mul z z))))))
-
-(define-function-converter binomial-to-factorial ($binomial $factorial) (x)
+(define-converter (%binomial "!") (x)
+"Convert binomial(n,k) to factorial form."
   (let ((n (car x))
         (k (cadr x)))
-    (div (ftake '$factorial n)
-         (mul (ftake '$factorial k)
-              (ftake '$factorial (sub n k))))))
+    (div (ftake 'mfactorial n)
+         (mul (ftake 'mfactorial k)
+              (ftake 'mfactorial (sub n k))))))
 
-|#

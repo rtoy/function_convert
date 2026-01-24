@@ -1,0 +1,6 @@
+cd /mnt/c/Users/barto/OneDrive/Documents/GitHub/sinc/function_convert 
+
+Either:
+
+makeinfo function_convert.texi
+makeinfo --html --no-split function_convert.texi
