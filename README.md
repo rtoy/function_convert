@@ -86,7 +86,8 @@ is the definition of the converter for `sinc => 'sin`
     (div (ftake '%sin z) z)))
 ```
 The function `list_converters` prints the docstring for each converter along with
-the identifier for the rule (`f => g').
+the identifier for the rule (`f => g'), so it is useful to include a docstring for
+each converter function.
 
 ## Algorithm and Implementation 
 
