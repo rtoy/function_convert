@@ -14,7 +14,7 @@ The package makes it easy to convert between equivalent special functions and to
 
 ## Features
 
-- Convert function using built-in identities
+- Convert Maxima expressions using built-in identities
 - Support user-defined conversions via lambda expressions
 - Apply multiple conversions left-to-right
 - Simple, readable syntax for conversions using `=>`
