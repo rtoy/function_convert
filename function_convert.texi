@@ -1,0 +1,51 @@
+@deffn Function function_convert (@var{expr}, @var{f => g}, @dots{})
+Apply one or more function-conversion rules to the expression @var{expr}.
+A conversion rule has the form @code{f => g}, where @code{f} is the
+source function and @code{g} is either a target function name or a
+lambda expression.
+
+The operator @code{=>} indicates a @emph{semantic} conversion, not a
+literal renaming.  For example, the rule @code{sinc => sin} does not
+replace the symbol @code{sinc} by @code{sin}.  Instead, it applies the
+built-in identity
+
+@example
+sinc(x) = sin(x)/x
+@end example
+
+so that occurrences of @code{sinc(x)} in @var{expr} are rewritten as
+@code{sin(x)/x}.
+
+Users may also supply an explicit conversion by giving a lambda
+expression on the right-hand side.  For example:
+
+@example
+function_convert (expr, f => lambda([u], g(u)^2))
+@end example
+
+rewrites each call @code{f(u)} in @var{expr} to @code{g(u)^2}.
+
+Multiple conversions may be given; they are applied from left to right.
+
+@itemize @bullet
+@item
+@code{f} and @code{g} may be given as symbols or strings.
+@item
+If @code{g} is a lambda expression, it must accept exactly one argument.
+@item
+Malformed conversion rules cause an error.
+@end itemize
+
+@strong{Examples}
+
+@example
+(%i1) function_convert (sinc(3*x), sinc => sin);
+(%o1) sin(3*x)/(3*x)
+
+(%i2) function_convert (f(a) + f(b),
+                        f => lambda([u], u^2 + 1));
+(%o2) a^2 + 1 + b^2 + 1
+@end example
+
+
+@end deffn
