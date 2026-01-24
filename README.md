@@ -110,7 +110,7 @@ For historical reasons only, the original `sinc` package still resides in this r
 - [ ] re-examine the code that converts to the internal name of an operator
 - [ ] build a library of useful core rules
 - [ ] regression tests
-- [ ] documentation
+- [x] documentation (at least a good start)
 
 
 
