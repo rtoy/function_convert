@@ -40,11 +40,19 @@ Each entry has the form:
      *function-convert-hash*)
     acc))
 
-(defmfun $list_converters ()
-  (dolist (entry (list-converters))
-    (destructuring-bind ((from . to) fn doc) entry
-      (mtell "~M => ~M : ~M~%" from to doc)))
-  '$done)
+(defmfun $list_converters (&rest names)
+  (let* ((normalized (mapcar #'$nounify names)) (results nil))
+    (dolist (entry (list-converters))
+      (destructuring-bind ((from . to) fn doc) entry
+        (declare (ignore fn))
+        (when (or (endp names)
+                  (member ($nounify from) normalized :test #'equal))
+          (mtell "~M => ~M : ~M ~%" from to doc)
+          ;; Accumulate a Maxima-style list entry
+          (push (ftake '$=> from to) results))))
+    ;; Return results in forward order
+    (fapply 'mlist (nreverse results))))
+
 
 (defmacro define-converter ((from to) lambda-list &body body)
   "Define a converter from FROM to TO, automatically naming the function
@@ -219,15 +227,16 @@ the function symbol."
    
 ;; erf-like functions
 
+#| 
 (define-converter (%erfi %erf) (x)
   "Convert erfi(x) into -i * erf(i*x)."
   (let ((z (car x)))
-    (mul -%i (ftake '%erf (mul %i z)))))
+    (mul -1 '$%i (ftake '%erf (mul '$%i z)))))
 
 (define-converter (%erf %erfi) (x)
   "Convert erf(x) into i * erfi(-i*x)."
   (let ((z (car x)))
-    (mul %i (ftake '%erfi (mul -%i z)))))
+    (mul '$%i (ftake '%erfi (mul -1 '$%i z)))))
 
 (define-converter (%erf %erfc) (x)
   "Convert erf(x) into 1 - erfc(x)."
@@ -267,3 +276,4 @@ the function symbol."
          (t ($gensym)))
     (ftake '%integrate (div 1 2) t (mul -1 z) z)))
 
+|#
