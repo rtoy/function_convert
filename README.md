@@ -122,9 +122,11 @@ For historical reasons only, the original `sinc` package still resides in this r
 - [x] build a self-documenting feature
 - [ ] re-examine the code that converts to the internal name of an operator
 - [ ] build a library of useful core rules
-- [ ] regression tests
-- [x] documentation (at least a good start)
+- [ ] regression tests for `function_convert`
+- [x] texinfo documenation for `function_convert`  (at least a good start)
 - [ ] decide if the converter(s) are first `function_convert(f => g,expr)` or last `function_convert(expr, f => g)`
+- [ ] texinfo documenation for `sinc`
+- [ ] regression tests for `sinc`
 
 
 
