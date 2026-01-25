@@ -103,7 +103,7 @@ At the top-level of `convert_function,` there is a bit of code that converts to 
 
 ## Motivation
 
-Many systems (Maple, Mathematica, SymPy) provide built‑in expansions or rewrite mechanisms, but Maxima uses an alphabet soup of functions that perform semantic function‑to‑function conversions; examples include `makefac` and `makegamma`. In other cases, transformations are controlled by option variables—for example, `expintrep`. 
+Many systems (Maple, Mathematica, SymPy) provide built‑in expansions or rewrite mechanisms, but Maxima uses an alphabet soup of functions that perform semantic function‑to‑function conversions; examples include `makefact` and `makegamma`. In other cases, transformations are controlled by option variables—for example, `expintrep`. 
 
 These names are easy to forget and are not always easy to locate in the user documentation. Possibly, `function_convert` will provide a simple, uniform, and user-extensible way to do such conversions.
 
@@ -123,7 +123,7 @@ For historical reasons only, the original `sinc` package still resides in this r
 - [ ] re-examine the code that converts to the internal name of an operator
 - [ ] build a library of useful core rules
 - [ ] regression tests for `function_convert`
-- [x] texinfo documentation for `function_convert`  (at least a good start)
+- [x] texinfo documentation for `function_convert` (at least a good start)
 - [ ] decide if the converter(s) are first `function_convert(f => g,expr)` or last `function_convert(expr, f => g)`
 - [ ] texinfo documentation for `sinc`
 - [ ] regression tests for `sinc`

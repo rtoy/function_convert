@@ -1,11 +1,19 @@
+@ifnotinfo
+@settitle Function Convert
+@top Function Convert
+@end ifnotinfo
+
 @deffn Function function_convert (@var{expr}, @var{f => g}, @dots{})
 Apply one or more function-conversion rules to the expression @var{expr}.
 A conversion rule has the form @code{f => g}, where @code{f} is the
 source function and @code{g} is either a target function name or a
-lambda expression.
+lambda expression. 
+
+The operator @code{=>} has no evaluation or simplification rule of its own; 
+it is purely notational.
 
 The operator @code{=>} indicates a @emph{semantic} conversion, not a
-literal renaming.  For example, the rule @code{sinc => sin} does not
+literal renaming. For example, the rule @code{sinc => sin} does not
 replace the symbol @code{sinc} by @code{sin}.  Instead, it applies the
 identity
 

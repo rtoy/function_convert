@@ -3,10 +3,10 @@
 <!-- Created by GNU Texinfo 6.8, https://www.gnu.org/software/texinfo/ -->
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>Untitled Document</title>
+<title>Function Convert</title>
 
-<meta name="description" content="Untitled Document">
-<meta name="keywords" content="Untitled Document">
+<meta name="description" content="Function Convert">
+<meta name="keywords" content="Function Convert">
 <meta name="resource-type" content="document">
 <meta name="distribution" content="global">
 <meta name="Generator" content="makeinfo">
@@ -36,15 +36,23 @@ ul.no-bullet {list-style: none}
 </head>
 
 <body lang="en">
+<h1 class="settitle" align="center">Function Convert</h1>
+<div class="top" id="Function-Convert">
+<h1 class="top">Function Convert</h1>
+
+
 <dl class="def">
 <dt id="index-function_005fconvert"><span class="category">Function: </span><span><strong>function_convert</strong> <em>(<var>expr</var>, <var>f =&gt; g</var>, &hellip;)</em><a href='#index-function_005fconvert' class='copiable-anchor'> &para;</a></span></dt>
 <dd><p>Apply one or more function-conversion rules to the expression <var>expr</var>.
 A conversion rule has the form <code>f =&gt; g</code>, where <code>f</code> is the
 source function and <code>g</code> is either a target function name or a
-lambda expression.
+lambda expression. 
+</p>
+<p>The operator <code>=&gt;</code> has no evaluation or simplification rule of its own; 
+it is purely notational.
 </p>
 <p>The operator <code>=&gt;</code> indicates a <em>semantic</em> conversion, not a
-literal renaming.  For example, the rule <code>sinc =&gt; sin</code> does not
+literal renaming. For example, the rule <code>sinc =&gt; sin</code> does not
 replace the symbol <code>sinc</code> by <code>sin</code>.  Instead, it applies the
 identity
 </p>
@@ -114,6 +122,7 @@ tan  =&gt; sin : Convert tan(x) into sin(x)/cos(x).
 </dd></dl>
 
 
+<hr></div>
 
 
 
