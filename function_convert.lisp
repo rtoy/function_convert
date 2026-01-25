@@ -92,7 +92,6 @@ the function symbol."
                 (merror "Bad transformation ~M" x))))
     ;; check that the arguments in fun-subs-list are legitimate.
     (every #'check-subs fun-subs-list)
-
     (dolist (q fun-subs-list)
       (setq e (function-convert e (fn (second q)) (fn (third q)))))
     e))

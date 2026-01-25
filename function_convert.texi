@@ -7,7 +7,7 @@ lambda expression.
 The operator @code{=>} indicates a @emph{semantic} conversion, not a
 literal renaming.  For example, the rule @code{sinc => sin} does not
 replace the symbol @code{sinc} by @code{sin}.  Instead, it applies the
-built-in identity
+identity
 
 @example
 sinc(x) = sin(x)/x
@@ -20,58 +20,58 @@ Users may also supply an explicit conversion by giving a lambda
 expression on the right-hand side.  For example:
 
 @example
-function_convert (expr, f => lambda([u], g(u)^2))
+(%i1) function_convert(erfc(x), 'erfc => lambda([q], 1-erf(q)));
+(%o1)                             1 - erf(x)
 @end example
-
-rewrites each call @code{f(u)} in @var{expr} to @code{g(u)^2}.
 
 Multiple conversions may be given; they are applied from left to right.
 
-@itemize @bullet
-@item
-@code{f} and @code{g} may be given as symbols or strings.
-@item
-If @code{g} is a lambda expression, it must accept exactly one argument.
-@item
-Malformed conversion rules cause an error.
-@end itemize
-
-@strong{Examples}
+@strong{Example}
 
 @example
-(%i1) function_convert (sinc(3*x), sinc => sin);
-(%o1) sin(3*x)/(3*x)
-
-(%i2) function_convert (f(a) + f(b),
-                        f => lambda([u], u^2 + 1));
-(%o2) a^2 + 1 + b^2 + 1
+(%i1) function_convert(sinc(x), sinc => sin,sin => exp);
+                                %i x     - %i x
+                             (%e     - %e      ) %i
+(%o1)                      - ──────────────────────
+                                      2 x
 @end example
 
 @end deffn
 
-@deffn Function list_converters
-Return a human-readable listing of all currently registered function
-converters known to @code{function_convert}.  Each converter is shown
-as a pair @code{FROM => TO} followed by a short description taken from
-the converter's docstring.
+@deffn Function list_converters [name_1, name_2, ...]
 
-The output is intended for information.  It does not modify the converter table.
+Return a list of all registered function converters known to @code{function_convert}.  In addition to 
+returning this list, each converter is printed as a pair @code{FROM => TO} followed by a short description 
+taken from the converter's docstring.
+
+When called with no arguments, @code{list_converters} returns the full
+set of converters.  When one or more names are supplied, only those
+converters whose source function matches one of the given names are
+returned.
 
 @example
 (%i1) list_converters();
 sinc => sin : Convert sinc(x) into sin(x)/x.
-csc => sin : Convert csc(x) into 1/sin(x).
-cos => exp : Convert cos(x) to exponential form.
-tan => sin : Convert tan(x) into sin(x)/cos(x).
-sin => exp : Convert sin(x) to exponential form.
-factorial => gamma : Convert x! into gamma(1+x).
-(%o1)                         done
+csc  => sin : Convert csc(x) into 1/sin(x).
+cos  => exp : Convert cos(x) to exponential form.
+tan  => sin : Convert tan(x) into sin(x)/cos(x).
+sin  => exp : Convert sin(x) to exponential form.
+(%o1) [sinc => sin, csc => sin, cos => exp, tan => sin, sin => exp]
+
+(%i2) list_converters(sinc, tan);
+sinc => sin : Convert sinc(x) into sin(x)/x.
+tan  => sin : Convert tan(x) into sin(x)/cos(x).
+(%o2) [sinc => sin, tan => sin]
 @end example
 
-The list of converters is maintained internally in a hash table.
-Entries appear in an unspecified order.  Each converter corresponds to
-a function defined with @code{define-function-converter} or added by
-the system at load time.
+The list of converters is maintained internally and entries appear in an unspecified order.  
+Entries appear in an unspecified order.
+
+
+@code{function_convert}.  
+
 
 @seealso{function_convert}
 @end deffn
+
+
