@@ -217,3 +217,35 @@ the function symbol."
   (let ((a (car x)) (z (cadr x)) ($gamma_expand t))
     (ftake '%gamma_incomplete a z)))
    
+;; erf-like functions
+
+(define-converter (%erfi %erf) (x)
+  "Convert erfi(x) into -i * erf(i*x)."
+  (let ((z (car x)))
+    (mul -%i (ftake '%erf (mul %i z)))))
+
+(define-converter (%erf %erfi) (x)
+  "Convert erf(x) into i * erfi(-i*x)."
+  (let ((z (car x)))
+    (mul %i (ftake '%erfi (mul -%i z)))))
+
+(define-converter (%erf %erfc) (x)
+  "Convert erf(x) into 1 - erfc(x)."
+  (let ((z (car x)))
+    (sub 1 (ftake '%erfc z))))
+
+(define-converter (%erfc %erf) (x)
+  "Convert erfc(x) into 1 - erf(x)."
+  (let ((z (car x)))
+    (sub 1 (ftake '%erf z))))
+
+(define-converter (%erf %integral) (x)
+  "Convert erf(x) into (2/sqrt(pi))*integrate(exp(-t^2), t, 0, x)."
+  (let* ((z (car x))
+         (t (gensym)))
+    (mul (div 2 (sqrt '$%pi))
+         (ftake '%integrate
+                (ftake '%exp (mul -1 (mul t t)))
+                t
+                0
+                z))))
