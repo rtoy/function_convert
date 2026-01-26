@@ -226,6 +226,7 @@ the function symbol."
     
 ;; log10(x) → log(x)/log(10)
 (define-converter ($log10 %log) (x)
+  "Convert log10(x) into log(x)/log(10)."
   (let ((z (car x)))
     (div (ftake '%log z)  (ftake '%log 10))))
 

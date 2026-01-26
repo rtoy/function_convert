@@ -53,7 +53,7 @@ of all converters, the function prints a list of them along with a short descrip
 
 sinc => sin : Convert sinc(x) into sin(x)/x.
 csc => sin : Convert csc(x) into 1/sin(x).
-log10 => log : false
+log10 => log : Convert log10(x) into log(x)/log(10).
 cos => exp : Convert cos(x) to exponential form.
 tan => sin : Convert tan(x) into sin(x)/cos(x).
 tanh => sinh : Convert tanh(x) to sinh(x)/cosh(x).
