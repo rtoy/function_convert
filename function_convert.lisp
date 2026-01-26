@@ -128,7 +128,7 @@ the function symbol."
       e)))
 
 (defun function-convert (e op-old op-new)
-   ;(print `(e = ,e old = ,op-old new = ,op-new))
+  ;;;; (print `(e = ,e old = ,op-old new = ,op-new))
    (cond (($mapatom e) e)
          ;; Case I: both op-old & op-new are symbols. For this case, look up the 
          ;; transformation in the *function-convert-hash* hashtable.
@@ -260,6 +260,21 @@ the function symbol."
   (let ((a (car x)) (z (cadr x)) ($gamma_expand t))
     (ftake '%gamma_incomplete a z)))
    
+;; I'm not sure this is worthwhile--it differs from simply calling trigreduce by the way it handles
+;; negative powers. And this rule shows that to do things like sin(x)^2 => (1-cos(2 x))/2 the source 
+;; function must be mexpt, not a trigonometric function.
+
+;; All the business about the gensym is to prevent non-trig functions from expanding (well, that's my claim).
+(define-converter (mexpt $trigreduce) (x)
+ "Convert integer powers of trig to a Fourier sum"
+  (let ((z (car x)) (n (cadr x)))
+    (cond ((and (consp z) (consp (car z)) (trigp (caar z)) (integerp n))
+             ;($trigreduce (ftake 'mexpt z n)))
+             (let* ((g (gensym)) 
+                    (w (sratsimp ($demoivre ($expand ($exponentialize (ftake 'mexpt (ftake (caar z) g) n)))))))
+               (maxima-substitute (cadr z) g w)))
+          (t (ftake 'mexpt z n)))))
+
 ;; erf-like functions
 
 #| 
