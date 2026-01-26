@@ -76,8 +76,10 @@ the function symbol."
 ;;     is no such built-in conversion, do nothing.
 ;; (b) f => lambda(...) means “use this explicit conversion instead.”
 
-($infix "=>")
+;; I think this binding power makes a+b => c parse as (a+b) => c
+($infix "=>" 80 80)
 
+#| 
 (defmfun $function_convert (e &rest fun-subs-list)
   (flet ((fn (x)
          (cond ((stringp x) ($verbify x))
@@ -95,6 +97,34 @@ the function symbol."
     (dolist (q fun-subs-list)
       (setq e (function-convert e (fn (second q)) (fn (third q)))))
     e))
+|#
+
+(defmfun $function_convert (subs e)
+  (let ((fun-subs-list (if ($listp subs) (cdr subs) (list subs))))
+    (flet ((fn (x)
+             (cond ((stringp x) ($verbify x))
+                   ((lambda-p x) x)
+                   (t ($nounify x))))
+
+           (check-subs (x)
+             (cond
+               ((not (consp x))
+                (merror "Bad transformation (a mapatom): ~M" x))
+               ((not (eq (caar x) '$=>))
+                (merror "Bad transformation (missing =>): ~M" x))
+               ((not (or (symbolp (second x))
+                         (stringp (second x))))
+                (merror "Bad transformation (invalid LHS): ~M" x))
+               ((not (or (symbolp (third x))
+                         (stringp (third x))
+                         (lambda-p (third x))))
+                (merror "Bad transformation (invalid RHS): ~M" x))
+               (t t))))
+      ;; check that the arguments in fun-subs-list are legitimate.
+      (mapc #'check-subs fun-subs-list)
+      (dolist (q fun-subs-list)
+        (setq e (function-convert e (fn (second q)) (fn (third q)))))
+      e)))
 
 (defun function-convert (e op-old op-new)
    (cond (($mapatom e) e)
