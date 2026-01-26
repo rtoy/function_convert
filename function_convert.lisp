@@ -277,11 +277,12 @@ the function symbol."
 
 ;; erf-like functions
 
-#| 
+
 (define-converter (%erfi %erf) (x)
   "Convert erfi(x) into -i * erf(i*x)."
   (let ((z (car x)))
     (mul -1 '$%i (ftake '%erf (mul '$%i z)))))
+
 
 (define-converter (%erf %erfi) (x)
   "Convert erf(x) into i * erfi(-i*x)."
@@ -298,16 +299,16 @@ the function symbol."
   (let ((z (car x)))
     (sub 1 (ftake '%erf z))))
 
-(define-converter (%erf %integral) (x)
-  "Convert erf(x) into (2/sqrt(pi))*integrate(exp(-t^2), t, 0, x)."
-  (let* ((z (car x))
-         (t (gensym)))
-    (mul (div 2 (sqrt '$%pi))
-         (ftake '%integrate
-                (ftake '%exp (mul -1 (mul t t)))
-                t
-                0
-                z))))
+(define-converter (%erf $integral) (x)
+  "Convert erfc(x) into an integral representation"
+  (let ((z (car x))
+        (s (gentemp "$X" :maxima)))
+         (mul (div 2 (ftake 'mexpt '$%pi (div 1 2)))
+           (ftake '%integrate  (ftake 'mexpt '$%e (mul -1 s s)) s  0 z))))
+
+
+      #| 
+
 
 (define-converter (%erf %hypergeometric) (x)
   "Convert erf(x) into (2*x/sqrt(pi))*hypergeometric([1/2],[3/2],-x^2)."
