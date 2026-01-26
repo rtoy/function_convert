@@ -132,12 +132,13 @@ the function symbol."
          ;; Case I: both op-old & op-new are symbols. For this case, look up the 
          ;; transformation in the *function-convert-hash* hashtable.
          ((and (consp e)
-               (eq (caar e) op-old)
+               (or (eq (caar e) op-old) (eq (caar e) (car (get op-old 'mheader))))
                (symbolp op-new)
                ;; bind converter fn inside conjunction--it's OK!
                (let ((fn (or (lookup-converter op-old op-new) 
                              (lookup-converter ($verbify op-old) op-new)
-                             (lookup-converter ($nounify op-old) op-new))))
+                             (lookup-converter ($nounify op-old) op-new)
+                             (lookup-converter (car (get op-old 'mheader)) op-new))))
                  (and fn
                    (funcall fn (mapcar (lambda (q) (function-convert q op-old op-new)) (cdr e)))))))
         ;; Case II: op-old is a symbol and op-new is a Maxima lambda form
@@ -223,9 +224,9 @@ the function symbol."
          (ftake '%cosh z))))
 
 ;; double_factorial → gamma
-;; This rule doesn't work because verbify("!!") =/= %genfact.
-;(define-converter (%genfact %gamma) (x)
-; (let ((z (car x))) ($makegamma x)))
+(define-converter (%genfact %gamma) (x)
+"Convert x!! to gamma form."
+  (let ((a (car x)) (b (cadr x)) (c (caddr x))) ($makegamma (ftake '%genfact a b c))))
     
 ;; log10(x) → log(x)/log(10)
 (define-converter ($log10 %log) (x)
