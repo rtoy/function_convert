@@ -41,20 +41,21 @@ ul.no-bullet {list-style: none}
 <h1 class="top">Function Convert</h1>
 
 <dl class="def">
-<dt id="index-function_005fconvert"><span class="category">Function: </span><span><strong>function_convert</strong> <em>(<var>expr</var>, <var>f =&gt; g</var>, &hellip;)</em><a href='#index-function_005fconvert' class='copiable-anchor'> &para;</a></span></dt>
+<dt id="index-function_005fconvert"><span class="category">Function: </span><span><strong>function_convert</strong> <em>(<var>converters</var>, <var>expr</var>)</em><a href='#index-function_005fconvert' class='copiable-anchor'> &para;</a></span></dt>
 <dd><p>Apply one or more function-conversion rules to the expression <var>expr</var>.
-A conversion rule has the form <code>f =&gt; g</code>, where <code>f</code> is the
+The argument <var>converters</var> is either a single conversion rule
+<code>f =&gt; g</code> or a list of such rules.
+</p>
+<p>A conversion rule has the form <code>f =&gt; g</code>, where <code>f</code> is the
 source function and <code>g</code> is either a target function name or a
 lambda expression. 
 </p>
-
-
 <p>The operator <code>=&gt;</code> indicates a <em>semantic</em> conversion, not a
 literal renaming. For example, the rule <code>sinc =&gt; sin</code> does not
 replace the symbol <code>sinc</code> by <code>sin</code>.  Instead, it applies the
  <code>sinc(x) = sin(x)/x</code>; specifically
 </p><div class="example">
-<pre class="example">(%i1) function_convert(sinc(x) + 1, sinc =&gt; sin);
+<pre class="example">(%i1) function_convert('sinc =&gt; 'sin, sinc(x) + 1);
                                   sin(x)
 (%o1)                             ────── + 1
                                     x
@@ -64,19 +65,20 @@ replace the symbol <code>sinc</code> by <code>sin</code>.  Instead, it applies t
 expression on the right-hand side. For example:
 </p>
 <div class="example">
-<pre class="example">(%i1) function_convert(erfc(x), 'erfc =&gt; lambda([q], 1-erf(q)));
-(%o1)                             1 - erf(x)
+<pre class="example">(%i2) function_convert('erfc =&gt; lambda([q], 1-erf(q)), erfc(x)^2);
+                                             2
+(%o2)                            (1 - erf(x))
 </pre></div>
 
-<p>Multiple conversions may be given; they are applied from left to right.
+<p>Multiple conversions may be given in a Maxima list; they are applied from left to right.
 </p>
 <p><strong>Example</strong>
 </p>
 <div class="example">
-<pre class="example">(%i1) function_convert(sinc(x), sinc =&gt; sin,sin =&gt; exp);
+<pre class="example">(%i3) function_convert(['sinc =&gt; 'sin,'sin =&gt; 'exp], sinc(x));
                                 %i x     - %i x
                              (%e     - %e      ) %i
-(%o1)                      - ──────────────────────
+(%o3)                      - ──────────────────────
                                       2 x
 </pre></div>
 

@@ -3,20 +3,21 @@
 @top Function Convert
 @end ifnotinfo
 
-@deffn Function function_convert (@var{expr}, @var{f => g}, @dots{})
+@deffn Function function_convert (@var{converters}, @var{expr})
 Apply one or more function-conversion rules to the expression @var{expr}.
+The argument @var{converters} is either a single conversion rule
+@code{f => g} or a list of such rules.
+
 A conversion rule has the form @code{f => g}, where @code{f} is the
 source function and @code{g} is either a target function name or a
 lambda expression. 
-
-
 
 The operator @code{=>} indicates a @emph{semantic} conversion, not a
 literal renaming. For example, the rule @code{sinc => sin} does not
 replace the symbol @code{sinc} by @code{sin}.  Instead, it applies the
  @code{sinc(x) = sin(x)/x}; specifically
 @example
-(%i1) function_convert(sinc(x) + 1, sinc => sin);
+(%i1) function_convert('sinc => 'sin, sinc(x) + 1);
                                   sin(x)
 (%o1)                             ────── + 1
                                     x
@@ -26,19 +27,20 @@ Users may also supply an explicit conversion by giving a lambda
 expression on the right-hand side. For example:
 
 @example
-(%i1) function_convert(erfc(x), 'erfc => lambda([q], 1-erf(q)));
-(%o1)                             1 - erf(x)
+(%i2) function_convert('erfc => lambda([q], 1-erf(q)), erfc(x)^2);
+                                             2
+(%o2)                            (1 - erf(x))
 @end example
 
-Multiple conversions may be given; they are applied from left to right.
+Multiple conversions may be given in a Maxima list; they are applied from left to right.
 
 @strong{Example}
 
 @example
-(%i1) function_convert(sinc(x), sinc => sin,sin => exp);
+(%i3) function_convert(['sinc => 'sin,'sin => 'exp], sinc(x));
                                 %i x     - %i x
                              (%e     - %e      ) %i
-(%o1)                      - ──────────────────────
+(%o3)                      - ──────────────────────
                                       2 x
 @end example
 
