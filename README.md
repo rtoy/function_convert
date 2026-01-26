@@ -24,39 +24,63 @@ The package makes it easy to convert between similar functions and to define cus
 
 ### Semantic conversion using a built-in identity
 ```maxima 
-(%i8)	function_convert(1+sinc(x), 'sinc => 'sin);
-(%o8)	sin(x)/x+1
+(%i1) function_convert('sinc => 'sin,1+sinc(x));
+(%o1) sin(x)/x+1
 
-(%i9)	function_convert( (x!)!, "!" => 'gamma);	
-(%9)	gamma(gamma(x+1)+1)
+(%i2) function_convert("!" => 'gamma, (x!)!);
+(%o2) gamma(gamma(x+1)+1)
 ```
 
 ### Explicit conversion using a lambda expression
 ```maxima
-(%i9)	function_convert(1+sinc(x), 'sinc => lambda([q], sin(q)/q));
-(%o9)	sin(x)/x+1
+(%i3) function_convert('sinc => lambda([q], sin(q)/q),1+sinc(x));
+(%o3) sin(x)/x+1
 ```
 
 ### Chaining multiple conversions
-
+To apply two or more conversions, put the converters into a list; for example
 ```maxima
-(%i12)	function_convert(sinc(x), sinc => sin, sin => exp);	
-(%o12)	-((%i*(%e^(%i*x)-%e^(-(%i*x))))/(2*x))
+(%i4) function_convert(['sinc => 'sin, 'sin => 'exp], sinc(x)^2);
+(%o4) -((%e^(%i*x)-%e^-(%i*x))^2/(4*x^2))
 ```
 
-### Listing all built-in converions
+### Listing all built-in conversions
 
-To print all the built-in converter functions, use `list_converters`
+To print all the built-in converter functions, use `list_converters`. In addition to returning a list
+of all converters, the function prints a list of them along with a short description of the converter:
 ```maxima
-(%i34) list_converters();
+(%i5) list_converters();
+
 sinc => sin : Convert sinc(x) into sin(x)/x.
 csc => sin : Convert csc(x) into 1/sin(x).
+log10 => log : false
 cos => exp : Convert cos(x) to exponential form.
 tan => sin : Convert tan(x) into sin(x)/cos(x).
+tanh => sinh : Convert tanh(x) to sinh(x)/cosh(x).
+binomial => ! : Convert binomial(n,k) to factorial form.
+atan => log : Convert tan(x) to logarc form.
+factorial => product : Convert n! to product(g,g,1,n).
+sinh => exp : Convert sinh(x) to exponential form.
 sin => exp : Convert sin(x) to exponential form.
 factorial => gamma : Convert x! into gamma(1+x).
+gamma_incomplete => %expand : false
+cosh => exp : Convert cosh(x) to exponential form.
+(%o5) [sinc => sin,csc => sin,log10 => log,cos => exp,tan => sin,tanh => sinh,
+       binomial => "!",atan => log,factorial => product,sinh => exp,
+       sin => exp,factorial => gamma,gamma_incomplete => %expand,cosh => exp]
 ```
 If a package defines new conversions, these conversions will be listed once the package is loaded.
+
+To list just the converters with given source functions, list the source functions as arguments:
+```maxima
+(%i6) list_converters("!", 'tan);
+
+tan => sin : Convert tan(x) into sin(x)/cos(x).
+factorial => product : Convert n! to product(g,g,1,n).
+factorial => gamma : Convert x! into gamma(1+x).
+
+(%o6) [tan => sin,factorial => product,factorial => gamma]
+```
 ## Syntax
 
 A conversion rule has the form `f => g` where:
@@ -100,6 +124,8 @@ would be useful to allow the source function to be a collection, say `trig` that
 functions, but the code doesn't allow this. Fixing this would require allowing the source function to be a predicate-it's doable.
 
 At the top-level of `convert_function,` there is a bit of code that converts to the internal name of an operator. I suspect that this code has some limitations or bugs.
+
+The source function can not be subscripted.
 
 ## Motivation
 
