@@ -323,5 +323,11 @@ the function symbol."
     (ftake 'mexpt (mul z (ftake '$conjugate z)) (div 1 2))))
 
 (define-converter (%signum %hstep) (x)
+  "Convert signum(x) into 2 hstep(x) - 1."
   (let ((z (car x)))
     (sub (mul 2 (ftake '%hstep z)) 1)))
+
+(define-converter (%hstep %signum) (x)
+  "Convert hstep(x) into (1+signum(x))/2."
+  (let ((z (car x)))
+    (div (add 1 (ftake '%signum z)) 2)))
