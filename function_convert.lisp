@@ -306,14 +306,11 @@ the function symbol."
          (mul (div 2 (ftake 'mexpt '$%pi (div 1 2)))
            (ftake '%integrate  (ftake 'mexpt '$%e (mul -1 s s)) s  0 z))))
 
-
-      #| 
-
-
 (define-converter (%erf %hypergeometric) (x)
   "Convert erf(x) into (2*x/sqrt(pi))*hypergeometric([1/2],[3/2],-x^2)."
-  (let ((z (car x)) ($hypergeometric_representation t)) (ftake '%erf x)))
-
+  (let ((z (car x))) 
+    (let (($hypergeometric_representation t)) (ftake '%erf z))))
+   #|
   ;;; abs
 
   (define-converter (mabs %signum) (x)
