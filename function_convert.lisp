@@ -310,18 +310,9 @@ the function symbol."
   "Convert erf(x) into (2*x/sqrt(pi))*hypergeometric([1/2],[3/2],-x^2)."
   (let ((z (car x))) 
     (let (($hypergeometric_representation t)) (ftake '%erf z))))
-   #|
-  ;;; abs
-
+  
+  ;; abs
   (define-converter (mabs %signum) (x)
   "Convert abs(x) into x*signum(x)."
   (let ((z (car x)))
     (mul z (ftake '%signum z))))
-
-  (define-converter (mabs %integral) (x)
-  "Convert abs(x) into integral(1/2, t, -x, x)."
-  (let* ((z (car x))
-         (t ($gensym)))
-    (ftake '%integrate (div 1 2) t (mul -1 z) z)))
-
-|#
