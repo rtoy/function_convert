@@ -1,3 +1,10 @@
+/* bogus arguments */
+errcatch(sinc());
+[]$
+
+errcatch(sinc(a,b));
+[]$
+
 /* numeric inputs */
 sinc(0);
 1$
