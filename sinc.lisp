@@ -21,7 +21,9 @@
     an IEEE float and perform floating‑point evaluation."
   (cond
     ;; Special case: sinc(0)
-    ((zerop1 x) (add 1 x)) ; the add 1 ... makes sinc(0.0) = 1.0 (not 1) and sinc(0.0b0) = 1.0b0 (not 1)
+    ((zerop1 x)
+       (if $numer 0.0
+           (add 1 x))) ; the add 1 ... makes sinc(0.0) = 1.0 (not 1) and sinc(0.0b0) = 1.0b0 (not 1)
     (t
      (multiple-value-bind (flag re im)
          (complex-number-p x #'mnump)
@@ -45,7 +47,7 @@
                (maxima::to (bigfloat::/ (bigfloat::sin z) z)))))))))))
 
 (def-simplifier sinc (x) 
-   (cond ((zerop1 x) (add 1 x)) ; the add 1 ... makes sinc(0.0) = 1.0 (not 1)
+   (cond ((zerop1 x) (sinc-float x))
          ((taylorize (mop form) (second form)))
          ((sinc-float x)); bug for sinc(4.3+%i) & bug for sinc(4+%i), numer
          (t               
