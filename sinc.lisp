@@ -45,7 +45,6 @@
                   ;; return nil the input isn't a float
                   (t nil))))))
 
-
 (def-simplifier sinc (x) 
    (cond ((zerop1 x) (add 1 x)) ; the add 1 ... makes sinc(0.0) = 1.0 (not 1)
          ((taylorize (mop form) (second form)))
