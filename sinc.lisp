@@ -15,13 +15,13 @@
 
 (defun sinc-float (x)
  "Evaluate the sinc(x) function for float, bigfloat, or complex float or bigfloat input.
- Return nil when x is not one of these types of numbers. Exceptions:
-(a) when x = 0, return 1 even when $numer is false
-(b) when $numer is true and x is a mnump number or a complex mnump number, convert x to
+  Return nil when x is not one of these types of numbers. Exceptions:
+    (a) when x = 0, return 1 even when $numer is false
+    (b) when $numer is true and x is a mnump number or a complex mnump number, convert x to
     an IEEE float and perform floating‑point evaluation."
   (cond
     ;; Special case: sinc(0)
-    ((zerop1 x) (add 1 x)) ; the add 1 ... makes sinc(0.0) = 1.0 (not 1) amd sinc(0.0b0) = 1.0b0 (not 1)
+    ((zerop1 x) (add 1 x)) ; the add 1 ... makes sinc(0.0) = 1.0 (not 1) and sinc(0.0b0) = 1.0b0 (not 1)
     (t
      (multiple-value-bind (flag re im)
          (complex-number-p x #'mnump)
@@ -32,7 +32,7 @@
           (when $numer
             (setq re ($float re)
                   im ($float im)))
-          ;; If neither part is float/bigfloat, cannot evaluate: return nil
+          ;; If neither part is float or bigfloat, cannot evaluate: return nil
           (cond
             ((not (or (float-or-bigfloat-p re) (float-or-bigfloat-p im))) nil)
             ;; real case--avoid complex number division. When x is a bigfloat, can't do (/ sin x) x)s
