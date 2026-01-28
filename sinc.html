@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!-- Created by GNU Texinfo 6.8, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Function sinc</title>
+
+<meta name="description" content="Function sinc">
+<meta name="keywords" content="Function sinc">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<style type="text/css">
+<!--
+a.copiable-anchor {visibility: hidden; text-decoration: none; line-height: 0em}
+a.summary-letter {text-decoration: none}
+blockquote.indentedblock {margin-right: 0em}
+div.display {margin-left: 3.2em}
+div.example {margin-left: 3.2em}
+kbd {font-style: oblique}
+pre.display {font-family: inherit}
+pre.format {font-family: inherit}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+span.nolinebreak {white-space: nowrap}
+span.roman {font-family: initial; font-weight: normal}
+span.sansserif {font-family: sans-serif; font-weight: normal}
+span:hover a.copiable-anchor {visibility: visible}
+ul.no-bullet {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en">
+<h1 class="settitle" align="center">Function sinc</h1>
+<div class="top" id="Function-sinc">
+<h1 class="top">Function sinc</h1>
+
+
+<dl class="def">
+<dt id="index-sinc"><span class="category">Function: </span><span><strong>sinc</strong> <em>(x)</em><a href='#index-sinc' class='copiable-anchor'> &para;</a></span></dt>
+<dd><p>Return <code>sin(x)/x</code>.  The function <code>sinc(x)</code> is defined for all
+real and complex values of <var>x</var>.  At <var>x</var> = 0 the value is defined
+to be 1, corresponding to the limiting value of <code>sin(x)/x</code>.
+</p>
+<p>When <code>sinc</code> is applied to a symbolic expression, the result is the
+quotient <code>sin(x)/x</code>.  When <code>$numer</code> is <code>true</code> and the
+argument is a floating or complex floating number, <code>sinc</code> performs
+floating‑point evaluation.
+</p>
+<p>Examples:
+</p>
+<div class="example">
+<pre class="example">(%i1) sinc(%pi/3);
+(%o1) 3/(2 %pi)
+
+(%i2) sinc(1.2 - 4.5*%i);
+(%o2) 5.7043918199347985 + 7.802144269985125 %i
+
+(%i3) integrate(sinc(x), x);
+(%o3) si(x)
+
+(%i4) taylor(sinc(x), x, 0, 5);
+(%o4) 1 - x^2/6 + x^4/120 + O(x^6)
+
+(%i5) powerseries(sinc(x), x, 0);
+(%o5) sum((-1)^k * x^(2*k) / (2*k+1)!, k, 0, inf)
+</pre></div>
+
+</dd></dl>
+
+<hr></div>
+
+
+
+</body>
+</html>
