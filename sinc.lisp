@@ -8,22 +8,6 @@
 ;;  (e) rectform (not sure what I had in mind)
 ;;  (f) regression tests
 
-#| 
-(defmvar $use_sinc_integration t)
-
-(defun cos-integral (x)  
-   (if $use_sinc_integration
-    (mul x (ftake '%sinc x))
-    (ftake '%sin x)))
-(putprop '%cos `((x) ,'cos-integral) 'integral)
-
-(defun sin-integral (x)  
-   (if $use_sinc_integration
-    (div (mul x x (ftake 'mexpt (ftake '%sinc (div x 2)) 2)) 2)
-    (neg (ftake '%cos x))))
-(putprop '%sin `((x) ,'sin-integral) 'integral)
-|#
-
 (defun pure-constant-p (e)
   (cond ((mnump e) t)
         ((or (mplusp e) (mtimesp e) (mexptp e)) (every #'pure-constant-p (cdr e)))
