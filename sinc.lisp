@@ -29,14 +29,22 @@
         ((or (mplusp e) (mtimesp e) (mexptp e)) (every #'pure-constant-p (cdr e)))
         (t nil)))
 
-;; Bug: doesn't look at $numer
 (defun sinc-float (x)
-   (if (complex-number-p x 'float-or-bigfloat-p)
-       (if (zerop1 x)
-             (add 1 x)
-             (let ((z (bigfloat::to x)))
-                (bigfloat::to (maxima::to (bigfloat::/ (bigfloat::sin z) z)))))
-       nil))
+   (cond ((zerop1 x) (add 1 x)) ; the add 1 ... makes sinc(0.0) = 1.0 (not 1)
+         (t
+           (multiple-value-bind (flag re im)
+            (complex-number-p x #'mnump)
+            ;; When flag and $numer are true, convert re and im to floats
+            (when (and flag $numer)
+               (setq re ($float re)
+                     im ($float im)))
+            ;; When either re or im is a float or bigfloat, do floating point evaluation
+            (cond ((and flag (or (float-or-bigfloat-p re) (float-or-bigfloat-p im)))
+                    (let ((z (bigfloat::to re im)))
+                        (maxima::to (bigfloat::/ (bigfloat::sin z) z))))
+                  ;; return nil the input isn't a float
+                  (t nil))))))
+
 
 (def-simplifier sinc (x) 
    (cond ((zerop1 x) (add 1 x)) ; the add 1 ... makes sinc(0.0) = 1.0 (not 1)
@@ -72,7 +80,7 @@
 
 ;; Antiderivative of sinc: x -> expintegral_si(x)
 (putprop '%sinc
-  '((x) ((%expintegral_sixpintegral_si) x)) 'integral)
+  '((x) ((%expintegral_si) x)) 'integral)
 
 (defun taylor-sinc (a b)
   "Return a list of dotted pairs (p . q), where p = (2k . 1) and
