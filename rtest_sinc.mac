@@ -84,6 +84,10 @@ taylor(sinc(x), x, 0, 6);
 taylor(sinc(x), x, %pi/2, 3);
 2/%pi-(4*(x-%pi/2))/%pi^2-((%pi^2-8)*(x-%pi/2)^2)/%pi^3+((2*%pi^2-16)*(x-%pi/2)^3)/%pi^4$
 
+/* test taylorize */
+sinc(taylor(x+x^2,x,0,5));
+1-x^2/6-x^3/3-x^4/6$
+
 /* limits */
 
 limit(sinc(x), x, 0);
@@ -103,7 +107,7 @@ limit((sinc(x)-1)/x^2,x,0);
 
  limit((sinc(x)-1 + x^2/6)/x^4,x,0);
  1/120$
- 
+
 /* derivatives */
 diff(sinc(x), x);
 (cos(x)-sinc(x))/x$
@@ -130,3 +134,11 @@ block([ans],
    forget(0 < x, x < %pi),
    ans);
 [pos, pos]$
+
+/* conjugate */
+block([ans],
+   declare(z,complex),
+   ans : conjugate(sinc(z)),
+   forget(z,complex),
+   ans);
+sinc(conjugate(z))$

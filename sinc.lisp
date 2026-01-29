@@ -46,7 +46,7 @@
 (def-simplifier sinc (x) 
    (cond ((zerop1 x) (sinc-float x))
          ((taylorize (mop form) (second form)))
-         ((sinc-float x)); bug for sinc(4.3+%i) & bug for sinc(4+%i), numer
+         ((sinc-float x))
          (t               
           (let* ((z (ftake '%sin x)))
               (cond 
