@@ -42,7 +42,7 @@ block([numer:true], sinc(2 + 3*%i));
 block([numer:true], float(sinc(0.0)));
 1.0$
 
-/* binary 64 subnormals -- the next two test fail using Clozure */
+/* binary 64 subnormals -- the next two test fail using Clozure (this Clozure bug has been reporteds) */
 sinc(0.5000001*2.0^(-1075));
 1.0$
 

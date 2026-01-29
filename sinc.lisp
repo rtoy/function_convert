@@ -1,12 +1,7 @@
 (in-package :maxima)
 
 ;;undone:  
-;;  (a) power series (possibly done)
-;;  (b) tex
 ;;  (c) exponentialize (not sure what I had in mind)
-;;  (d) convert to sin form (possibly done via function_convert)
-;;  (e) rectform (not sure what I had in mind)
-;;  (f) regression tests
 
 (defun pure-constant-p (e)
   (cond ((mnump e) t)
@@ -110,5 +105,18 @@
  ((mtimes) ((mexpt) -1 *index) ((mexpt) ((mfactorial) ((mplus) 1 ((mtimes) 2 *index))) -1)
   ((mexpt) sp2var ((mtimes) 2 *index)))
  *index 0 $inf))
+
+;; allow rectform(sinc(X)) to work correctly
+(defun risplit-sinc (x) ;rectangular form for a signum expression
+    (let ((z (cadr x)))
+      (risplit (div (ftake '%sin z) z))))
+(setf (get '%sinc 'risplit-function) 'risplit-sinc)
+(putprop '%sinc 'risplit-sinc 'risplit-function)
+
+(defun sign-sinc (x)
+     (let ((z (cadr x)))
+      (sign (div (ftake '%sin z) z))))
+(putprop '%sinc 'sign-sinc 'sign-function)
+;; Tex support for sinc
 
 (defprop %sinc "\\sinc" texword)
