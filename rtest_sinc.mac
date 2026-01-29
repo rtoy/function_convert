@@ -97,6 +97,13 @@ limit(sinc(x), x, -inf);
 
 limit(sinc(x), x, minf);
 0$
+
+limit((sinc(x)-1)/x^2,x,0);
+-1/6$
+
+ limit((sinc(x)-1 + x^2/6)/x^4,x,0);
+ 1/120$
+ 
 /* derivatives */
 diff(sinc(x), x);
 (cos(x)-sinc(x))/x$

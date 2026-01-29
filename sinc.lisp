@@ -4,9 +4,11 @@
 ;;  (c) exponentialize (not sure what I had in mind)
 
 (defun pure-constant-p (e)
+"Return true if `e` is either a Maxima number or a sum, product, or power whose 
+ arguments are all pure constants. Symbolic constants such as %pi, %e, and %i are 
+ not considered numeric and cause the predicate to return nil."
   (cond ((mnump e) t)
-        ((or (mplusp e) (mtimesp e) (mexptp e)) (every #'pure-constant-p (cdr e)))
-        (t nil)))
+        ((or (mplusp e) (mtimesp e) (mexptp e)) (every #'pure-constant-p (cdr e)))))
 
 (defun sinc-float (x)
  "Evaluate the sinc(x) function for float, bigfloat, or complex float or bigfloat input.
