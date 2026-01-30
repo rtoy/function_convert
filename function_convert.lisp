@@ -342,3 +342,16 @@ the function symbol."
   (let ((z (car x)))
     (div (add 1 (ftake '%signum z)) 2)))
 
+(define-converter (%sin %sin) (x)
+  (let ((z (car x)))
+    (cond
+      (($polynomialp z (ftake 'mlist '$%pi)
+                      #'(lambda (s) (freeof '$%pi s))
+                      #'(lambda (s) (or (eql 0 s) (eql 1 s))))
+       (let* ((n (coeff z '$%pi 1))
+              (w (sratsimp (sub z (mul n '$%pi)))))
+         (ftake '%sin (add w (reduce-angle-mod-2pi (mul '$%pi n))))))
+      (t  (ftake '%sin z)))))
+
+           
+      
