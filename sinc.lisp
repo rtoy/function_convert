@@ -78,6 +78,10 @@
 	 '((x) ((mtimes) ((mexpt) x -1) ((mplus) ((%cos) x) ((mtimes) -1 ((%sinc) x))))) 'grad)
 
 ;; Antiderivative of sinc: x -> expintegral_si(x)
+;; Tradeoff: Maxima integrates sin(x)/x in terms of the incomplete gamma function,
+;; but the expression is not continuous at zero and the result is not manifestly 
+;; real. Integrating sinc gives a better result. But Maxima can integrate 
+;; sin(x)^2/x^2, but it fails to integrate sinc(x)^2.
 (putprop '%sinc
   '((x) ((%expintegral_si) x)) 'integral)
 
