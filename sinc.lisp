@@ -10,6 +10,8 @@
   (cond ((mnump e) t)
         ((or (mplusp e) (mtimesp e) (mexptp e)) (every #'pure-constant-p (cdr e)))))
 
+;; For subnormal number, computing sin(x)/x directly seems to work OK. If that's
+;; not true, we should trap for them and use a Taylor polynomial.
 (defun sinc-float (x)
  "Evaluate the sinc(x) function for float, bigfloat, or complex float or bigfloat input.
   Return nil when x is not one of these types of numbers. Exceptions:
