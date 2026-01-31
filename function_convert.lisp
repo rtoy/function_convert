@@ -1,5 +1,7 @@
 (in-package :maxima)
 
+(defmvar *function-convert-infix-op* 'mequal)
+
 (defun lambda-p (e)
 "Return true when `e` is a Maxima lambda form."
   (and (consp e)
@@ -84,7 +86,7 @@ the function symbol."
 ;;    ($infix "=>" 80 80)
 ;;    (defmvar *function-convert-infix-op* '$=>)
 
-(defmvar *function-convert-infix-op* 'mequal)
+
 
 #| 
 (defmfun $function_convert (e &rest fun-subs-list)
@@ -271,7 +273,7 @@ the function symbol."
   (let ((z (car x)))
     ($logarc (ftake '%atan z))))
 
- (define-function-converter (%gamma_incomplete %expand) (x)
+ (define-function-converter (%gamma_incomplete $expand) (x)
   (let ((a (car x)) (z (cadr x)) ($gamma_expand t))
     (ftake '%gamma_incomplete a z)))
    
