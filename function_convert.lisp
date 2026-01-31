@@ -246,6 +246,10 @@ the function symbol."
 "Convert x!! to gamma form."
   (let ((a (car x)) (b (cadr x)) (c (caddr x))) ($makegamma (ftake '%genfact a b c))))
 
+(define-function-converter (%genfact $pochhammer) (x)
+  (let ((a (car x)) (b (cadr x)) (c (caddr x)))
+    (div (ftake 'mexpt c (ftake '$floor b)) (ftake '$pochhammer (add 1 (div a c)) (ftake '$ceiling (neg b))))))
+
 ;; log10(x) → log(x)/log(10)
 (define-function-converter ($log10 %log) (x)
   "Convert log10(x) into log(x)/log(10)."
