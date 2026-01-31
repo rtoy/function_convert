@@ -128,18 +128,16 @@ the function symbol."
       e)))
 
 (defun function-convert (e op-old op-new)
-  ;;;; (print `(e = ,e old = ,op-old new = ,op-new))
    (cond (($mapatom e) e)
          ;; Case I: both op-old & op-new are symbols. For this case, look up the 
          ;; transformation in the *function-convert-hash* hashtable.
          ((and (consp e)
-               (or (eq (caar e) op-old) (eq (caar e) (car (get op-old 'mheader))))
+               (member (caar e) (list op-old ($nounify op-old) ($verbify op-old)))
                (symbolp op-new)
                ;; bind converter fn inside conjunction--it's OK!
                (let ((fn (or (lookup-converter op-old op-new) 
                              (lookup-converter ($verbify op-old) op-new)
-                             (lookup-converter ($nounify op-old) op-new)
-                             (lookup-converter (car (get op-old 'mheader)) op-new))))
+                             (lookup-converter ($nounify op-old) op-new))))                            
                  (and fn
                    (funcall fn (mapcar (lambda (q) (function-convert q op-old op-new)) (cdr e)))))))
         ;; Case II: op-old is a symbol and op-new is a Maxima lambda form
@@ -238,7 +236,7 @@ the function symbol."
 (define-converter (%genfact %gamma) (x)
 "Convert x!! to gamma form."
   (let ((a (car x)) (b (cadr x)) (c (caddr x))) ($makegamma (ftake '%genfact a b c))))
-    
+
 ;; log10(x) → log(x)/log(10)
 (define-converter ($log10 %log) (x)
   "Convert log10(x) into log(x)/log(10)."
@@ -365,7 +363,6 @@ the function symbol."
          (ftake '%cos (add w (reduce-angle-mod-2pi (mul '$%pi n))))))
       (t  (ftake '%cos z)))))
 
-(define-converter (%gamma %sinc))
 
            
       
