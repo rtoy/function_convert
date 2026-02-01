@@ -104,9 +104,9 @@ No modification of Maxima’s simplifier or pattern matcher is required.
 
 Users who have some understanding of Common Lisp and Maxima internals should
 be able to define new built-in conversions. The file `function_convert` has some examples; here
-is the definition of the converter for `sinc = 'sin`
+is the definition of the converter for `sinc = sin`
 ```lisp
-(define-converter (%sinc %sin) (x)
+(define-fuction-converter (%sinc %sin) (x)
   "Convert sinc(x) into sin(x)/x."
   (let ((z (car x)))
     (div (ftake '%sin z) z)))
