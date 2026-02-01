@@ -1,5 +1,4 @@
-/* [ erf = integral, erf = erfc, erf = erfi,
-erf = hypergeometric, erfc = erf, erfi = erf, gamma_incomplete = expand,
+/* [
 genfact = gamma, hstep = signum, signum = hstep, sin = exp, sin = sin,
 sin = sinc, sinc = gamma, sinc = sin, sinh = exp, tan = sin, tanh = sinh,
 abs = signum, abs = sqrt, ^ = trigreduce, factorial = product,
@@ -101,5 +100,39 @@ erf(28*x)$
 function_convert('erf = 'erfc, erf(x));
 1-erfc(x)$
 
-function_convert(['erf = 'erfc, 'efrc = 'erf], erf(x));
+function_convert(['erf = 'erfc, 'erfc = 'erf], erf(x));
 erf(x)$
+
+function_convert('erf = 'erfi, 20252+erf(a*x));
+20252-%i*erfi(%i*a*x)$
+
+function_convert(['erf = 'erfi, erfi = 'erf], 20252+erf(a*x));
+20252+erf(a*x)$
+
+function_convert([erf = hypergeometric], erf(x));
+(2*%e^-x^2*hypergeometric([1],[3/2],x^2)*x)/sqrt(%pi)$
+
+ratdisrep(taylor(function_convert([erf = hypergeometric], erf(x)) - erf(x),x,0,14));
+0$
+
+ratdisrep(taylor(function_convert([erf = hypergeometric], erf(x/7)) - erf(x/7),x,0,14));
+0$
+
+/* erfc to erf */
+function_convert(erfc = erf, erf(x/5) + erfc(x/5));
+1$
+
+/* erfi to erf */
+function_convert(erfi = erf, erfi(x));
+-(%i*erf(%i*x))$
+
+/* gamma_incomplete: is it really this complicated? */
+function_convert('gamma_incomplete = 'expand, gamma_incomplete(0,x));
+-log(x)+(log(-x)-log(-(1/x)))/2-expintegral_ei(-x)$
+
+/* !! */
+function_convert("!!" = 'gamma, x!!);
+(2^(floor(x/2)-1)*gamma(x/2)*x)/(gamma(x/2-floor(x/2))*(x/2-floor(x/2)))$
+
+subst(x=12, function_convert("!!" = 'gamma, x!!)) = 12!!
+
