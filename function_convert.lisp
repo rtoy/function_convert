@@ -70,13 +70,13 @@ the function symbol."
        (register-converter ',from ',to #',fname)
        ',fname)))
 
-;; Here “=>” indicates a semantic conversion, not a literal renaming. For example, “sinc => sin” does not 
+;; Here “=” indicates a semantic conversion, not a literal renaming. For example, “sinc = sin” does not 
 ;; mean “replace the name sinc with sin”. Instead, it applies the built‑in identity sinc(x) = sin(x)/x.
 ;; Specifically
 
-;; (a) f => g where both f and g are symbols means “use the built‑in conversion from f to g.” When there
+;; (a) f = g where both f and g are symbols means “use the built‑in conversion from f to g.” When there
 ;;     is no such built-in conversion, do nothing.
-;; (b) f => lambda(...) means “use this explicit conversion instead.”
+;; (b) f = lambda(...) means “use this explicit conversion instead.”
 
 ;; To be consistent with substitute, we use “=” as the infix operator for semantic conversion. 
 ;; Using “=” instead of “=>” preserves the freedom for users to define “=>” for other purposes. 
@@ -85,28 +85,6 @@ the function symbol."
 ;; may redefine *function-convert-infix-op*. Example:
 ;;    ($infix "=>" 80 80)
 ;;    (defmvar *function-convert-infix-op* '$=>)
-
-
-
-#| 
-(defmfun $function_convert (e &rest fun-subs-list)
-  (flet ((fn (x)
-         (cond ((stringp x) ($verbify x))
-               ((lambda-p x) x)
-               (t ($nounify x))))
-         (check-subs (x)
-            (or (and
-                  (consp x)
-                  (eq (caar x) '$=>)
-                  (or (symbolp (second x)) (stringp (second x)))
-                  (or (symbolp (third x)) (stringp (third x)) (lambda-p (third x))))
-                (merror "Bad transformation ~M" x))))
-    ;; check that the arguments in fun-subs-list are legitimate.
-    (every #'check-subs fun-subs-list)
-    (dolist (q fun-subs-list)
-      (setq e (function-convert e (fn (second q)) (fn (third q)))))
-    e))
-|#
 
 (defmfun $function_convert (subs e)
   (let ((fun-subs-list (if ($listp subs) (cdr subs) (list subs))))
