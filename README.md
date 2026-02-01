@@ -119,7 +119,9 @@ each converter function.
 
 ## Algorithm and Implementation 
 
-The function `function_convert` walks an expression tree and replaces function calls according to well-defined rules. As such, it is simple code that is repeated in Maxima hundreds of times. It isn’t a pattern matcher or a general rewrite engine. 
+The function `function_convert` walks an expression tree and replaces function calls according to well‑defined rules. In that sense, it is straightforward code of a kind repeated many times in Maxima. It is not a pattern matcher or a general rewrite engine.
+
+The package is implemented in Common Lisp.
 
 ## Limitations & Bugs
 
