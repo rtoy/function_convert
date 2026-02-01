@@ -1,13 +1,15 @@
+“example text”
 # function_convert
 
 
 The file `function_convert` is a Maxima package for performing semantic function-to-function conversions on Maxima expressions.
 
-A conversion rule has the form `f => g`, where `f` is the source function and `g` is either a target function 
- or a lambda expression.
+A conversion rule has the form `f = g`, where `f` is the source function and `g` is either a target function 
+ or a lambda expression. The rule `f = g` means to replace the function `f` by the function `g`. In this context,
+ the use of "=" is similar to the way it is used by the Maxima function “substitute.”
 
-The operator `=>` indicates a *semantic* conversion, not a literal renaming.  For example, the rule
- `sinc => sin` does not replace the symbol `sinc` by `sin`.  Instead, it applies the
+The operator `=` indicates a *semantic* conversion, not a literal renaming. For example, the rule
+ `sinc = sin` does not replace the symbol `sinc` by `sin`.  Instead, it applies the
 identity `sinc(x) = sin(x)/x` so that occurrences `sinc(x)` are rewritten as `sin(x)/x`.
 
 The package makes it easy to convert between similar functions and to define custom transformations without using pattern matching.
@@ -17,30 +19,30 @@ The package makes it easy to convert between similar functions and to define cus
 - Convert Maxima expressions using built-in identities
 - Support user-defined conversions via lambda expressions
 - Apply multiple conversions left-to-right
-- Simple, readable syntax for conversions using `=>`
+- Simple, readable syntax for conversions using `=`
 - Extensible without modifying Maxima internals or using Common Lisp
 
 ## Basic Usage
 
 ### Semantic conversion using a built-in identity
 ```maxima 
-(%i1) function_convert('sinc => 'sin,1+sinc(x));
+(%i1) function_convert('sinc = 'sin,1+sinc(x));
 (%o1) sin(x)/x+1
 
-(%i2) function_convert("!" => 'gamma, (x!)!);
+(%i2) function_convert("!" = 'gamma, (x!)!);
 (%o2) gamma(gamma(x+1)+1)
 ```
 
 ### Explicit conversion using a lambda expression
 ```maxima
-(%i3) function_convert('sinc => lambda([q], sin(q)/q),1+sinc(x));
+(%i3) function_convert('sinc = lambda([q], sin(q)/q),1+sinc(x));
 (%o3) sin(x)/x+1
 ```
 
 ### Chaining multiple conversions
 To apply two or more conversions, put the converters into a list; for example
 ```maxima
-(%i4) function_convert(['sinc => 'sin, 'sin => 'exp], sinc(x)^2);
+(%i4) function_convert(['sinc = 'sin, 'sin = 'exp], sinc(x)^2);
 (%o4) -((%e^(%i*x)-%e^-(%i*x))^2/(4*x^2))
 ```
 
@@ -51,23 +53,23 @@ of all converters, the function prints a list of them along with a short descrip
 ```maxima
 (%i5) list_converters();
 
-sinc => sin : Convert sinc(x) into sin(x)/x.
-csc => sin : Convert csc(x) into 1/sin(x).
-log10 => log : Convert log10(x) into log(x)/log(10).
-cos => exp : Convert cos(x) to exponential form.
-tan => sin : Convert tan(x) into sin(x)/cos(x).
-tanh => sinh : Convert tanh(x) to sinh(x)/cosh(x).
-binomial => ! : Convert binomial(n,k) to factorial form.
-atan => log : Convert tan(x) to logarc form.
-factorial => product : Convert n! to product(g,g,1,n).
-sinh => exp : Convert sinh(x) to exponential form.
-sin => exp : Convert sin(x) to exponential form.
-factorial => gamma : Convert x! into gamma(1+x).
-gamma_incomplete => %expand : false
-cosh => exp : Convert cosh(x) to exponential form.
-(%o5) [sinc => sin,csc => sin,log10 => log,cos => exp,tan => sin,tanh => sinh,
-       binomial => "!",atan => log,factorial => product,sinh => exp,
-       sin => exp,factorial => gamma,gamma_incomplete => %expand,cosh => exp]
+sinc = sin : Convert sinc(x) into sin(x)/x.
+csc = sin : Convert csc(x) into 1/sin(x).
+log10 = log : Convert log10(x) into log(x)/log(10).
+cos = exp : Convert cos(x) to exponential form.
+tan = sin : Convert tan(x) into sin(x)/cos(x).
+tanh = sinh : Convert tanh(x) to sinh(x)/cosh(x).
+binomial = ! : Convert binomial(n,k) to factorial form.
+atan = log : Convert tan(x) to logarc form.
+factorial = product : Convert n! to product(g,g,1,n).
+sinh = exp : Convert sinh(x) to exponential form.
+sin = exp : Convert sin(x) to exponential form.
+factorial = gamma : Convert x! into gamma(1+x).
+gamma_incomplete = %expand : false
+cosh = exp : Convert cosh(x) to exponential form.
+(%o5) [sinc = sin,csc = sin,log10 = log,cos = exp,tan = sin,tanh = sinh,
+       binomial = "!",atan = log,factorial = product,sinh = exp,
+       sin = exp,factorial = gamma,gamma_incomplete = %expand,cosh = exp]
 ```
 If a package defines new conversions, these conversions will be listed once the package is loaded.
 
@@ -75,20 +77,20 @@ To list just the converters with given source functions, list the source functio
 ```maxima
 (%i6) list_converters("!", 'tan);
 
-tan => sin : Convert tan(x) into sin(x)/cos(x).
-factorial => product : Convert n! to product(g,g,1,n).
-factorial => gamma : Convert x! into gamma(1+x).
+tan = sin : Convert tan(x) into sin(x)/cos(x).
+factorial = product : Convert n! to product(g,g,1,n).
+factorial = gamma : Convert x! into gamma(1+x).
 
-(%o6) [tan => sin,factorial => product,factorial => gamma]
+(%o6) [tan = sin,factorial = product,factorial = gamma]
 ```
 ## Syntax
 
-A conversion rule has the form `f => g` where:
+A conversion rule has the form `f = g` where:
 
 - `f` is the source function
 - `g` is either a target function (using a built-in identity) or a lambda expression 
 
-The operator `=>` indicates a semantic conversion, not a literal renaming. The operator `=>` has no evaluation or simplification rule of its own; it is purely notational.
+The operator `=` indicates a semantic conversion, not a literal renaming. The operator `=` has no evaluation or simplification rule of its own; it is purely notational.
 
 ## Error Checking
 
@@ -96,13 +98,13 @@ The function `function_convert` validates each rule and signals an error for mal
 
 ## Extensibility
 
-Users may define new conversions by supplying a lambda expression using `function_convert(f => lambda([u], some_expression_in_u), expr);`
+Users may define new conversions by supplying a lambda expression using `function_convert(f = lambda([u], some_expression_in_u), expr);`
 
 No modification of Maxima’s simplifier or pattern matcher is required.
 
 Users who have some understanding of Common Lisp and Maxima internals should
 be able to define new built-in conversions. The file `function_convert` has some examples; here
-is the definition of the converter for `sinc => 'sin`
+is the definition of the converter for `sinc = 'sin`
 ```lisp
 (define-converter (%sinc %sin) (x)
   "Convert sinc(x) into sin(x)/x."
@@ -110,7 +112,7 @@ is the definition of the converter for `sinc => 'sin`
     (div (ftake '%sin z) z)))
 ```
 The function `list_converters` prints the docstring for each converter along with
-the identifier for the rule (`f => g`), so it is useful to include a docstring for
+the identifier for the rule (`f = g`), so it is useful to include a docstring for
 each converter function.
 
 
@@ -171,11 +173,11 @@ For historical reasons only, the original `sinc` package still resides in this r
 - [x] build a library of useful core rules (a good start)
 - [ ] regression tests for `function_convert`
 - [x] texinfo documentation for `function_convert` (at least a good start)
-- [x] decide if the converter(s) are first `function_convert(f => g,expr)` or last `function_convert(expr, f => g)`
+- [x] decide if the converter(s) are first `function_convert(f = g,expr)` or last `function_convert(expr, f = g)`
 - [x] texinfo documentation for `sinc`
 - [x] regression tests for `sinc`
 - [x] TeX support for `sinc`
-- [ ] Update README.md to reflect the change from "=>" to "=".
+- [x] Update README.md to reflect the change from "=" to "=".
 
 
 
