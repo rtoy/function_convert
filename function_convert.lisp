@@ -382,7 +382,7 @@ the function symbol."
 (defun xgather-args-of (e fn)
    (cond (($mapatom e) nil)        
          ((and (consp e) (consp (car e)) (eq fn (caar e))) (cdr e))
-          (t 
+         (t 
         	(remove-duplicates (reduce #'append 
 		 	       (mapcar #'(lambda (q) (xgather-args-of q fn)) (cdr e))) :test #'alike1))))
 
@@ -398,10 +398,12 @@ the function symbol."
           (when (eql 2 ($cardinality lx))
             (setq lx (cdr lx)) ;Maxima set to list
              (let* ((g1 (ftake '%gamma (car lx)))  (g2 (ftake '%gamma (cadr lx))) (z))
+                ;; set z to the most simple gamma arugment--we'll trust great to choose 
                 (if (great (cadr g1) (cadr g2))
                    (setq z (cadr g1))
                    (setq z (cadr g2)))
                 (setq ee ($ratsubst (div '$%pi (ftake '%sin (mul '$%pi z))) (mul g1 g2) e))
+                ;; when ratsimp eliminates both gamma terms, keep it
                 (when (and ($freeof g1 ee) ($freeof g2 ee))
                   (setq e ee)))))
       e)))
