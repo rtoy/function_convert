@@ -376,6 +376,33 @@ the function symbol."
          (ftake '%cos (add w (reduce-angle-mod-2pi (mul '$%pi n))))))
       (t  (ftake '%cos z)))))
 
+;; The function gather-args-of is defined in limit.lisp, but this function only gathers arguments
+;; that involve a specified varible. Here we want to gather all such arguments...the function
+;; gather-args-of should be extended to take a predicate for inclusion.
+(defun xgather-args-of (e fn)
+   (cond (($mapatom e) nil)        
+         ((and (consp e) (consp (car e)) (eq fn (caar e))) (cdr e))
+          (t 
+        	(remove-duplicates (reduce #'append 
+		 	       (mapcar #'(lambda (q) (xgather-args-of q fn)) (cdr e))) :test #'alike1))))
 
-           
+;; Experimental converter for gamma(X)*gamma(1-X) => pi/(sin(pi X)). This must dispatch
+;; on a product, not on gamma--this is likely confusing: we're not converting a product
+;; to a sine function as the signature suggests.
+(define-function-converter (mtimes %sin) (x)
+  (flet ((gamma-p (s) (and (consp s) (eq (caar s) '%gamma))))
+     (let* ((e (fapply 'mtimes x)) (ll (fapply '$set (xgather-args-of e '%gamma))) (ee))
+      (setq ll ($equiv_classes ll #'(lambda (a b) (eql 1 (add a b)))))
+      (setq ll (cdr ll))
+        (dolist (lx ll)
+          (when (eql 2 ($cardinality lx))
+            (setq lx (cdr lx)) ;Maxima set to list
+             (let* ((g1 (ftake '%gamma (car lx)))  (g2 (ftake '%gamma (cadr lx))) (z))
+                (if (great (cadr g1) (cadr g2))
+                   (setq z (cadr g1))
+                   (setq z (cadr g2)))
+                (setq ee ($ratsubst (div '$%pi (ftake '%sin (mul '$%pi z))) (mul g1 g2) e))
+                (when (and ($freeof g1 ee) ($freeof g2 ee))
+                  (setq e ee)))))
+      e)))
       
