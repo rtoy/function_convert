@@ -41,11 +41,11 @@
   "Return the converter function from FROM to TO, or NIL if none exists."
   (gethash (converter-key from to) *function-convert-hash*))
 
-(defun lookup-converter-alias (from to)
-  (let ((xxx (gethash (converter-key from to) *function-convert-hash-alias*)))
-    (if xxx 
-       (values (car xxx) (cdr xxx))
-       (values from to))))
+(defun lookup-converter-alias (from to) 
+  (let ((primary (gethash (converter-key from to) *function-convert-hash-alias*)))
+    (if primary
+        (values (car primary) (cdr primary))
+        (values from to))))
 
 (defun unregister-converter (from to)
   "Remove any converter registered from FROM to TO."
@@ -208,8 +208,7 @@ in *function-convert-hash-alias* via REGISTER-CONVERTER-ALIAS."
                ;; bind converter fn inside conjunction--it's OK!
                (let ((fn (or (lookup-converter op-old op-new) 
                              (lookup-converter ($verbify op-old) op-new)
-                             (lookup-converter ($nounify op-old) op-new)
-                             (lookup-converter-alias op-old op-new))))                         
+                             (lookup-converter ($nounify op-old) op-new))))
                  (and fn
                    (funcall fn (mapcar (lambda (q) (function-convert q op-old op-new)) (cdr e)))))))
         ;; Case II: op-old is a symbol and op-new is a Maxima lambda form
