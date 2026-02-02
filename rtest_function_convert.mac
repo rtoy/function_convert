@@ -130,9 +130,5 @@ function_convert(erfi = erf, erfi(x));
 function_convert('gamma_incomplete = 'expand, gamma_incomplete(0,x));
 -log(x)+(log(-x)-log(-(1/x)))/2-expintegral_ei(-x)$
 
-/* !! */
-function_convert("!!" = 'gamma, x!!);
-(2^(floor(x/2)-1)*gamma(x/2)*x)/(gamma(x/2-floor(x/2))*(x/2-floor(x/2)))$
 
-subst(x=12, function_convert("!!" = 'gamma, x!!)) = 12!!
 

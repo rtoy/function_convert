@@ -16,13 +16,36 @@
   (make-hash-table :test 'equal)
   "Hash table mapping (FROM . TO) operator pairs to converter functions.")
 
+(defmvar *function-convert-hash-alias*
+  (make-hash-table :test 'equal)
+  "Hash table mapping (FROM . TO) operator pairs to converter functions.")
+
 (defun register-converter (from to fn)
   "Register FN as the converter from FROM to TO."
   (setf (gethash (converter-key from to) *function-convert-hash*) fn))
 
+(defun register-converter-alias (from to from-alt to-alt)
+  (setf (gethash (converter-key from to) *function-convert-hash-alias*) (converter-key from-alt to-alt)))
+
+(defun list-converter-aliases ()
+  "Print all alias mappings stored in *function-convert-hash-alias*."
+  (maphash
+   (lambda (alias-key primary-key)
+     (destructuring-bind (from-alt . to-alt) alias-key
+       (destructuring-bind (from . to) primary-key
+         (format t "~A → ~A   aliases   ~A → ~A~%"
+                 from-alt to-alt from to))))
+   *function-convert-hash-alias*))
+
 (defun lookup-converter (from to)
   "Return the converter function from FROM to TO, or NIL if none exists."
   (gethash (converter-key from to) *function-convert-hash*))
+
+(defun lookup-converter-alias (from to)
+  (let ((xxx (gethash (converter-key from to) *function-convert-hash-alias*)))
+    (if xxx 
+       (values (car xxx) (cdr xxx))
+       (values from to))))
 
 (defun unregister-converter (from to)
   "Remove any converter registered from FROM to TO."
@@ -55,6 +78,7 @@ Each entry has the form:
     ;; Return results in forward order
     (fapply 'mlist (nreverse results))))
 
+#| until I and 100% certain the new macro works, let's save the old!
 
 (defmacro define-function-converter ((from to) lambda-list &body body)
   "Define a converter from FROM to TO, automatically naming the function
@@ -69,6 +93,64 @@ the function symbol."
          ,@body)
        (register-converter ',from ',to #',fname)
        ',fname)))
+
+(defmacro define-function-converter-alias ((from to) (from-alt to-alt) lambda-list &body body)
+  "Define a converter FROM→TO, register it, and record an alias
+FROM-ALT→TO-ALT in *function-convert-hash-alias* via REGISTER-CONVERTER-ALIAS."
+  (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
+                               from to)
+                       :maxima)))
+    `(progn
+       (defun ,fname ,lambda-list
+         ,@body)
+       (register-converter ',from ',to #',fname)
+       (register-converter-alias ',from-alt ',to-alt ',from ',to)
+       ',fname)))
+
+|#
+
+(defmacro define-function-converter (spec lambda-list &body body)
+  "Define a converter FROM→TO, optionally with an alias FROM-ALT→TO-ALT.
+
+Valid forms:
+  (define-function-converter (FROM TO) (args) ...)
+  (define-function-converter ((FROM TO) (FROM-ALT TO-ALT)) (args) ...)
+
+Registers the converter and, if an alias is supplied, stores the alias
+in *function-convert-hash-alias* via REGISTER-CONVERTER-ALIAS."
+  ;; Determine whether SPEC is simple or alias form
+  (cond
+    ;; Alias form: ((from to) (from-alt to-alt))
+    ((and (consp spec)
+          (consp (first spec))
+          (consp (second spec)))
+     (destructuring-bind ((from to) (from-alt to-alt)) spec
+       (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
+                                    from to)
+                            :maxima)))
+         `(progn
+            (defun ,fname ,lambda-list
+              ,@body)
+            (register-converter ',from ',to #',fname)
+            (register-converter-alias ',from-alt ',to-alt ',from ',to)
+            ',fname))))
+
+    ;; Simple form: (from to)
+    ((and (consp spec)
+          (symbolp (first spec))
+          (symbolp (second spec)))
+     (destructuring-bind (from to) spec
+       (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
+                                    from to)
+                            :maxima)))
+         `(progn
+            (defun ,fname ,lambda-list
+              ,@body)
+            (register-converter ',from ',to #',fname)
+            ',fname))))
+
+    (t
+     (error "Malformed converter spec: ~S" spec))))
 
 ;; Here “=” indicates a semantic conversion, not a literal renaming. For example, “sinc = sin” does not 
 ;; mean “replace the name sinc with sin”. Instead, it applies the built‑in identity sinc(x) = sin(x)/x.
@@ -111,7 +193,9 @@ the function symbol."
       ;; check that the arguments in fun-subs-list are legitimate.
       (mapc #'check-subs fun-subs-list)
       (dolist (q fun-subs-list)
-        (setq e (function-convert e (fn (second q)) (fn (third q)))))
+        (multiple-value-bind (aa bb)
+         (lookup-converter-alias (fn (second q)) (fn (third q)))
+         (setq e (function-convert e aa bb))))
       e)))
 
 (defun function-convert (e op-old op-new)
@@ -124,7 +208,8 @@ the function symbol."
                ;; bind converter fn inside conjunction--it's OK!
                (let ((fn (or (lookup-converter op-old op-new) 
                              (lookup-converter ($verbify op-old) op-new)
-                             (lookup-converter ($nounify op-old) op-new))))                            
+                             (lookup-converter ($nounify op-old) op-new)
+                             (lookup-converter-alias op-old op-new))))                         
                  (and fn
                    (funcall fn (mapcar (lambda (q) (function-convert q op-old op-new)) (cdr e)))))))
         ;; Case II: op-old is a symbol and op-new is a Maxima lambda form
@@ -365,9 +450,10 @@ the function symbol."
 		 	       (mapcar #'(lambda (q) (xgather-args-of q fn)) (cdr e))) :test #'alike1))))
 
 ;; Experimental converter for gamma(X)*gamma(1-X) => pi/(sin(pi X)). This must dispatch
-;; on a product, not on gamma--this is likely confusing: we're not converting a product
-;; to a sine function as the signature suggests.
-(define-function-converter (mtimes %sin) (x)
+;; on a product, not on gamma--this is likely confusing for a user. So we give the 
+;; converter an alias of (%gamma %sin). So function_convert(gamma = sin, gamma(X)*gamma(1-X)*a*b*X = 42)
+;; will properly trigger the rule.
+(define-function-converter ((mtimes %sin) (%gamma %sin)) (x)
   (flet ((gamma-p (s) (and (consp s) (eq (caar s) '%gamma))))
      (let* ((e (fapply 'mtimes x)) (ll (fapply '$set (xgather-args-of e '%gamma))) (ee))
       (setq ll ($equiv_classes ll #'(lambda (a b) (eql 1 (add a b)))))
@@ -385,4 +471,3 @@ the function symbol."
                 (when (and ($freeof g1 ee) ($freeof g2 ee))
                   (setq e ee)))))
       e)))
-      
