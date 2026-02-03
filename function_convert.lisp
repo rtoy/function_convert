@@ -91,37 +91,6 @@ Each entry has the form:
     ;; Return results in sorted order
     ($sort (fapply 'mlist (nreverse results)))))
 
-#| until I and 100% certain the new macro works, let's save the old!
-
-(defmacro define-function-converter ((from to) lambda-list &body body)
-  "Define a converter from FROM to TO, automatically naming the function
-CONVERTER-FROM-TO, installing it in the converter registry, and returning
-the function symbol."
-  (let* ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
-                                from
-                                to)
-                        :maxima)))
-    `(progn
-       (defun ,fname ,lambda-list
-         ,@body)
-       (register-converter ',from ',to #',fname)
-       ',fname)))
-
-(defmacro define-function-converter-alias ((from to) (from-alt to-alt) lambda-list &body body)
-  "Define a converter FROM→TO, register it, and record an alias
-FROM-ALT→TO-ALT in *function-convert-hash-alias* via REGISTER-CONVERTER-ALIAS."
-  (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
-                               from to)
-                       :maxima)))
-    `(progn
-       (defun ,fname ,lambda-list
-         ,@body)
-       (register-converter ',from ',to #',fname)
-       (register-converter-alias ',from-alt ',to-alt ',from ',to)
-       ',fname)))
-
-|#
-
 (defmacro define-function-converter (spec lambda-list &body body)
   "Define a converter FROM→TO, optionally with an alias FROM-ALT→TO-ALT.
 
