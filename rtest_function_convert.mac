@@ -130,5 +130,6 @@ function_convert(erfi = erf, erfi(x));
 function_convert('gamma_incomplete = 'expand, gamma_incomplete(0,x));
 -log(x)+(log(-x)-log(-(1/x)))/2-expintegral_ei(-x)$
 
-
+function_convert('gamma = 'sin, gamma(X)*gamma(1-X)*a*b*X  < 42);
+(%pi*X*a*b)/sin(%pi*X) < 42$
 

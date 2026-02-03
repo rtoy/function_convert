@@ -24,8 +24,13 @@
   "Register FN as the converter from FROM to TO."
   (setf (gethash (converter-key from to) *function-convert-hash*) fn))
 
+(defmvar *function-convert-hash-reverse-alias*
+  (make-hash-table :test 'equal)
+  "Hash table mapping (FROM . TO) operator pairs to converter functions.")
+
 (defun register-converter-alias (from to from-alt to-alt)
-  (setf (gethash (converter-key from to) *function-convert-hash-alias*) (converter-key from-alt to-alt)))
+  (setf (gethash (converter-key from to) *function-convert-hash-alias*) (converter-key from-alt to-alt))
+  (setf (gethash (converter-key from-alt to-alt) *function-convert-hash-reverse-alias*) (converter-key from to)))
 
 (defun list-converter-aliases ()
   "Print all alias mappings stored in *function-convert-hash-alias*."
@@ -117,8 +122,8 @@ Valid forms:
   (define-function-converter ((FROM TO) (FROM-ALT TO-ALT)) (args) ...)
 
 Registers the converter and, if an alias is supplied, stores the alias
-in *function-convert-hash-alias* via REGISTER-CONVERTER-ALIAS."
-  ;; Determine whether SPEC is simple or alias form
+in *function-convert-hash-alias* via REGISTER-CONVERTER-ALIAS and also
+stores the reverse mapping via REGISTER-CONVERTER-REVERSE-ALIAS."
   (cond
     ;; Alias form: ((from to) (from-alt to-alt))
     ((and (consp spec)
@@ -469,4 +474,4 @@ in *function-convert-hash-alias* via REGISTER-CONVERTER-ALIAS."
                 ;; when ratsimp eliminates both gamma terms, keep it
                 (when (and ($freeof g1 ee) ($freeof g2 ee))
                   (setq e ee)))))
-      e)))
+      ($expand e 0 0))))
