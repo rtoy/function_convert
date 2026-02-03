@@ -52,6 +52,12 @@
         (values (car primary) (cdr primary))
         (values from to))))
 
+(defun lookup-converter-reverse-alias (from to) 
+  (let ((primary (gethash (converter-key from to) *function-convert-hash-reverse-alias*)))
+    (if primary
+        (values (car primary) (cdr primary))
+        (values from to))))
+
 (defun unregister-converter (from to)
   "Remove any converter registered from FROM to TO."
   (remhash (converter-key from to) *function-convert-hash*))
@@ -75,13 +81,15 @@ Each entry has the form:
     (dolist (entry (list-converters))
       (destructuring-bind ((from . to) fn doc) entry
         (declare (ignore fn))
+          (multiple-value-bind (from-alias to-alias)
+             (lookup-converter-reverse-alias from to)
         (when (or (endp names)
-                  (member ($nounify from) normalized :test #'equal))
-          (mtell "~M ~M ~M : ~M ~%" from *function-convert-infix-op* to doc)
+                  (member ($nounify from-alias) normalized :test #'equal))
+           (mtell "~M ~M ~M : ~M ~%" from-alias *function-convert-infix-op* to-alias doc)
           ;; Accumulate a Maxima-style list entry
-          (push (ftake *function-convert-infix-op* from to) results))))
+          (push (ftake *function-convert-infix-op* from-alias to-alias) results)))))
     ;; Return results in forward order
-    (fapply 'mlist (nreverse results))))
+    ($sort (fapply 'mlist (nreverse results)))))
 
 #| until I and 100% certain the new macro works, let's save the old!
 
