@@ -81,14 +81,14 @@ Each entry has the form:
     (dolist (entry (list-converters))
       (destructuring-bind ((from . to) fn doc) entry
         (declare (ignore fn))
-          (multiple-value-bind (from-alias to-alias)
-             (lookup-converter-reverse-alias from to)
-        (when (or (endp names)
-                  (member ($nounify from-alias) normalized :test #'equal))
-           (mtell "~M ~M ~M : ~M ~%" from-alias *function-convert-infix-op* to-alias doc)
-          ;; Accumulate a Maxima-style list entry
-          (push (ftake *function-convert-infix-op* from-alias to-alias) results)))))
-    ;; Return results in forward order
+        (multiple-value-bind (from-alias to-alias)
+            (lookup-converter-reverse-alias from to)
+          (when (or (endp names)
+                    (member ($nounify from-alias) normalized  :test #'equal))
+            (mtell "~M ~M ~M : ~M ~%" from-alias *function-convert-infix-op* to-alias doc)
+            ;; Accumulate a Maxima-style list entry
+            (push (ftake *function-convert-infix-op* from-alias to-alias) results)))))
+    ;; Return results in sorted order
     ($sort (fapply 'mlist (nreverse results)))))
 
 #| until I and 100% certain the new macro works, let's save the old!
