@@ -489,6 +489,7 @@ is first degree polynomial in %pi."
               (w (sratsimp (sub z (mul n '$%pi)))))
 
          (let ((angle (reduce-angle-mod-2pi (mul '$%pi n))))
+           ;; for tan and cot, add %pi to negative angles.
            (when (and (or (eq op '%tan) (eq op '%cot))
                       (eq t (mgrp 0 angle)))
                 (setq angle (add angle '$%pi)))
