@@ -4,12 +4,12 @@
 ;; function f to function g displays as f *function-convert-infix-op* g. 
 
 ;; To be consistent with substitute, we use “=” as the infix operator for semantic conversion. 
-;; An arrow-like operator (say “=>”) might better clarify the meaning of the source and target functions, 
+;; An arrow-like operator (say “=>”) might clarify the distinction between the source and target functions, 
 ;; but using “=” is consistent with substitute and it preserves the freedom for users to define “=>” 
 ;; for other purposes. 
 
-;; The source code comments sometimes use “=>” as the infix operator--I think this notation clarifies the 
-;; source and target functions. Anyone wishing to rename the semantic conversion operator 
+;; The source code comments sometimes use “=>” as the infix operator for a converter. I think this notation 
+;; helps distinguish the source and target functions. Anyone wishing to rename the semantic conversion operator 
 ;; may redefine *function-convert-infix-op*. Example:
 ;;    ($infix "=>" 80 80)
 ;;    (defmvar *function-convert-infix-op* '$=>)
@@ -96,7 +96,7 @@
   "Return a converter function for OPERATOR→OP-NEW. Tries exact match, noun/verb and class-key match."
 
   (flet
-      ;; Try to find a converter for FROM → OP-NEW
+      ;; Try to find a converter for FROM => OP-NEW
       ((try (from) (gethash (cons from op-new) *function-convert-hash*)))
     
     (or
@@ -162,7 +162,7 @@ Each entry has the form:
     ($sort (fapply 'mlist (nreverse results)))))
 
 (defmacro define-function-converter (spec lambda-list &body body)
-  "Define a converter FROM→TO, optionally with an alias FROM-ALT→TO-ALT.
+  "Define a converter FROM => TO, optionally with an alias FROM-ALT => TO-ALT.
 
 Valid forms:
   (define-function-converter (FROM TO) (args) ...)
@@ -414,8 +414,6 @@ stores the reverse mapping via REGISTER-CONVERTER-REVERSE-ALIAS."
           (t (ftake 'mexpt z n)))))
 
 ;; erf-like functions
-
-
 (define-function-converter (%erfi %erf) (op x)
   "Convert erfi(x) into -i * erf(i*x)."
   (declare (ignore op))
