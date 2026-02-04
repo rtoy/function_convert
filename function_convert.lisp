@@ -94,7 +94,8 @@
 
 ;; This code doesn't look up aliases. The alias lookup happens before this code is called.
 (defun lookup-converter (operator op-old op-new)
-  "Return a converter function for OPERATOR→OP-NEW. Tries exact match, noun/verb and class-key match."
+  "Return a converter op-old => op-new function for expression whose operator is OPERATOR. Tries exact match, noun/verb, and class-key match.
+   Generally, operator = op-old (or op-old either noun or verbified) but not for a class-key match."
 
   (flet
       ;; Try to find a converter for FROM => OP-NEW
