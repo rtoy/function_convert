@@ -499,14 +499,19 @@ is first degree polynomial in %pi."
       (t  (ftake op z)))))
 
 ;; The function gather-args-of is defined in limit.lisp, but this function only gathers arguments
-;; that involve a specified varible. Here we want to gather all such arguments...the function
-;; gather-args-of should be extended to take a predicate for inclusion.
-(defun xgather-args-of (e fn)
-   (cond (($mapatom e) nil)        
-         ((and (consp e) (consp (car e)) (eq fn (caar e))) (cdr e))
-         (t 
-        	(remove-duplicates (reduce #'append 
-		 	       (mapcar #'(lambda (q) (xgather-args-of q fn)) (cdr e))) :test #'alike1))))
+;; that involve a specified varible. Here we want to gather all such arguments. The version has
+;; predicate for final argument that can be used to exclude arguments. The default for this 
+;; predicate is x |-> true.
+(defun xgather-args-of (e fn &optional (pred #'(lambda (q) (declare (ignore q)) t)))
+  (cond
+    (($mapatom e)  nil)
+    ((and (consp e) (consp (car e)) (eq fn (caar e)))
+     (when (funcall pred e)
+       (cdr e)))
+    (t
+     (remove-duplicates
+      (reduce #'append
+              (mapcar #'(lambda (q) (xgather-args-of q fn pred)) (cdr e)) :initial-value nil) :test #'alike1))))
 
 ;; Experimental converter for gamma(X)*gamma(1-X) => pi/(sin(pi X)). This must dispatch
 ;; on a product, not on gamma--this is likely confusing for a user. So we give the 
