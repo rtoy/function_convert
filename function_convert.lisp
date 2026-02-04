@@ -477,30 +477,22 @@ stores the reverse mapping via REGISTER-CONVERTER-REVERSE-ALIAS."
   (let ((z (car x)))
     (div (add 1 (ftake '%signum z)) 2)))
 
-;; disapointing to have to do this twice ...
-(define-function-converter (%sin %sin) (op x)
-  (declare (ignore op))
-  (let ((z (car x)))
+;; This should special case tan and cot and reduce 
+(define-function-converter (:trig $normalize_trig_argument) (op x)
+  (let ((z (car x))) 
     (cond
       (($polynomialp z (ftake 'mlist '$%pi)
                       #'(lambda (s) (freeof '$%pi s))
                       #'(lambda (s) (or (eql 0 s) (eql 1 s))))
        (let* ((n (coeff z '$%pi 1))
               (w (sratsimp (sub z (mul n '$%pi)))))
-         (ftake '%sin (add w (reduce-angle-mod-2pi (mul '$%pi n))))))
-      (t  (ftake '%sin z)))))
-    
-(define-function-converter (%cos %cos) (op x)
-  (declare (ignore op))
-  (let ((z (car x)))
-    (cond
-      (($polynomialp z (ftake 'mlist '$%pi)
-                      #'(lambda (s) (freeof '$%pi s))
-                      #'(lambda (s) (or (eql 0 s) (eql 1 s))))
-       (let* ((n (coeff z '$%pi 1))
-              (w (sratsimp (sub z (mul n '$%pi)))))
-         (ftake '%cos (add w (reduce-angle-mod-2pi (mul '$%pi n))))))
-      (t  (ftake '%cos z)))))
+
+         (let ((angle (reduce-angle-mod-2pi (mul '$%pi n))))
+           (when (and (or (eq op '%tan) (eq op '%cot))
+                      (eq t (mgrp 0 angle)))
+                (setq angle (add angle '$%pi)))
+         (ftake op (add w angle)))))
+      (t  (ftake op z)))))
 
 ;; The function gather-args-of is defined in limit.lisp, but this function only gathers arguments
 ;; that involve a specified varible. Here we want to gather all such arguments...the function
