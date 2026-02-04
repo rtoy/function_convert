@@ -477,8 +477,9 @@ stores the reverse mapping via REGISTER-CONVERTER-REVERSE-ALIAS."
   (let ((z (car x)))
     (div (add 1 (ftake '%signum z)) 2)))
 
-;; This should special case tan and cot and reduce 
 (define-function-converter (:trig $normalize_trig_argument) (op x)
+ "Normalize the argument of a trigonometric functions when the argument
+is first degree polynomial in %pi."
   (let ((z (car x))) 
     (cond
       (($polynomialp z (ftake 'mlist '$%pi)
