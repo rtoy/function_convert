@@ -67,6 +67,7 @@
     (:hyperbolic  . (%sinh %cosh %tanh %sech %csch %coth))
     (:inv-trig    . (%asin %acos %atan %asec %acsc %acot))
     (:inv-hyperbolic . (%asinh %acosh %atanh %asech %acsch %acoth))
+    (:exp            . (mexpt))
     (:logarithmic . (%log)))
   "Mapping from class keys to lists of operator symbols.")
 
@@ -542,3 +543,80 @@ is first degree polynomial in %pi."
       (%csc (div 1 (ftake '%sin z)))
       (%cot (div (ftake '%cos z) (ftake '%sin z)))
       (t (ftake op z)))))
+
+(define-function-converter (:trig $exp) (op x)
+  ($exponentialize (fapply op x)))
+
+(define-function-converter (:hyperbolic $exp) (op x)
+  ($exponentialize (fapply op x)))
+
+(define-function-converter (:inverse-trig $log) (op x)
+  ($logarc (fapply op x)))
+
+(define-function-converter (:exp :trig) (op x)
+  ($demoivre (fapply op x)))
+
+(define-function-converter (:trig $trig_tan_half_angle) (op x)
+  "
+Rewrite trigonometric functions in terms of the tangent half–angle
+substitution t = tan(z/2).  Produces rational functions of t:
+
+    sin(z) → 2 t / (1 + t^2)
+    cos(z) → (1 - t^2) / (1 + t^2)
+    tan(z) → 2 t / (1 - t^2)
+    sec(z) → (1 + t^2) / (1 - t^2)
+    csc(z) → (1 + t^2) / (2 t)
+    cot(z) → (1 - t^2) / (2 t)
+
+If OP is not one of the standard trigonometric operators, return OP(z)
+unchanged.
+"
+(let* ((z (car x))
+       (q (ftake '%tan (div z 2))))
+  (case op
+    (%sin (div (mul 2 q)
+               (add 1 (mul q q))))
+    (%cos (div (sub 1 (mul q q))
+               (add 1 (mul q q))))
+    (%tan (div (mul 2 q)
+               (sub 1 (mul q q))))
+    (%sec (div (add 1 (mul q q))
+               (sub 1 (mul q q))))
+    (%csc (div (add 1 (mul q q))
+               (mul 2 q)))
+    (%cot (div (sub 1 (mul q q))
+               (mul 2 q)))
+    (t    (ftake op z)))))
+
+(define-function-converter (:hyperbolic $hyperbolic_tanh_half_angle) (op x)
+  "
+Rewrite hyperbolic functions in terms of the tanh half–angle substitution
+u = tanh(z/2).  Produces rational functions of u:
+
+    sinh(z) → 2 u / (1 - u^2)
+    cosh(z) → (1 + u^2) / (1 - u^2)
+    tanh(z) → 2 u / (1 + u^2)
+    sech(z) → (1 - u^2) / (1 + u^2)
+    csch(z) → (1 - u^2) / (2 u)
+    coth(z) → (1 + u^2) / (2 u)
+
+If OP is not one of the standard hyperbolic operators, return OP(z)
+unchanged.
+"
+  (let* ((z (car x))
+         (u (ftake '%tanh (div z 2))))
+    (case op
+      (%sinh (div (mul 2 u)
+                  (sub 1 (mul u u))))
+      (%cosh (div (add 1 (mul u u))
+                  (sub 1 (mul u u))))
+      (%tanh (div (mul 2 u)
+                  (add 1 (mul u u))))
+      (%sech (div (sub 1 (mul u u))
+                  (add 1 (mul u u))))
+      (%csch (div (sub 1 (mul u u))
+                  (mul 2 u)))
+      (%coth (div (add 1 (mul u u))
+                  (mul 2 u)))
+      (t    (ftake op z)))))
+
