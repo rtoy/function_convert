@@ -116,7 +116,7 @@ Unlike the `sinc` to `sin` rule, this rule uses the argument `op`.
 
 The function `function_convert` walks an expression tree and replaces function calls according to well‑defined rules. In that sense, it is straightforward code of a kind repeated many times in Maxima. It is not a pattern matcher or a general rewrite engine.
 
-The package is implemented in Common Lisp.
+The package is implemented in Common Lisp. It has been tested using Clozure Common Lisp version 1.13 and SBCL version 2.4.7.
 
 ## Limitations & Bugs
 
