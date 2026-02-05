@@ -1,18 +1,13 @@
 “example text”
 # function_convert
 
+The file `function_convert` contains a Maxima package for performing semantic function-to-function conversions on Maxima expressions.
 
-The file `function_convert` is a Maxima package for performing semantic function-to-function conversions on Maxima expressions.
+A conversion rule has the form `f = g`, where `f` is the source function and `g` is either a target function or a lambda expression. The rule `f = g` instructs Maxima to replace calls to `f` with calls to `g`. This use of "=" is similar to its use in the Maxima function `substitute`, with one difference: here the operator `=` indicates a *semantic* conversion, not a literal renaming.
 
-A conversion rule has the form `f = g`, where `f` is the source function and `g` is either a target function 
- or a lambda expression. The rule `f = g` means to replace the function `f` by the function `g`. In this context,
- the use of "=" is similar to the way it is used by the Maxima function “substitute.”
+For example, the rule `sinc = sin` does **not** replace the symbol `sinc` with `sin`. Instead, it applies the identity `sinc(x) = sin(x)/x`, so occurrences of `sinc(x)` are rewritten as `sin(x)/x`.
 
-The operator `=` indicates a *semantic* conversion, not a literal renaming. For example, the rule
- `sinc = sin` does not replace the symbol `sinc` by `sin`.  Instead, it applies the
-identity `sinc(x) = sin(x)/x` so that occurrences `sinc(x)` are rewritten as `sin(x)/x`.
-
-The package makes it easy to convert between similar functions and to define custom transformations without using pattern matching.
+The package provides a simple, declarative way to convert between related functions and to define custom transformations without relying on pattern matching.
 
 ## Features
 
@@ -52,24 +47,13 @@ To print all the built-in converter functions, use `list_converters`. In additio
 of all converters, the function prints a list of them along with a short description of the converter:
 ```maxima
 (%i5) list_converters();
-
 sinc = sin : Convert sinc(x) into sin(x)/x.
 csc = sin : Convert csc(x) into 1/sin(x).
+binomial = factorial : Convert binomial(n,k) to factorial form.
 log10 = log : Convert log10(x) into log(x)/log(10).
-cos = exp : Convert cos(x) to exponential form.
-tan = sin : Convert tan(x) into sin(x)/cos(x).
-tanh = sinh : Convert tanh(x) to sinh(x)/cosh(x).
-binomial = ! : Convert binomial(n,k) to factorial form.
-atan = log : Convert tan(x) to logarc form.
-factorial = product : Convert n! to product(g,g,1,n).
-sinh = exp : Convert sinh(x) to exponential form.
-sin = exp : Convert sin(x) to exponential form.
-factorial = gamma : Convert x! into gamma(1+x).
-gamma_incomplete = %expand : false
-cosh = exp : Convert cosh(x) to exponential form.
-(%o5) [sinc = sin,csc = sin,log10 = log,cos = exp,tan = sin,tanh = sinh,
-       binomial = "!",atan = log,factorial = product,sinh = exp,
-       sin = exp,factorial = gamma,gamma_incomplete = %expand,cosh = exp]
+
+(%o3) [sinc = sin, csc = sin, binomial = factorial, log10 = log, ...]
+...
 ```
 If a package defines new conversions, these conversions will be listed once the package is loaded.
 
@@ -106,14 +90,25 @@ Users who have some understanding of Common Lisp and Maxima internals should
 be able to define new built-in conversions. The file `function_convert` has some examples; here
 is the definition of the converter for `sinc = sin`
 ```lisp
-(define-fuction-converter (%sinc %sin) (x)
+(define-function-converter (%sinc %sin) (op x)
   "Convert sinc(x) into sin(x)/x."
+  (declare (ignore op))
   (let ((z (car x)))
     (div (ftake '%sin z) z)))
 ```
 The function `list_converters` prints the docstring for each converter along with
 the identifier for the rule (`f = g`), so it is useful to include a docstring for
 each converter function.
+
+It is possible to define a rule that applies to a class of functions, for example to all
+trigonmetric functions. Here is the definition of a rule that converts all six trigonometric
+functions to exponential form:
+```lisp
+(define-function-converter (:trig $exp) (op x)
+ "Convert all trigonometric functions to exponential form."
+  ($exponentialize (fapply op x)))
+```
+Unlike the `sinc` to `sin` rule, this rule uses the argument `op`.
 
 
 
@@ -125,13 +120,7 @@ The package is implemented in Common Lisp.
 
 ## Limitations & Bugs
 
-For a rule to work correctly, the source function must be the name of a simplifying Maxima function. It 
-would be useful to allow the source function to be a collection, say `trig` that matches all trigonometric 
-functions, but the code doesn't allow this. Fixing this would require allowing the source function to be a predicate-it's doable.
-
-At the top-level of `convert_function,` there is a bit of code that converts to the internal name of an operator. I suspect that this code has some limitations or bugs.
-
-The source function can not be subscripted.
+The source function can not be subscripted, for example `li[2](x)`. 
 
 ## Motivation
 
@@ -161,6 +150,16 @@ example is
 
 ```
 This method works well, especially for single use function-to-function conversions. But a `kill(all)` removes all rules defined by `defrule` and it still relies on an alphabet soup of functions.
+
+Finally, the package has at least one built-in rule that is difficult to fully duplicate using `defrule`: 
+
+```lisp
+(%i5) function_convert('gamma = 'sin, 20252*x*gamma(x)*gamma(1-x) < %pi);
+                               20252 %pi x
+(%o5)                          ─────────── < %pi
+                               sin(%pi x)
+
+```
 
 ## History
 
