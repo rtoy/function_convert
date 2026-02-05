@@ -126,7 +126,7 @@ The source function can not be subscripted, for example `li[2](x)`.
 
 Many systems (Maple, Mathematica, SymPy) provide built‑in expansions or rewrite mechanisms, but Maxima uses an alphabet soup of functions that perform semantic function‑to‑function conversions; examples include `makefact` and `makegamma`. In other cases, transformations are controlled by option variables—for example, `expintrep`. 
 
-These names are easy to forget and are not always easy to locate in the user documentation. Possibly, `function_convert` will provide a simple, uniform, and user-extensible way to do such conversions.
+These names are easy to forget and are not always easy to locate in the user documentation. The function_convert package may offer a simple, uniform, and user‑extensible way to perform such conversions.
 
 ## Installation
 
