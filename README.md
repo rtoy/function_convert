@@ -1,5 +1,4 @@
-“example text”
-# function_convert
+# Maxima package ``function_convert`
 
 The file `function_convert` contains a Maxima package for performing semantic function-to-function conversions on Maxima expressions.
 
