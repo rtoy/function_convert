@@ -554,6 +554,7 @@ is first degree polynomial in %pi."
       (t (ftake op z)))))
 
 (define-function-converter (:trig $exp) (op x)
+ "Convert all trigonometric functions to exponential form."
   ($exponentialize (fapply op x)))
 
 (define-function-converter (:hyperbolic $exp) (op x)
