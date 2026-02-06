@@ -659,3 +659,9 @@ unchanged.
                   (mul 2 u)))
       (t    (ftake op z)))))
 
+;;  missing: 
+;;   (a) Beta function => gamma
+;;   (b) inverse trig => log
+;;   (c) pochammer => gamma
+;;   (d) bessel functions
+

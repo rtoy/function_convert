@@ -1,8 +1,5 @@
 (in-package :maxima)
 
-;;undone:  
-;;  (a) exponentialize--I think this requires altering the exponentialize function.
-
 (defun pure-constant-p (e)
 "Return true if `e` is either a Maxima number or a sum, product, or power whose 
  arguments are all pure constants. Symbolic constants such as %pi, %e, and %i are 
@@ -87,7 +84,7 @@
 
 (defun taylor-sinc (a b)
   "Return a list of dotted pairs (p . q), where p = (2k . 1) and
-   q = ((-1)^k . (2k+1)!) for k from 0 to n-1, where n = (floor (car a) 2).
+   q = ((-1)^k . (2k+1)!) for k from 0 to n-1, where n = 1+(floor (car a) 2).
 
    Each dotted pair q represents a coefficient of the Taylor polynomial
    by (/ (car q) (cdr q)), and p represents the exponent by (/ (car p) (cdr p)).
@@ -95,7 +92,7 @@
    The second argument `b` is required by a general scheme used by many
    functions, but not by sinc, so we ignore `b`."
   (declare (ignore b))
-  (let ((ord (floor (car a) 2)) (cfs nil) (w 1) (sgn 1))
+  (let ((ord (+ 1 (floor (car a) 2))) (cfs nil) (w 1) (sgn 1))
     (dotimes (k ord)
       (let* ((k2 (* 2 k))
              (p  (cons k2 1))

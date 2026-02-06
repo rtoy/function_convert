@@ -42,7 +42,7 @@ block([numer:true], sinc(2 + 3*%i));
 block([numer:true], float(sinc(0.0)));
 1.0$
 
-/* binary 64 subnormals -- the next two test fail using Clozure (this Clozure bug has been reporteds) */
+/* binary 64 subnormals -- the next two tests fail using Clozure (this Clozure bug has been reported) */
 sinc(0.5000001*2.0^(-1075));
 1.0$
 
@@ -79,14 +79,20 @@ sinc(2*n*%pi + %pi/3);
 /* Taylor polynomials -------------------- */
 
 taylor(sinc(x), x, 0, 6);
-1-x^2/6+x^4/120$
+1-x^2/6+x^4/120-x^6/5040$
 
 taylor(sinc(x), x, %pi/2, 3);
 2/%pi-(4*(x-%pi/2))/%pi^2-((%pi^2-8)*(x-%pi/2)^2)/%pi^3+((2*%pi^2-16)*(x-%pi/2)^3)/%pi^4$
 
+taylor(sinc(a*x) - sin(a*x)/(a*x),x,0,8);
+0$
+
 /* test taylorize */
 sinc(taylor(x+x^2,x,0,5));
-1-x^2/6-x^3/3-x^4/6$
+1-x^2/6-x^3/3-(19*x^4)/120+x^5/30$
+
+sinc(taylor(x+x^2,x,0,5)) - taylor(sinc(x+x^2),x,0,5);
+0$
 
 /* limits */
 
@@ -114,6 +120,9 @@ ind$
 /* derivatives */
 diff(sinc(x), x);
 (cos(x)-sinc(x))/x$
+
+ratsimp(subst(sinc(x) = sin(x)/x, diff(sinc(x) - sin(x)/x,x)));
+0$
 
 diff(sinc(x), x, 2);
 (-((cos(x)-sinc(x))/x)-sin(x))/x-(cos(x)-sinc(x))/x^2$
