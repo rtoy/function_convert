@@ -3,10 +3,10 @@
 <!-- Created by GNU Texinfo 6.8, https://www.gnu.org/software/texinfo/ -->
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>Function sinc</title>
+<title>The sinc function</title>
 
-<meta name="description" content="Function sinc">
-<meta name="keywords" content="Function sinc">
+<meta name="description" content="The sinc function">
+<meta name="keywords" content="The sinc function">
 <meta name="resource-type" content="document">
 <meta name="distribution" content="global">
 <meta name="Generator" content="makeinfo">
@@ -36,22 +36,23 @@ ul.no-bullet {list-style: none}
 </head>
 
 <body lang="en">
-<h1 class="settitle" align="center">Function sinc</h1>
+<h1 class="settitle" align="center">The sinc function</h1>
 <div class="top" id="Function-sinc">
 <h1 class="top">Function sinc</h1>
 
 <dl class="def">
-<dt id="index-sinc"><span class="category">Function: </span><span><strong>sinc</strong> <em><var>x</var></em><a href='#index-sinc' class='copiable-anchor'> &para;</a></span></dt>
+<dt id="index-sinc_0028x_0029"><span class="category">Function: </span><span><strong>sinc(<var>x</var>)</strong><a href='#index-sinc_0028x_0029' class='copiable-anchor'> &para;</a></span></dt>
 <dd>
 <p>The function <code>sinc</code> is defined by <code>sinc(x) = sin(x)/x</code> for <code><var>x</var> ≠ 0</code>, and by <code>sinc(0) = 1</code>, 
-so that <code>sinc</code> is continuous at zero. This is sometimes called the <em>unnormalized</em> <code>sinc</code> function.
+making <code>sinc</code> continuous at zero. The definition used here is the <em>unnormalized</em> version of the <code>sinc</code>
+function.
 </p>
 <p>When <code>%piargs</code> is true (the default), <code>sinc(<var>x</var>)</code> evaluates to an exact value when <var>x</var> is an 
 explicit integer multiple of <code>pi</code>, <code>pi/4</code>, or <code>pi/6</code>. For other nonzero symbolic arguments, 
-<code>sinc</code> does not simplify to <code>sin(x)/x</code>.
+<code>sinc</code> does not simplify to <code>sin(x)/x</code>. 
 </p>
-<p>For real or complex floating‑point arguments (double or big floats), <code>sinc</code> returns a floating‑point 
-value in rectangular form. When <code>numer</code> is true, <code>sinc</code> returns a floating‑point value in rectangular 
+<p>For real or complex floating-point arguments (double or big floats), <code>sinc</code> returns a floating-point 
+value in rectangular form. When <code>numer</code> is true, <code>sinc</code> returns a floating-point value in rectangular 
 form for all numeric arguments.
 </p>
 <div class="example">
