@@ -7,13 +7,13 @@
   (cond ((mnump e) t)
         ((or (mplusp e) (mtimesp e) (mexptp e)) (every #'pure-constant-p (cdr e)))))
 
-
-;; Claim: sin(x)/x is numerically safe in IEEE floats including subnormals. It is also
-;; numerically safe for bigfloats. Special casing small nonzero inputs is not needed.
+;; For IEEE floats, sin(x)/x is numerically safe for numerical evaluation including
+;; subnormals. It is also numerically safe for bigfloats. Special casing small nonzero
+;; inputs is not needed.
 (defun sinc-float (x)
  "Evaluate sinc(x) for float, bigfloat, or complex float or bigfloat input. When $numer 
- is true, all numeric inputs are coerced to IEEE floats. Exception: for the special case of x=0, 
- return 1 when $numer is false, otherwise, return 1.0."
+ is true, all numeric inputs are coerced to IEEE floats. Exception: for x = 0, return an 
+ exact 1 when $numer is false; otherwise return an IEEE float 1.0."
   (cond
     ;; Special case: sinc(0); return one of the proper type
     ((zerop1 x)
@@ -34,14 +34,11 @@
           ;; This test only checks whether floating evaluation is possible.
           (cond
             ((not (or (float-or-bigfloat-p re) (float-or-bigfloat-p im))) nil)
-            ;; real case--avoid complex number division. When x is a bigfloat, can't do (/ sin x) x)
-            ((zerop1 im) (let ((z (bigfloat::to re))) 
-                (maxima::to (bigfloat::/ (bigfloat::sin z) z))))
-            ;; do floating-point complex evaluation; there is 
-            ;; no bigfloat::sinc. Maybe there should be, till then:
             (t
-             (let ((z (bigfloat::to re im)))
-               (maxima::to (bigfloat::/ (bigfloat::sin z) z)))))))))))
+             (let ((z (if (zerop1 im)
+                             (bigfloat::to re) ; real case: no complex number division
+                             (bigfloat::to re im))))
+                 (maxima::to (bigfloat::/ (bigfloat::sin z) z)))))))))))
 
 (def-simplifier sinc (x) 
    (cond ((zerop1 x) (sinc-float x))
