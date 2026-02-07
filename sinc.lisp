@@ -7,19 +7,19 @@
   (cond ((mnump e) t)
         ((or (mplusp e) (mtimesp e) (mexptp e)) (every #'pure-constant-p (cdr e)))))
 
-;; For subnormal number, computing sin(x)/x directly seems to work OK. If that's
-;; not true, we should trap for them and use a Taylor polynomial.
+
+;; Claim: sin(x)/x is numerically safe in IEEE floats including subnormals. It is also
+;; numerically safe for bigfloats. Special casing small nonzero inputs is not needed.
 (defun sinc-float (x)
- "Evaluate sinc(x) for float, bigfloat, or complex float or bigfloat input.
-  Return nil when x is not one of these types of numbers. Exceptions:
-    (a) when x = 0, return 1 even when $numer is false
-    (b) when $numer is true and x is a mnump number or a complex mnump number, convert x to
-    an IEEE float and perform floating‑point evaluation."
+ "Evaluate sinc(x) for float, bigfloat, or complex float or bigfloat input. When $numer 
+ is true, all numeric inputs are coerced to IEEE floats. Exception: for the special case of x=0, 
+ return 1 when $numer is false, otherwise, return 1.0."
   (cond
-    ;; Special case: sinc(0)
+    ;; Special case: sinc(0); return one of the proper type
     ((zerop1 x)
-       (if $numer 1.0
-           (add 1 x))) ; the add 1 makes sinc(0.0) = 1.0 (not 1) and sinc(0.0b0) = 1.0b0 (not 1)
+       (cond ((or (floatp x) $numer) 1.0) ; yes: block([numer:true], sinc(0.0b0)= 1.0 (not 1.0b0)
+             (($bfloatp x) *bigfloatone*)
+             (t 1)))
     (t
      (multiple-value-bind (flag re im)
          (complex-number-p x #'mnump)
@@ -30,7 +30,8 @@
           (when $numer
             (setq re ($float re)
                   im ($float im)))
-          ;; If neither part is float or bigfloat, cannot evaluate: return nil
+          ;; At this point, re and im are guaranteed to be mnump numbers (by complex-number-p).
+          ;; This test only checks whether floating evaluation is possible.
           (cond
             ((not (or (float-or-bigfloat-p re) (float-or-bigfloat-p im))) nil)
             ;; real case--avoid complex number division. When x is a bigfloat, can't do (/ sin x) x)

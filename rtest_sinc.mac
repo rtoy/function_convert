@@ -53,6 +53,12 @@ sinc(expand(0.5000001*2.0^(-1075) * (1+%i)));
 sinc(1.2 + 3.5b0*%i);
 2.886489912329489b0-3.423637846717706b0*%i$
 
+sinc(0.0b0);
+1.0b0$
+
+block([numer : true], sinc(0.0b0));
+1.0$
+
 /* reflection */
 sinc(-x) - sinc(x);
 0$
