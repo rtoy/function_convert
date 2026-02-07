@@ -48,7 +48,8 @@
           (let* ((z (ftake '%sin x)))
               (cond 
                  ;; When sin(x) is a pure constant and x is not zero, return sin(x)/x.
-                 ((and z (pure-constant-p z) (eq t (mnqp 0 x)))  (div z x)) 
+                 ;; Here we know that x is not a float or a complex float.
+                 ((and z (pure-constant-p z) (eq t (mnqp 0 x))) (div z x)) 
                  ;; even reflection rule: sinc(-x) = sinc(x)
                  ((great (neg x) x) (ftake '%sinc (neg x))) 
                  ;; sinc nounform return
