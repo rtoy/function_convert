@@ -16,7 +16,7 @@ explicit integer multiple of @code{pi}, @code{pi/4}, or @code{pi/6}. For other n
 
 For real or complex floating-point arguments (double or big floats), @code{sinc} returns a floating-point 
 value in rectangular form. When @code{numer} is true, @code{sinc} returns a floating-point value in rectangular 
-form for all numeric arguments.
+form for all numeric arguments, including big floats.
 
 @example
 (%i1) sinc(%pi);
@@ -33,8 +33,11 @@ form for all numeric arguments.
 (%i5) sinc(1 + 5*%i);
 (%o5) sinc(5 %i + 1)
 
-(%i6) sinc(1 + 5*%i),numer;
+(%i6) sinc(1 + 5*%i), numer;
 (%o6) 10.111782590680328 - 10.466747175403242 %i
+
+(%i7) sinc(1.2b0 + 5.6b0*%i), numer;
+(%o7) 12.975676863468044 - 19.724089614291696 %
 
 @end example
 @end deffn
