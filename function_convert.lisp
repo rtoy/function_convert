@@ -65,8 +65,8 @@
 (defparameter *converter-class-table*
   '((:trig        . (%sin %cos %tan %sec %csc %cot))
     (:hyperbolic  . (%sinh %cosh %tanh %sech %csch %coth))
-    (:inv-trig    . (%asin %acos %atan %asec %acsc %acot))
-    (:inv-hyperbolic . (%asinh %acosh %atanh %asech %acsch %acoth))
+    (:inv_trig    . (%asin %acos %atan %asec %acsc %acot))
+    (:inv_hyperbolic . (%asinh %acosh %atanh %asech %acsch %acoth))
     (:exp            . (mexpt))
     (:logarithmic . (%log)))
   "Mapping from class keys to lists of operator symbols.")
@@ -589,7 +589,7 @@ compared using `alike`."
 (define-function-converter (:hyperbolic $exp) (op x)
   ($exponentialize (fapply op x)))
 
-(define-function-converter (:inverse-trig $log) (op x)
+(define-function-converter (:inverse_trig $log) (op x)
   ($logarc (fapply op x)))
 
 (define-function-converter (:exp :trig) (op x)

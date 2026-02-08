@@ -1,0 +1,12 @@
+cd /mnt/c/Users/barto/OneDrive/Documents/GitHub/sinc/function_convert 
+
+Either:
+
+makeinfo function_convert.texi
+makeinfo --html --no-split function_convert.texi
+
+m4 sinc.texi.m4 > sinc.texi
+makeinfo --html sinc.texi
+makeinfo --pdf sinc.texi
+
+sudo apt install texlive texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-plain-generic

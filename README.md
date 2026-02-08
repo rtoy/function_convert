@@ -74,6 +74,14 @@ A conversion rule has the form `f = g` where:
 - `g` is either a target function (using a built-in identity) or a lambda expression 
 
 The operator `=` indicates a semantic conversion, not a literal renaming. The operator `=` has no evaluation or simplification rule of its own; it is purely notational.
+The source function can either be a specific function, such as `cos` or it can be a class of functions, such as `trig`, for the set of all trigonometric functions.
+The defined classes of functions are
+
+ - `trig`:  `sin, cos, tan, sec, csc, cot`
+ - `hyperbolic`: `sinh, cosh, tanh, sech, csch, coth`
+ - `inv_trig` :  `asin, acos, atan, asec, acsc, acot`
+ - `inv_hyperbolic`: `asinh, acosh, atanh, asech, acsch, acoth`
+ - `logarithmic` : `log`
 
 ## Error Checking
 
