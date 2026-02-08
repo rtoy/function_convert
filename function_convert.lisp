@@ -308,42 +308,6 @@ stores the reverse mapping via REGISTER-CONVERTER-REVERSE-ALIAS."
     (div (ftake '%sin z)
          (ftake '%cos z))))
 
-(define-function-converter (%sin %exp) (op x)
-  "Convert sin(x) to exponential form."
-  (declare (ignore op))
-  (let ((z (car x)))
-    (div
-      (sub (ftake '%exp (mul '$%i z))
-           (ftake '%exp (mul (neg '$%i) z)))
-      (mul 2 '$%i))))
-
-(define-function-converter (%cos %exp) (op x)
-"Convert cos(x) to exponential form."
- (declare (ignore op))
-  (let ((z (car x)))
-    (div
-      (add (ftake '%exp (mul '$%i z))
-           (ftake '%exp (mul (neg '$%i) z)))
-      2)))
-
-(define-function-converter (%sinh %exp) (op x)
-"Convert sinh(x) to exponential form."
-  (declare (ignore op))
-  (let ((z (car x)))
-    (div
-      (sub (ftake '%exp z)
-           (ftake '%exp (neg z)))
-      2)))
-
-(define-function-converter (%cosh %exp) (op x)
-"Convert cosh(x) to exponential form."
-  (declare (ignore op))
-  (let ((z (car x)))
-    (div
-      (add (ftake '%exp z)
-           (ftake '%exp (neg z)))
-      2)))
-
 ;; tanh → sinh/cosh
 (define-function-converter (%tanh %sinh) (op x)
 "Convert tanh(x) to sinh(x)/cosh(x)."
@@ -582,11 +546,11 @@ compared using `alike`."
       (%cot (div (ftake '%cos z) (ftake '%sin z)))
       (t (ftake op z)))))
 
-(define-function-converter (:trig $exp) (op x)
+(define-function-converter (:trig %exp) (op x)
  "Convert all trigonometric functions to exponential form."
   ($exponentialize (fapply op x)))
 
-(define-function-converter (:hyperbolic $exp) (op x)
+(define-function-converter (:hyperbolic %exp) (op x)
   ($exponentialize (fapply op x)))
 
 (define-function-converter (:inverse_trig $log) (op x)

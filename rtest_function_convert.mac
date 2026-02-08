@@ -133,3 +133,25 @@ function_convert('gamma_incomplete = 'expand, gamma_incomplete(0,x));
 function_convert('gamma = 'sin, gamma(X)*gamma(1-X)*a*b*X  < 42);
 (%pi*X*a*b)/sin(%pi*X) < 42$
 
+/* exponentialize */
+ans : function_convert(hyperbolic = exp, [cosh(x), sinh(x), tanh(x), sech(x), csch(x), coth(x)]);
+[(%e^x+%e^-x)/2,(%e^x-%e^-x)/2,(%e^x-%e^-x)/(%e^x+%e^-x), 2/(%e^x+%e^-x),2/(%e^x-%e^-x),(%e^x+%e^-x)/(%e^x-%e^-x)]$
+
+block([listarith : true], exponentialize(ans -[cosh(x), sinh(x), tanh(x), sech(x), csch(x), coth(x)]));
+ [0,0,0,0,0,0]$
+
+ ans : function_convert(trig = exp, [cos(x), sin(x), tan(x), sec(x), csc(x), cot(x)]);
+ [(%e^(%i*x)+%e^-(%i*x))/2,-(((%e^(%i*x)-%e^-(%i*x))*%i)/2),
+        -(((%e^(%i*x)-%e^-(%i*x))*%i)/(%e^(%i*x)+%e^-(%i*x))),
+        2/(%e^(%i*x)+%e^-(%i*x)),(2*%i)/(%e^(%i*x)-%e^-(%i*x)),
+        ((%e^(%i*x)+%e^-(%i*x))*%i)/(%e^(%i*x)-%e^-(%i*x))]$
+
+block([listarith : true], exponentialize(ans -[cos(x), sin(x), tan(x), sec(x), csc(x), cot(x)]));
+ [0,0,0,0,0,0]$
+
+ (remvalue(ans),0);
+ 0$
+
+
+
+
