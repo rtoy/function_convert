@@ -68,6 +68,7 @@
     (:inv_trig    . (%asin %acos %atan %asec %acsc %acot))
     (:inv_hyperbolic . (%asinh %acosh %atanh %asech %acsch %acoth))
     (:exp            . (mexpt))
+    (:gamma_like     . (%gamma %beta %binomial %double_factorial mfactorial $pochhammer))
     (:logarithmic . (%log)))
   "Mapping from class keys to lists of operator symbols.")
 
@@ -623,6 +624,9 @@ unchanged.
                   (mul 2 u)))
       (t    (ftake op z)))))
 
+(define-function-converter (:gamma_like %gamma) (op x)
+  ($makegamma (fapply op x)))
+  
 ;;  missing: 
 ;;   (a) Beta function => gamma
 ;;   (b) inverse trig => log
