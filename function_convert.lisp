@@ -69,6 +69,8 @@
     (:inv_hyperbolic . (%asinh %acosh %atanh %asech %acsch %acoth))
     (:exp            . (mexpt))
     (:gamma_like     . (%gamma %beta %binomial %double_factorial mfactorial $pochhammer))
+    (:bessel  . (%bessel_j %bessel_y %bessel_i %bessel_k %hankel_1 %hankel_2 %airy_ai %airy_bi 
+                 %airy_dai %airy_dbi ))
     (:logarithmic . (%log)))
   "Mapping from class keys to lists of operator symbols.")
 
@@ -467,20 +469,6 @@ is first degree polynomial in %pi."
 ;; that involve a specified varible. Here we want to gather all such arguments. The version has
 ;; predicate for final argument that can be used to exclude arguments. The default for this 
 ;; predicate is x |-> true. Possibly, this function could replace gather-args-of.
-(defun xgather-args-of (e fn &optional (pred #'(lambda (q) (declare (ignore q)) t)))
-  (cond
-    (($mapatom e)  nil)
-    (t
-     (let* ((subresults
-             (reduce #'append (mapcar #'(lambda (q) (xgather-args-of q fn pred)) (cdr e)) :initial-value nil))
-            (head
-             (and (consp e)
-                  (consp (car e))
-                  (eq fn (caar e))
-                  (funcall pred e)
-                  (cdr e))))
-       (remove-duplicates (append head subresults) :test #'alike)))))
-
 (defun xgather-args-of (e fn &optional
                            (pred #'(lambda (q) (declare (ignore q)) t))
                            (max-depth nil)
@@ -626,7 +614,7 @@ unchanged.
 
 (define-function-converter (:gamma_like %gamma) (op x)
   ($makegamma (fapply op x)))
-  
+
 ;;  missing: 
 ;;   (a) Beta function => gamma
 ;;   (b) inverse trig => log
