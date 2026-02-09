@@ -168,11 +168,7 @@ Finally, the package has at least one built-in rule that is difficult to fully d
 
 ```
 
-## History
 
-Initially, the aim of this project was to add a `sinc` function to Maxima. That led to the question of converting expressions from `sinc` form to trigonometric form. I realized that with only a bit more work, the conversion utility could be made much more broadly useful.
-
-For historical reasons only, the original `sinc` package still resides in this repository.
 
 ## To Do
 
@@ -182,10 +178,8 @@ For historical reasons only, the original `sinc` package still resides in this r
 - [ ] regression tests for `function_convert`
 - [x] texinfo documentation for `function_convert` (at least a good start)
 - [x] decide if the converter(s) are first `function_convert(f = g,expr)` or last `function_convert(expr, f = g)`
-- [x] texinfo documentation for `sinc`
-- [x] regression tests for `sinc`
-- [x] TeX support for `sinc`
-- [x] Update README.md to reflect the change from "=" to "=".
+- [x] Update README.md to reflect the change from "=" to 
+- [x] Remove the sinc package from this repo & commit it to Maxima
 
 
 
