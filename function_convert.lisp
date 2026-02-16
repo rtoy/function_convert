@@ -69,8 +69,8 @@
     (:inv_hyperbolic . (%asinh %acosh %atanh %asech %acsch %acoth))
     (:exp            . (mexpt))
     (:gamma_like     . (%gamma %beta %binomial %double_factorial mfactorial $pochhammer))
-    (:bessel  . (%bessel_j %bessel_y %bessel_i %bessel_k %hankel_1 %hankel_2 %airy_ai %airy_bi 
-                 %airy_dai %airy_dbi ))
+    (:bessel  . (%bessel_j %bessel_y %bessel_i %bessel_k %hankel_1 %hankel_2 %airy_ai %airy_bi %airy_dai %airy_dbi ))
+    (:algebraic . (mplus mtimes mexpt))
     (:logarithmic . (%log)))
   "Mapping from class keys to lists of operator symbols.")
 
@@ -544,13 +544,17 @@ compared using `alike`."
        (remove-duplicates (append head subresults) :test #'alike)))))
 |#
 
+(defmfun $larry (e)
+  (let ((ll (xgather-args-of e 'mexpt)))
+    (fapply 'mlist (mapcar #'(lambda (q) (fapply 'mlist q)) ll))))
+
 (defun xgather-args-of (e fn)
    (cond (($mapatom e) nil)        
          ((eq fn (caar e)) (list (cdr e)))
           (t 
         	(remove-duplicates (reduce #'append 
 			 (mapcar #'(lambda (q) 
-			     (xgather-args-of q fn)) (cdr e))) :test #'alike1))))
+			     (xgather-args-of q fn)) (cdr e))) :test #'alike))))
            
 ;; Experimental converter for gamma(X)*gamma(1-X) => pi/(sin(pi X)). This must dispatch
 ;; on a product, not on gamma--this is likely confusing for a user. So we give the 
@@ -669,22 +673,25 @@ unchanged.
 (define-function-converter (:gamma_like %gamma) (op x)
   ($makegamma (fapply op x)))
 
-(define-function-converter ((mplus $hyperbolic) (%exp %hyperbolic)) (op x)
-  (declare (ignore op))
-  (setq x (fapply 'mplus x))
+(define-function-converter ((:algebraic $hyperbolic) (%exp %hyperbolic)) (op x)
+ 
+  (setq x (fapply op x))
+;(mtell "Yep: x = ~M ~%" x)
   (let ((ll (xgather-args-of x 'mexpt)) (g (gensym)))
     (dolist (lx ll)
       (when (eq '$%e (first lx))
         (let* ((z (second lx)) (ch (ftake '%cosh z)) (sh (ftake '%sinh z)) (ex (ftake 'mexpt '$%e z)) (xx) (yy))
           (setq xx ($ratsubst g ex x))
           (setq xx ($expand ($partfrac xx g) 1 1))
-          (setq yy ($ratsubst ch (add g (div 1 g)) xx)) ; g + 1/g = ch
+          (setq yy ($ratsubst (mul 2 ch) (add g (div 1 g)) xx)) ; g + 1/g =2 ch
+          ;(mtell "yy = ~M ~%" yy)
           (cond ((freeof g yy)
                   (setq x yy))
                 (t
-                  (setq xx ($ratsubst sh (sub g (div 1 g)) xx)) ; g - 1/g = sh
+                  (setq xx ($ratsubst (mul 2 sh) (sub g (div 1 g)) xx)) ; g - 1/g = 2 sh
                   (when (freeof g xx)
                      (setq x xx)))))))
+;(mtell "leaving: x = ~M ~%" x)
     x))
                 
                
