@@ -1,0 +1,54 @@
+This is sinc.info, produced by makeinfo version 6.8 from sinc.texi.
+
+
+File: sinc.info,  Node: sinc
+
+1 The sinc Function
+===================
+
+ -- Function: sinc X
+
+     The function 'sinc' is defined by 'sinc(x) = sin(x)/x' for 'X ≠ 0',
+     and by 'sinc(0) = 1', making 'sinc' continuous at zero.  The
+     definition used here is the _unnormalized_ version of the 'sinc'
+     function.
+
+     When '%piargs' is true (the default), 'sinc(X)' evaluates to an
+     exact value when X is an explicit integer multiple of 'pi', 'pi/4',
+     or 'pi/6'.  For other nonzero symbolic arguments, 'sinc' does not
+     simplify to 'sin(x)/x'.
+
+     For real or complex floating-point arguments (double or big
+     floats), 'sinc' returns a floating-point value in rectangular form.
+     When 'numer' is true, 'sinc' returns a floating-point value in
+     rectangular form for all numeric arguments.
+
+          (%i1) sinc(%pi);
+          (%o1) 0
+
+          (%i2) %piargs : false$
+
+          (%i3) sinc(pi);
+          (%o3) sinc(%pi)
+
+          (%i4) sinc(1.0 + 5.0*%i);
+          (%o4) 10.111782590680328 - 10.466747175403242 %i
+
+          (%i5) sinc(1 + 5*%i);
+          (%o5) sinc(5 %i + 1)
+
+          (%i6) sinc(1 + 5*%i),numer;
+          (%o6) 10.111782590680328 - 10.466747175403242 %i
+
+
+
+
+Tag Table:
+Node: sinc69
+
+End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

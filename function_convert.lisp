@@ -469,6 +469,7 @@ is first degree polynomial in %pi."
 ;; that involve a specified varible. Here we want to gather all such arguments. The version has
 ;; predicate for final argument that can be used to exclude arguments. The default for this 
 ;; predicate is x |-> true. Possibly, this function could replace gather-args-of.
+#| 
 (defun xgather-args-of (e fn &optional
                            (pred #'(lambda (q) (declare (ignore q)) t))
                            (max-depth nil)
@@ -495,9 +496,18 @@ compared using `alike`."
                   (consp (car e))
                   (eq fn (caar e))
                   (funcall pred e)
-                  (cdr e))))
+                  (list (cdr e)))))
        (remove-duplicates (append head subresults) :test #'alike)))))
+|#
 
+(defun xgather-args-of (e fn)
+   (cond (($mapatom e) nil)        
+         ((eq fn (caar e)) (list (cdr e)))
+          (t 
+        	(remove-duplicates (reduce #'append 
+			 (mapcar #'(lambda (q) 
+			     (xgather-args-of q fn)) (cdr e))) :test #'alike1))))
+           
 ;; Experimental converter for gamma(X)*gamma(1-X) => pi/(sin(pi X)). This must dispatch
 ;; on a product, not on gamma--this is likely confusing for a user. So we give the 
 ;; converter an alias of (%gamma %sin). So function_convert(gamma = sin, gamma(X)*gamma(1-X)*a*b*X = 42)
@@ -505,7 +515,7 @@ compared using `alike`."
 (define-function-converter ((mtimes %sin) (%gamma %sin)) (op x)
   (declare (ignore op))
   (flet ((gamma-p (s) (and (consp s) (eq (caar s) '%gamma))))
-     (let* ((e (fapply 'mtimes x)) (ll (fapply '$set (xgather-args-of e '%gamma))) (ee))
+     (let* ((e (fapply 'mtimes x)) (ll (fapply '$set (mapcar #'first (xgather-args-of e '%gamma)))) (ee))
       (setq ll ($equiv_classes ll #'(lambda (a b) (eql 1 (add a b)))))
       (setq ll (cdr ll))
         (dolist (lx ll)
@@ -614,6 +624,31 @@ unchanged.
 
 (define-function-converter (:gamma_like %gamma) (op x)
   ($makegamma (fapply op x)))
+
+(define-function-converter ((mplus $hyperbolic) (%exp %hyperbolic)) (op x)
+  (declare (ignore op))
+  (setq x (fapply 'mplus x))
+  (let ((ll (xgather-args-of x 'mexpt)) (g (gensym)))
+    (dolist (lx ll)
+      (when (eq '$%e (first lx))
+        (let* ((z (second lx)) (ch (ftake '%cosh z)) (sh (ftake '%sinh z)) (ex (ftake 'mexpt '$%e z)) (xx) (yy))
+          (setq xx ($ratsubst g ex x))
+          (setq xx ($expand ($partfrac xx g) 1 1))
+          (setq yy ($ratsubst ch (add g (div 1 g)) xx)) ; g + 1/g = ch
+          (cond ((freeof g yy)
+                  (setq x yy))
+                (t
+                  (setq xx ($ratsubst sh (sub g (div 1 g)) xx)) ; g - 1/g = sh
+                  (when (freeof g xx)
+                     (setq x xx)))))))
+    x))
+                
+               
+                
+          
+  
+    
+
 
 ;;  missing: 
 ;;   (a) Beta function => gamma

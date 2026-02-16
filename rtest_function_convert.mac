@@ -152,6 +152,23 @@ block([listarith : true], exponentialize(ans -[cos(x), sin(x), tan(x), sec(x), c
  (remvalue(ans),0);
  0$
 
+ /* class:  gamma_like */
+function_convert('gamma_like = 'gamma,[gamma(x), pochhammer(x,n), beta(x,y), binomial(x,y)]);
+[gamma(x),gamma(x+n)/gamma(x),(gamma(x)*gamma(y))/gamma(y+x), gamma(x+1)/(gamma(-y+x+1)*gamma(y+1))]$
+
+
+/* exp to hyperbolic */
+function_convert(exp = hyperbolic, 107 + 28*exp(1/x) - 28*exp(-1/x));
+28*sinh(1/x) + 107$
+
+function_convert(exp = hyperbolic, 107 + 28*exp(1/x) + 28*exp(-1/x));
+28*cosh(1/x) + 107$
+
+function_convert(exp = hyperbolic, exp(x) - 5*exp(-x));
+%e^x-5*%e^-x$
+
+
+
 
 
 
