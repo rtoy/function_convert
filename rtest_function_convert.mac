@@ -167,7 +167,12 @@ function_convert(exp = hyperbolic, 107 + 28*exp(1/x) + 28*exp(-1/x));
 function_convert(exp = hyperbolic, exp(x) - 5*exp(-x));
 %e^x-5*%e^-x$
 
+function_convert(exp = hyperbolic, exponentialize(tanh(x)));
+sinh(x)/cosh(x)$
 
+
+function_convert(exp = hyperbolic, ratsimp(exponentialize(tanh(x))));
+sinh(x)/cosh(x)$
 
 
 
