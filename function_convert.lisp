@@ -152,7 +152,9 @@ Each entry has the form:
     acc))
 
 (defmfun $list_converters (&rest names)
-  (let* ((normalized (mapcar #'$nounify names)) (results nil))
+  (let* ((normalized (mapcar #'$nounify names))
+         (results nil)
+         ($lispdisp nil))
     (dolist (entry (list-converters))
       (destructuring-bind ((from . to) fn doc) entry
         (declare (ignore fn))
@@ -160,7 +162,49 @@ Each entry has the form:
             (lookup-converter-reverse-alias from to)
           (when (or (endp names)
                     (member ($nounify from-alias) normalized  :test #'equal))
-            (mtell "~M ~M ~M : ~M ~%" from-alias *function-convert-infix-op* to-alias doc)
+            (labels
+                ((stringify (s)
+                   ;; Convert a Maxima symbol to a string.  Using
+                   ;; aformat works except it always seems to append a
+                   ;; newline.  Remove that before returning the
+                   ;; result.
+                   (string-right-trim '(#\newline)
+                                      (aformat nil "~M" s)))
+                 (stringify-op (op)
+                   ;; Convert the function converter op to something printable.
+                   (case op
+                     (mequal "=")
+                     (t
+                      ;; Hope this does something sensible.
+                      (stringify op)))))
+              (cond ((zerop (count #\newline doc))
+                     ;; One line in the docstring.  Try to wrap
+                     ;; everything neatly.  The fancy ~{ part is
+                     ;; stolen from PRINT-HELP-STRING.
+                     (format t "~A ~A ~A : ~{~<~%    ~1,80:; ~A~>~^~}~%"
+                             (stringify from-alias)
+                             (stringify-op *function-convert-infix-op*)
+                             (stringify to-alias)
+                             (pregexp::pregexp-split "\\s+" (or doc ""))))
+                    (t
+                     ;; More than one line.
+                     (format t "~A ~A ~A :"
+                             (stringify from-alias)
+                             (stringify-op *function-convert-infix-op*)
+                             (stringify to-alias))
+                     ;; Some docstrings have a newline but don't start
+                     ;; with a newline.  Force a newline in this case.
+                     (when (char/= #\newline (aref doc 0))
+                       (terpri))
+                     ;; Print each line of the docstring indented by
+                     ;; INDENT spaces.
+                     (let ((indent 4))
+                       (do* ((start 0 (1+ end))
+                             (end (position #\newline doc :start start)
+                                  (position #\newline doc :start start)))
+                            ((null end)
+                             (format t "~VT~A~%" indent (subseq doc start)))
+                         (format t "~VT~A~%" indent (subseq doc start end)))))))
             ;; Accumulate a Maxima-style list entry
             (push (ftake *function-convert-infix-op* from-alias to-alias) results)))))
     ;; Return results in sorted order
