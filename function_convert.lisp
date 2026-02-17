@@ -71,6 +71,7 @@
     (:gamma_like     . (%gamma %beta %binomial %double_factorial mfactorial $pochhammer))
     (:bessel  . (%bessel_j %bessel_y %bessel_i %bessel_k %hankel_1 %hankel_2 %airy_ai %airy_bi %airy_dai %airy_dbi ))
     (:algebraic . (mplus mtimes mexpt))
+    (:inequation . (mequal mlessp mleqp mnotequal mgreaterp mgeqp $notequal $equal))
     (:logarithmic . (%log)))
   "Mapping from class keys to lists of operator symbols.")
 
@@ -699,11 +700,13 @@ unchanged.
                 ((freeof g cc) (setq x cc))
                 ((freeof g dd) (setq x dd))))))
     (resimplify x)))
-                
-               
-                
           
-  
+  ;; inequations:
+
+  (define-function-converter (:inequation $zero_lhs) (op x)
+  "Normalize an inequation `a op b` to `a - b op 0.`"
+    (let ((a (first x)) (b (second x)))
+        (ftake op ($expand ($factor (sub a b)) 0 0) 0)))
     
 
 

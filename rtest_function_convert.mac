@@ -178,3 +178,22 @@ sinh(x)/cosh(x)$
 
 function_convert(exp = hyperbolic, ratsimp(exponentialize(tanh(x))));
 tanh(x)$
+
+/* inequations */
+function_convert('inequation = 'zero_lhs, [a=b, a<b, a<=b, a>b, a>=b, a#b, equal(a,b), notequal(a,b)]);
+[-(b-a) = 0,-(b-a) < 0,-(b-a) <= 0,-(b-a) > 0,-(b-a) >= 0,-(b-a) # 0, equal(-(b-a),0),notequal(-(b-a),0)]$
+
+function_convert('inequation = 'zero_lhs, x^2 + 2*x = x*(x + 2));
+0 = 0$   /* both sides equal; a - b = 0 simplifies to 0 */
+
+function_convert('inequation = 'zero_lhs, sin(x) + sin(y) = 0);
+sin(x) + sin(y) = 0$
+
+function_convert('inequation = 'zero_lhs, a = a);
+0 = 0$
+
+function_convert('inequation = 'zero_lhs, a < a);
+0 < 0$
+
+function_convert('inequation = 'zero_lhs, a # a);
+0 # 0$
