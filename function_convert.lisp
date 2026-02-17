@@ -674,9 +674,7 @@ unchanged.
   ($makegamma (fapply op x)))
 
 (define-function-converter ((:algebraic $hyperbolic) (%exp %hyperbolic)) (op x)
- 
   (setq x (fapply op x))
-;(mtell "Yep: x = ~M ~%" x)
   (let ((ll (xgather-args-of x 'mexpt)) (g (gensym)))
     (dolist (lx ll)
       (when (eq '$%e (first lx))
