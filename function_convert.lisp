@@ -680,19 +680,27 @@ unchanged.
   (let ((ll (xgather-args-of x 'mexpt)) (g (gensym)))
     (dolist (lx ll)
       (when (eq '$%e (first lx))
-        (let* ((z (second lx)) (ch (ftake '%cosh z)) (sh (ftake '%sinh z)) (ex (ftake 'mexpt '$%e z)) (xx) (yy))
+        (let* ((z (second lx)) 
+               (ch (ftake '%cosh z)) 
+               (sh (ftake '%sinh z))
+               (th (div (sub 1 (ftake '%tanh (div z 2))) 2)); th = (1 - tanh(z/2))/2
+               (coth (div (sub 1 (ftake '%coth (div z 2))) 2)); ch = (1 - coth(z/2))/2
+               (ex (ftake 'mexpt '$%e z)) 
+               (xx) (aa) (bb) (cc) (dd))
           (setq xx ($ratsubst g ex x))
           (setq xx ($expand ($partfrac xx g) 1 1))
-          (setq yy ($ratsubst (mul 2 ch) (add g (div 1 g)) xx)) ; g + 1/g =2 ch
-          ;(mtell "yy = ~M ~%" yy)
-          (cond ((freeof g yy)
-                  (setq x yy))
-                (t
-                  (setq xx ($ratsubst (mul 2 sh) (sub g (div 1 g)) xx)) ; g - 1/g = 2 sh
-                  (when (freeof g xx)
-                     (setq x xx)))))))
-;(mtell "leaving: x = ~M ~%" x)
-    x))
+          (setq aa ($ratsubst (mul 2 ch) (add g (div 1 g)) xx)) ; g + 1/g = 2 ch
+          (setq bb ($ratsubst (mul 2 sh) (sub g (div 1 g)) xx)) ; g - 1/g = 2 sh
+          ;; Notice that ratsubst(th,1/(1+g),g) => -((th-1)/th). If we accepted this,
+          ;; we'd express too many exponentials in terms of tanh. So, we'll use
+          ;; maxima-substitute, not ratsubst.        
+          (setq cc (maxima-substitute th (div 1 (add 1 g)) xx)) ; 1/(1 + g) = th
+          (setq dd (maxima-substitute (neg coth) (div 1 (sub g 1)) xx)) ; 1/(1 - g) = ch
+          (cond ((freeof g aa) (setq x aa))
+                ((freeof g bb) (setq x bb))
+                ((freeof g cc) (setq x cc))
+                ((freeof g dd) (setq x dd))))))
+    (resimplify x)))
                 
                
                 

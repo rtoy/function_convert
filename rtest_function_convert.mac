@@ -158,11 +158,17 @@ function_convert('gamma_like = 'gamma,[gamma(x), pochhammer(x,n), beta(x,y), bin
 
 
 /* exp to hyperbolic */
+function_convert(exp = hyperbolic, exponentialize([cosh(x), sinh(x), tanh(x), sech(x), csch(x),coth(x)]));
+[cosh(x),sinh(x),sinh(x)/cosh(x),1/cosh(x),1/sinh(x),cosh(x)/sinh(x)]$
+
+function_convert(exp = hyperbolic, ratsimp(exponentialize([cosh(x), sinh(x), tanh(x), sech(x), csch(x),coth(x)])));
+[cosh(x),sinh(x),tanh(x),1/cosh(x),1/sinh(x),coth(x)]$
+
 function_convert(exp = hyperbolic, 107 + 28*exp(1/x) - 28*exp(-1/x));
-28*sinh(1/x) + 107$
+56*sinh(1/x)+107$
 
 function_convert(exp = hyperbolic, 107 + 28*exp(1/x) + 28*exp(-1/x));
-28*cosh(1/x) + 107$
+56*cosh(1/x)+107$
 
 function_convert(exp = hyperbolic, exp(x) - 5*exp(-x));
 %e^x-5*%e^-x$
@@ -170,10 +176,5 @@ function_convert(exp = hyperbolic, exp(x) - 5*exp(-x));
 function_convert(exp = hyperbolic, exponentialize(tanh(x)));
 sinh(x)/cosh(x)$
 
-
 function_convert(exp = hyperbolic, ratsimp(exponentialize(tanh(x))));
-sinh(x)/cosh(x)$
-
-
-
-
+tanh(x)$
