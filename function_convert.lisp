@@ -691,7 +691,7 @@ unchanged.
           (setq aa ($ratsubst (mul 2 ch) (add g (div 1 g)) xx)) ; g + 1/g = 2 ch
           (setq bb ($ratsubst (mul 2 sh) (sub g (div 1 g)) xx)) ; g - 1/g = 2 sh
           ;; Notice that ratsubst(th,1/(1+g),g) => -((th-1)/th). If we accepted this,
-          ;; we'd express too many exponentials in terms of tanh. So, we'll use
+          ;; we'd express to many exponentials in terms of tanh. So, we'll use
           ;; maxima-substitute, not ratsubst.        
           (setq cc (maxima-substitute th (div 1 (add 1 g)) xx)) ; 1/(1 + g) = th
           (setq dd (maxima-substitute (neg coth) (div 1 (sub g 1)) xx)) ; 1/(1 - g) = ch
@@ -699,15 +699,17 @@ unchanged.
                 ((freeof g bb) (setq x bb))
                 ((freeof g cc) (setq x cc))
                 ((freeof g dd) (setq x dd))))))
-    (resimplify x)))
+    ($trigreduce (resimplify x)))) ; trigreduce does sinh(x)/cosh(x) = tanh(x), for example.
           
   ;; inequations:
-  (define-function-converter (:inequation $zero_lhs) (op x)
-  "Normalize an inequation `a op b` to the zero‑LHS form `(a - b) op 0`."
+ (define-function-converter (:inequation $zero_lhs) (op x)
+  "Normalize an inequation `a op b` to the zero LHS form `(a - b) op 0`."
   (destructuring-bind (a b) x
     (ftake op (resimplify ($factor (sub a b))) 0)))
 
 
+  
+ 
 ;;  missing: 
 ;;   (a) Beta function => gamma
 ;;   (b) inverse trig => log
