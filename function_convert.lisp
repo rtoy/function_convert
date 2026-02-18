@@ -702,6 +702,33 @@ subexpression."
                (setq e ee))))
       e))
 
+;;;;;;;;;;;;;;;;;;;;
+(define-function-converter ((mtimes %binomial) (%gamma %binomial)) (op x)
+   "Rewrite products of gamma functions into a binomial coefficient when possible.
+This converter looks for subexpressions of the form
+    gamma(a+1) /(gamma(b+1)*gamma(a+1-b)
+and replaces them with binonl(a, b).  Only explicit occurrences of this
+three-factor pattern are transformed; the converter does not rewrite
+gamma(a) or gamma(b) individually, nor does it attempt to derive a
+binomial coefficient from expressions where the pattern is not present as an actual
+subexpression."
+  (let* ((e (fapply op x))
+         (ee)
+         (ll (mapcar #'car (xgather-args-of e '%gamma)))
+         (ga (gensym))
+         (gb (gensym))
+         (gc (gensym)))
+  
+      (dolist (a ll)
+         (dolist (b ll)        
+            (setq ee 
+               (maxima-substitute gc (ftake '%gamma (add 1 a (neg b)))
+                   (maxima-substitute gb (ftake '%gamma b)
+                      (maxima-substitute ga (ftake '%gamma a) e))))
+            (setq ee ($ratsubst (ftake '%binomial (sub a 1) (sub b 1)) (div ga (mul gb gc)) ee))
+            (when ($freeof ga gb gc ee)
+               (setq e ee))))
+      e))
 
 (define-function-converter ((:algebraic $hyperbolic) (%exp %hyperbolic)) (op x)
   (setq x (fapply op x))
