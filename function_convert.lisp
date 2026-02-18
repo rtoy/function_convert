@@ -75,7 +75,7 @@
     (:logarithmic . (%log)))
   "Mapping from class keys to lists of operator symbols.")
 
-; Look up the class key associated with a given operator symbol.
+;; Look up the class key associated with a given operator symbol.
 ;; This function performs the inverse query of *converter-class-table*:
 ;; given an operator such as %sin or %log, return the class keyword
 ;; (:trig, :logarithmic, etc.) whose operator list contains it.
@@ -338,11 +338,6 @@ stores the reverse mapping via REGISTER-CONVERTER-REVERSE-ALIAS."
   (let ((z (car x)))
     (mul z (ftake '%sinc z))))
 
-(define-function-converter (mfactorial %gamma) (op x)
- "Convert x! into gamma(1+x)."
-  (declare (ignore op))
-  (let ((z (car x))) (ftake '%gamma (add 1 z))))
-
 (define-function-converter (%csc %sin) (op x)
   "Convert csc(x) into 1/sin(x)."
    (declare (ignore op))
@@ -363,12 +358,6 @@ stores the reverse mapping via REGISTER-CONVERTER-REVERSE-ALIAS."
   (let ((z (car x)))
     (div (ftake '%sinh z)
          (ftake '%cosh z))))
-
-;; double_factorial → gamma
-(define-function-converter (%genfact %gamma) (op x)
-"Convert x!! to gamma form. Set `gamma_expand` to false."
-  (declare (ignore op))
-  (let ((a (car x)) (b (cadr x)) (c (caddr x))) ($makegamma (ftake '%genfact a b c))))
 
 (define-function-converter (%genfact $pochhammer) (op x)
   (declare (ignore op))
@@ -505,7 +494,7 @@ of signum(X); only explicit products matching that pattern are transformed."
     (div (add 1 (ftake '%signum z)) 2)))
 
 (define-function-converter (:trig $normalize_trig_argument) (op x)
- "Normalize the argument of a trigonometric functions when the argument
+ "Normalize the argument of trigonometric functions when the argument
 is first degree polynomial in %pi."
   (let ((z (car x))) 
     (cond
@@ -608,9 +597,11 @@ compared using `alike`."
   ($exponentialize (fapply op x)))
 
 (define-function-converter (:hyperbolic %exp) (op x)
+"Convert all hyperbolic functions to exponential form."
   ($exponentialize (fapply op x)))
 
 (define-function-converter (:inverse_trig $log) (op x)
+"Convert all inverse trigonometric functions to logarithmic form."
   ($logarc (fapply op x)))
 
 (define-function-converter (:exp :trig) (op x)

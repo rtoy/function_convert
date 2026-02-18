@@ -218,3 +218,16 @@ function_convert('signum = 'abs, 28*b*a^2*signum(a));
 
 function_convert(signum = abs, w+s*F(signum(s)*s));
 w+s*F(abs(s))$
+
+/* signum => hstep */
+function_convert(signum = hstep, signum(x));
+2*hstep(x)-1$
+
+/* hstep => signum */
+function_convert(hstep = signum, 2*hstep(x)-1);
+signum(x)$
+
+function_convert(signum = hstep,signum(x)-2*hstep(x));
+-1$
+
+
