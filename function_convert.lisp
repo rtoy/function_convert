@@ -61,7 +61,7 @@
 
 ;; The table *converter-class-table* allows for class-based dispatch of a single converter to 
 ;; handle families of functions such as trigonometric, hyperbolic, inverse trigonometric, 
-;; inverse hyperbolic, and logarithmic operators.
+;; inverse hyperbolic, and logarithmic operators, not expression types. 
 (defparameter *converter-class-table*
   '((:trig        . (%sin %cos %tan %sec %csc %cot))
     (:hyperbolic  . (%sinh %cosh %tanh %sech %csch %coth))
