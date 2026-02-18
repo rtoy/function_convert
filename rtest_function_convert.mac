@@ -215,3 +215,6 @@ abs(a)$
 
 function_convert('signum = 'abs, 28*b*a^2*signum(a));
 28*a*abs(a)*b$
+
+function_convert(signum = abs, w+s*F(signum(s)*s));
+w+s*F(abs(s))$
