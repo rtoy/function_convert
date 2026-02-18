@@ -473,6 +473,19 @@ stores the reverse mapping via REGISTER-CONVERTER-REVERSE-ALIAS."
   (let ((z (car x)))
     (mul z (ftake '%signum z))))
 
+(define-function-converter ((:algebraic mabs) (signum mabs)) (op x)
+  "Convert subexpressions of the form X*signum(X) into abs(X).  This converter
+does not rewrite signum(X) itself, since X*signum(X) is not a subexpression
+of signum(X); only explicit products matching that pattern are transformed."
+  (let* ((e  (fapply op x))
+         (ll (xgather-args-of e '%signum)))
+    (dolist (lx ll)
+      (let ((s (car lx)))
+        (setq e ($ratsubst (ftake 'mabs s)
+                           (mul s (ftake '%signum s))
+                           e))))
+    ($expand e 0 0)))
+
 (define-function-converter (mabs %sqrt) (op x)
   "Convert abs(x) into sqrt(x^2). When radexpand is true, this is simplified back to abs(x)."
   (declare (ignore op))

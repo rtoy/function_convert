@@ -206,3 +206,12 @@ map('is, [subst(q=-42,id), subst(q=0,id), subst(q=%pi, id)]));
 function_convert('abs = 'signum, f(z+abs(z)));
 f(z*signum(z) + z)$
 
+/* signum => abs */
+function_convert('signum = 'abs, signum(w));
+signum(w)$
+
+function_convert('signum = 'abs, a*signum(a));
+abs(a)$
+
+function_convert('signum = 'abs, 28*b*a^2*signum(a));
+28*a*abs(a)*b$
