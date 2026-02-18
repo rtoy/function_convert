@@ -674,6 +674,33 @@ unchanged.
 (define-function-converter (:gamma_like %gamma) (op x)
   ($makegamma (fapply op x)))
 
+(define-function-converter ((mtimes %beta) (%gamma %beta)) (op x)
+   "Rewrite products of gamma functions into beta functions when possible.
+This converter looks for subexpressions of the form
+    gamma(a) * gamma(b) / gamma(a + b)
+and replaces them with beta(a, b).  Only explicit occurrences of this
+three-factor pattern are transformed; the converter does not rewrite
+gamma(a) or gamma(b) individually, nor does it attempt to derive beta(a,b)
+from expressions where the pattern is not present as an actual
+subexpression."
+  (let* ((e (fapply op x))
+         (ee)
+         (ll (mapcar #'car (xgather-args-of e '%gamma)))
+         (ga (gensym))
+         (gb (gensym))
+         (gc (gensym)))
+      (dolist (a ll)
+         (dolist (b ll)
+            (setq ee 
+               (maxima-substitute gc (ftake '%gamma (add a b))
+                   (maxima-substitute gb (ftake '%gamma b)
+                      (maxima-substitute ga (ftake '%gamma a) e))))
+            (setq ee ($ratsubst (ftake '%beta a b) (div (mul ga gb) gc) ee))
+            (when ($freeof ga gb gc ee)
+               (setq e ee))))
+      e))
+
+
 (define-function-converter ((:algebraic $hyperbolic) (%exp %hyperbolic)) (op x)
   (setq x (fapply op x))
   (let ((ll (xgather-args-of x 'mexpt)) (g (gensym)))
