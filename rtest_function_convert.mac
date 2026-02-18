@@ -1,9 +1,3 @@
-/* [
-genfact = gamma, hstep = signum, signum = hstep, sin = exp, sin = sin,
-sin = sinc, sinc = gamma, sinc = sin, sinh = exp, tan = sin, tanh = sinh,
-abs = signum, abs = sqrt, ^ = trigreduce, factorial = product,
-factorial = gamma]*/
-
 /* bad arguments */
 errcatch(function_convert());
 []$
@@ -197,3 +191,18 @@ function_convert('inequation = 'zero_lhs, a < a);
 
 function_convert('inequation = 'zero_lhs, a # a);
 0 # 0$
+
+/* abs => signum*/
+function_convert('abs = 'signum, abs(x));
+x*signum(x)$
+
+function_convert('abs = 'signum, abs(a+b));
+(a+b)*signum(a+b)$
+
+block([id : abs(q) = function_convert('abs = 'signum, abs(q))],
+map('is, [subst(q=-42,id), subst(q=0,id), subst(q=%pi, id)]));
+[true, true, true]$
+
+function_convert('abs = 'signum, f(z+abs(z)));
+f(z*signum(z) + z)$
+

@@ -474,7 +474,7 @@ stores the reverse mapping via REGISTER-CONVERTER-REVERSE-ALIAS."
     (mul z (ftake '%signum z))))
 
 (define-function-converter (mabs %sqrt) (op x)
-  "Convert abs(x) into sqrt(x^2). When radexpand is true, this is simplified back to abs(x)"
+  "Convert abs(x) into sqrt(x^2). When radexpand is true, this is simplified back to abs(x)."
   (declare (ignore op))
   (let ((z (car x)))
     (ftake 'mexpt (mul z (ftake '$conjugate z)) (div 1 2))))
