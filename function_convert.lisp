@@ -674,6 +674,8 @@ unchanged.
 (define-function-converter (:gamma_like %gamma) (op x)
   ($makegamma (fapply op x)))
 
+;; Since gamma(2/3)*gamma(5/3) simplifies to (2/3)*gamma(2/3), this code
+;; misses conversion of gamma(2/3)*gamma(5/3)/gamma(7/3), for example.
 (define-function-converter ((mtimes %beta) (%gamma %beta)) (op x)
    "Rewrite products of gamma functions into beta functions when possible.
 This converter looks for subexpressions of the form
