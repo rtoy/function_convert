@@ -545,10 +545,6 @@ compared using `alike`."
        (remove-duplicates (append head subresults) :test #'alike)))))
 |#
 
-(defmfun $larry (e)
-  (let ((ll (xgather-args-of e 'mexpt)))
-    (fapply 'mlist (mapcar #'(lambda (q) (fapply 'mlist q)) ll))))
-
 (defun xgather-args-of (e fn)
    (cond (($mapatom e) nil)        
          ((eq fn (caar e)) (list (cdr e)))
