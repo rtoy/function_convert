@@ -211,60 +211,6 @@ Each entry has the form:
     ;; Return results in sorted order
     ($sort (fapply 'mlist (nreverse results)))))
 
-#| 
-(defmacro define-function-converter (spec lambda-list &body body)
-  "Define a converter FROM => TO, optionally with an alias FROM-ALT => TO-ALT.
-
-Valid forms:
-  (define-function-converter (FROM TO) (args) ...)
-  (define-function-converter ((FROM TO) (FROM-ALT TO-ALT)) (args) ...)
-
-Registers the converter and, if an alias is supplied, stores the alias
-in *function-convert-hash-alias* via REGISTER-CONVERTER-ALIAS and also
-stores the reverse mapping via REGISTER-CONVERTER-REVERSE-ALIAS.
-
-A warning is issued if a converter for (FROM TO) is already defined."
-  (flet ((warn-if-existing (from to)
-           ;; Directly inspect the converter registry.
-           `(when (gethash (cons ',from ',to) *function-convert-hash*)
-              (warn "Converter for (~A → ~A) is already defined." ',from ',to))))
-    (cond
-      ;; Alias form: ((from to) (from-alt to-alt))
-      ((and (consp spec)
-            (consp (first spec))
-            (consp (second spec)))
-       (destructuring-bind ((from to) (from-alt to-alt)) spec
-         (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
-                                      from to)
-                              :maxima)))
-           `(progn
-              ,(warn-if-existing from to)
-              (defun ,fname ,lambda-list
-                ,@body)
-              (register-converter ',from ',to #',fname)
-              (register-converter-alias ',from-alt ',to-alt ',from ',to)
-              ',fname))))
-
-      ;; Simple form: (from to)
-      ((and (consp spec)
-            (symbolp (first spec))
-            (symbolp (second spec)))
-       (destructuring-bind (from to) spec
-         (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
-                                      from to)
-                              :maxima)))
-           `(progn
-              ,(warn-if-existing from to)
-              (defun ,fname ,lambda-list
-                ,@body)
-              (register-converter ',from ',to #',fname)
-              ',fname))))
-
-      (t
-       (error "Malformed converter spec: ~S" spec)))))
-
-|#
-
 (defmacro define-function-converter (spec lambda-list &body body)
   "Define a converter FROM => TO, optionally with an alias FROM-ALT => TO-ALT.
 
@@ -321,7 +267,46 @@ or if an alias (FROM-ALT . TO-ALT) is already present in
 
       (t
        (error "Malformed converter spec: ~S" spec)))))
-       
+           
+(defun find-conversion-path (src dst)
+  "Find a shortest conversion path from SRC to DST.
+
+The search is performed using breadth-first traversal of *FUNCTION-CONVERT-HASH*,
+whose keys are conses of the form (FROM . TO). Each node is visited at most once.
+Returns a list of nodes starting at SRC and ending at DST, or NIL if no path is
+found."
+
+  (multiple-value-bind (src dst)
+            (lookup-converter-alias src dst)
+            (format t "alias: src=~S  dst=~S~%" src dst)
+  (let ((visited (make-hash-table :test 'eq)))
+    (setf (gethash src visited) t)
+    (labels ((successor-paths (path node)
+               (let (paths)
+                 (maphash
+                  (lambda (key fn)
+                    (declare (ignore fn))
+                    (let ((from (car key))
+                          (to   (cdr key)))
+                      (when (and (eq from node)
+                                 (not (gethash to visited)))
+                        (setf (gethash to visited) t)
+                        (push (append path (list to)) paths))))
+                  *function-convert-hash*)
+                 (nreverse paths)))
+
+             (step (queue)
+               (when queue
+                 (let* ((path (car queue))
+                        (node (car (last path)))
+                        (rest (cdr queue)))
+                   (when (eq node dst)
+                     (return-from step path))
+                   (step
+                    (append rest
+                            (successor-paths path node)))))))
+      (step (list (list src)))))))
+
 ;; The user-level function. The first argument `subs` must either be a single converter 
 ;; or a Maxima list of converters; for example function_convert(sinc = sin, XXX) or 
 ;; function_convert([sinc = sin, sin = exp], XXX). This code checks the validity of the
@@ -388,6 +373,7 @@ or if an alias (FROM-ALT . TO-ALT) is already present in
 ;; Debugging Hint: If you define a converter that doesn't trigger correctly, try
 ;; tracing lookup-converter and look at the output of list_converters.
 ;; In define-function-converter, don't quote the source and target functions.
+
 (define-function-converter (%sinc %sin) (op x)
   "Convert sinc(x) into sin(x)/x."
   (declare (ignore op))
@@ -770,7 +756,6 @@ subexpression."
                (setq e ee))))
       e))
 
-;;;;;;;;;;;;;;;;;;;;
 (define-function-converter ((mtimes %binomial) (%gamma %binomial)) (op x)
    "Rewrite products of gamma functions into a binomial coefficient when possible.
 This converter looks for subexpressions of the form
@@ -831,11 +816,32 @@ subexpression."
   (destructuring-bind (a b) x
     (ftake op (resimplify ($factor (sub a b))) 0)))
 
+#| 
 
-  
- 
-;;  missing: 
-;;   (a) Beta function => gamma
-;;   (b) inverse trig => log
-;;   (c) pochammer => gamma
-;;   (d) bessel functions
+;;; These are toy converters that I used to test find-converter-path. There remains some issues with
+;;; find-converter-path used with class keys and aliases. So let's keep these for now!
+
+(define-function-converter (%a %b) (op x)
+  (declare (ignore op))
+  (ftake '%b (car x)))
+
+(define-function-converter (%b %c) (op x)
+ (declare (ignore op))
+  (ftake '%c (car x)))
+
+(define-function-converter (%c %d) (op x)
+ (declare (ignore op))
+  (ftake '%d (car x)))
+
+(define-function-converter (%d %e) (op x)
+ (declare (ignore op))
+  (ftake '%e (car x)))
+
+(define-function-converter (%b %e) (op x)
+ (declare (ignore op))
+ (ftake '%e (car x)))
+
+ (define-function-converter ((%b %d) ($pp $qq)) (op x)
+  (declare (ignore op))
+  (ftake '%d (car x)))
+|#
