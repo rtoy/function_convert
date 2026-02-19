@@ -271,15 +271,17 @@ A warning is issued if a converter for (FROM TO) is already defined."
 A warning is issued if a converter for (FROM . TO) is already defined,
 or if an alias (FROM-ALT . TO-ALT) is already present in
 *function-convert-hash-alias*."
-  (macrolet ((warn-if-existing-primary (from to)
-           `(when (gethash (cons ,from ,to) *function-convert-hash*)
-              (warn "Converter for (~A → ~A) is already defined."
-                    ,from ,to)))
-         (warn-if-existing-alias (from-alt to-alt)
-           `(when (gethash (cons ,from-alt ,to-alt)
-                           *function-convert-hash-alias*)
-              (warn "Alias converter for (~A → ~A) is already defined."
-                    ,from-alt ,to-alt))))
+  
+  (macrolet 
+     ((warn-if-existing-primary (from to)
+         `(when (gethash (cons ,from ,to) *function-convert-hash*)
+            (warn (format nil "Converter for (~A ~A ~A) is already defined."
+                          ,from (get *function-convert-infix-op* 'op) ,to))))
+       (warn-if-existing-alias (from-alt to-alt)
+         `(when (gethash (cons ,from-alt ,to-alt)
+                         *function-convert-hash-alias*)
+            (warn (format nil "Alias converter for (~A ~A ~A) is already defined."
+                          ,from-alt (get *function-convert-infix-op* 'op) ,to-alt)))))
     (cond
       ;; Alias form: ((from to) (from-alt to-alt))
       ((and (consp spec)
