@@ -273,15 +273,19 @@ or if an alias (FROM-ALT . TO-ALT) is already present in
 *function-convert-hash-alias*."
   
   (macrolet 
-     ((warn-if-existing-primary (from to)
-         `(when (gethash (cons ,from ,to) *function-convert-hash*)
-            (warn (format nil "Converter for ~A ~A ~A is already defined."
-                          ,from (get *function-convert-infix-op* 'op) ,to))))
-       (warn-if-existing-alias (from-alt to-alt)
-         `(when (gethash (cons ,from-alt ,to-alt)
-                         *function-convert-hash-alias*)
-            (warn (format nil "Alias converter for ~A ~A ~A is already defined."
-                          ,from-alt (get *function-convert-infix-op* 'op) ,to-alt)))))
+      ((warn-if-existing-primary (from to)
+       `(when (gethash (cons ,from ,to) *function-convert-hash*)
+          (warn (format nil "Converter for ~A ~A ~A is already defined."
+                        (string-downcase (symbol-name ,from))
+                        (get *function-convert-infix-op* 'op)
+                        (string-downcase (symbol-name ,to))))))
+     (warn-if-existing-alias (from-alt to-alt)
+       `(when (gethash (cons ,from-alt ,to-alt)
+                       *function-convert-hash-alias*)
+          (warn (format nil "Alias converter for ~A ~A ~A is already defined."
+                        (string-downcase (symbol-name ,from-alt))
+                        (get *function-convert-infix-op* 'op)
+                        (string-downcase (symbol-name ,to-alt)))))))
     (cond
       ;; Alias form: ((from to) (from-alt to-alt))
       ((and (consp spec)
