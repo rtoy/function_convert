@@ -268,7 +268,22 @@ or if an alias (FROM-ALT . TO-ALT) is already present in
 
       (t
        (error "Malformed converter spec: ~S" spec)))))
-           
+
+(defmfun $larry (sub e)
+  (let* ((f (cadr sub))
+         (g (caddr sub))
+         (path (find-conversion-path f g)))
+    (cond
+      ;; No conversion needed if the path is either empty or has only one element
+      ((null (cdr path)) e)
+      (t
+       (let ((from (pop path)))
+         (while path
+           (let ((to (pop path)))
+             (setq e (function-convert e from to))
+             (setq from to))))
+       e))))
+
 (defun find-conversion-path (src dst)
   "Find a shortest conversion path from SRC to DST.
 
@@ -817,7 +832,6 @@ subexpression."
   (destructuring-bind (a b) x
     (ftake op (resimplify ($factor (sub a b))) 0)))
 
-#| 
 
 ;;; These are toy converters that I used to test find-converter-path. There remains some issues with
 ;;; find-converter-path used with class keys and aliases. So let's keep these for
@@ -845,4 +859,3 @@ subexpression."
  (define-function-converter ((%b %d) ($pp $qq)) (op x)
   (declare (ignore op))
   (ftake '%d (car x)))
-|#
