@@ -211,6 +211,7 @@ Each entry has the form:
     ;; Return results in sorted order
     ($sort (fapply 'mlist (nreverse results)))))
 
+#| 
 (defmacro define-function-converter (spec lambda-list &body body)
   "Define a converter FROM => TO, optionally with an alias FROM-ALT => TO-ALT.
 
@@ -220,40 +221,101 @@ Valid forms:
 
 Registers the converter and, if an alias is supplied, stores the alias
 in *function-convert-hash-alias* via REGISTER-CONVERTER-ALIAS and also
-stores the reverse mapping via REGISTER-CONVERTER-REVERSE-ALIAS."
-  (cond
-    ;; Alias form: ((from to) (from-alt to-alt))
-    ((and (consp spec)
-          (consp (first spec))
-          (consp (second spec)))
-     (destructuring-bind ((from to) (from-alt to-alt)) spec
-       (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
-                                    from to)
-                            :maxima)))
-         `(progn
-            (defun ,fname ,lambda-list
-              ,@body)
-            (register-converter ',from ',to #',fname)
-            (register-converter-alias ',from-alt ',to-alt ',from ',to)
-            ',fname))))
+stores the reverse mapping via REGISTER-CONVERTER-REVERSE-ALIAS.
 
-    ;; Simple form: (from to)
-    ((and (consp spec)
-          (symbolp (first spec))
-          (symbolp (second spec)))
-     (destructuring-bind (from to) spec
-       (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
-                                    from to)
-                            :maxima)))
-         `(progn
-            (defun ,fname ,lambda-list
-              ,@body)
-            (register-converter ',from ',to #',fname)
-            ',fname))))
+A warning is issued if a converter for (FROM TO) is already defined."
+  (flet ((warn-if-existing (from to)
+           ;; Directly inspect the converter registry.
+           `(when (gethash (cons ',from ',to) *function-convert-hash*)
+              (warn "Converter for (~A → ~A) is already defined." ',from ',to))))
+    (cond
+      ;; Alias form: ((from to) (from-alt to-alt))
+      ((and (consp spec)
+            (consp (first spec))
+            (consp (second spec)))
+       (destructuring-bind ((from to) (from-alt to-alt)) spec
+         (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
+                                      from to)
+                              :maxima)))
+           `(progn
+              ,(warn-if-existing from to)
+              (defun ,fname ,lambda-list
+                ,@body)
+              (register-converter ',from ',to #',fname)
+              (register-converter-alias ',from-alt ',to-alt ',from ',to)
+              ',fname))))
 
-    (t
-     (error "Malformed converter spec: ~S" spec))))
+      ;; Simple form: (from to)
+      ((and (consp spec)
+            (symbolp (first spec))
+            (symbolp (second spec)))
+       (destructuring-bind (from to) spec
+         (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
+                                      from to)
+                              :maxima)))
+           `(progn
+              ,(warn-if-existing from to)
+              (defun ,fname ,lambda-list
+                ,@body)
+              (register-converter ',from ',to #',fname)
+              ',fname))))
 
+      (t
+       (error "Malformed converter spec: ~S" spec)))))
+
+|#
+
+(defmacro define-function-converter (spec lambda-list &body body)
+  "Define a converter FROM => TO, optionally with an alias FROM-ALT => TO-ALT.
+
+A warning is issued if a converter for (FROM . TO) is already defined,
+or if an alias (FROM-ALT . TO-ALT) is already present in
+*function-convert-hash-alias*."
+  (macrolet ((warn-if-existing-primary (from to)
+           `(when (gethash (cons ,from ,to) *function-convert-hash*)
+              (warn "Converter for (~A → ~A) is already defined."
+                    ,from ,to)))
+         (warn-if-existing-alias (from-alt to-alt)
+           `(when (gethash (cons ,from-alt ,to-alt)
+                           *function-convert-hash-alias*)
+              (warn "Alias converter for (~A → ~A) is already defined."
+                    ,from-alt ,to-alt))))
+    (cond
+      ;; Alias form: ((from to) (from-alt to-alt))
+      ((and (consp spec)
+            (consp (first spec))
+            (consp (second spec)))
+       (destructuring-bind ((from to) (from-alt to-alt)) spec
+         (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
+                                      from to)
+                              :maxima)))
+           `(progn
+              ,(warn-if-existing-primary from to)
+              ,(warn-if-existing-alias from-alt to-alt)
+              (defun ,fname ,lambda-list
+                ,@body)
+              (register-converter ',from ',to #',fname)
+              (register-converter-alias ',from-alt ',to-alt ',from ',to)
+              ',fname))))
+
+      ;; Simple form: (from to)
+      ((and (consp spec)
+            (symbolp (first spec))
+            (symbolp (second spec)))
+       (destructuring-bind (from to) spec
+         (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
+                                      from to)
+                              :maxima)))
+           `(progn
+              ,(warn-if-existing-primary from to)
+              (defun ,fname ,lambda-list
+                ,@body)
+              (register-converter ',from ',to #',fname)
+              ',fname))))
+
+      (t
+       (error "Malformed converter spec: ~S" spec)))))
+       
 ;; The user-level function. The first argument `subs` must either be a single converter 
 ;; or a Maxima list of converters; for example function_convert(sinc = sin, XXX) or 
 ;; function_convert([sinc = sin, sin = exp], XXX). This code checks the validity of the
@@ -710,7 +772,7 @@ This converter looks for subexpressions of the form
 and replaces them with binonl(a, b).  Only explicit occurrences of this
 three-factor pattern are transformed; the converter does not rewrite
 gamma(a) or gamma(b) individually, nor does it attempt to derive a
-binomial coefficient from expressions where the pattern is not present as an actual
+binomial coefficientfrom expressions where the pattern is not present as an actual
 subexpression."
   (let* ((e (fapply op x))
          (ee)
@@ -771,4 +833,3 @@ subexpression."
 ;;   (b) inverse trig => log
 ;;   (c) pochammer => gamma
 ;;   (d) bessel functions
-
