@@ -34,6 +34,7 @@
   "Return a key for the converter registry."
   (cons from to))
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
 ;; Each converter is stored in the hashtable *function-convert-hash*.
 (defmvar *function-convert-hash*
   (make-hash-table :test 'equal)
@@ -48,7 +49,7 @@
 
 (defmvar *function-convert-hash-reverse-alias*
   (make-hash-table :test 'equal)
-  "Hash table mapping (FROM . TO) operator pairs to converter functions.")
+  "Hash table mapping (FROM . TO) operator pairs to converter functions."))
 
 (defun register-converter (from to fn)
   "Register FN as the converter from FROM to TO."
@@ -819,7 +820,7 @@ subexpression."
 #| 
 
 ;;; These are toy converters that I used to test find-converter-path. There remains some issues with
-;;; find-converter-path used with class keys and aliases. So let's keep these for now!
+;;; find-converter-path used with class keys and aliases. So let's keep these for
 
 (define-function-converter (%a %b) (op x)
   (declare (ignore op))
