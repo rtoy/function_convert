@@ -233,4 +233,10 @@ signum(x)$
 function_convert(signum = hstep,signum(x)-2*hstep(x));
 -1$
 
+/* Test the BFS method--there is no sinc => gamma converter, but there is a chain */
+function_convert(sinc = gamma, sinc(x));
+1/(gamma(1-x/%pi)*gamma(x/%pi+1))$
 
+block([ans : function_convert(sinc = gamma, sinc(x))], 
+  taylor(ans/sinc(x),x,0,9));
+1$
