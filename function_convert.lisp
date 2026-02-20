@@ -550,7 +550,70 @@ and whose second and third elements are valid operator names or a lambda."
 		    (t (fapply (caar e) 
             (mapcar #'(lambda (q) (function-convert q op-old op-new)) (cdr e))))))
 
+(defmfun $describe_converter (eq)
+  ;; Accept only a single equation
+  (check-converter eq)
 
+  (let* ((from (second eq))
+         (to   (third eq))
+
+         ;; Normalize via alias system
+         (values (multiple-value-list
+                  (lookup-converter-alias from to)))
+         (norm-from (first values))
+         (norm-to   (second values))
+
+         ;; Look up converter function
+         (fn (gethash (cons norm-from norm-to)
+                      *function-convert-hash*))
+
+         ;; Built-in?
+         (builtin? (member (cons norm-from norm-to)
+                           *built-in-converters*
+                           :test #'equal))
+
+         ;; Aliases pointing to this converter
+         (aliases '()))
+
+    ;; Collect aliases
+    (maphash
+     (lambda (key val)
+       (when (equal val (cons norm-from norm-to))
+         (push key aliases)))
+     *function-convert-hash-alias*)
+
+    ;; If no converter exists
+    (unless fn
+      (format t "No converter defined for ~A ~A ~A.~%"
+              from (get *function-convert-infix-op* 'op) to)
+      '$false)
+
+    ;; Print description
+    (format t "~%Converter: ~A ~A ~A~%"
+            from (get *function-convert-infix-op* 'op) to)
+
+    (when (or (not (eq from norm-from))
+              (not (eq to norm-to)))
+      (format t "Normalized via alias to: ~A ~A ~A~%"
+              norm-from (get *function-convert-infix-op* 'op) norm-to))
+
+    (format t "Function: ~A~%" fn)
+    (format t "Type: ~A~%" (if builtin? "built-in" "user-defined"))
+
+    (when aliases
+      (format t "Aliases:~%")
+      (dolist (a aliases)
+        (format t "  ~A ~A ~A~%"
+                (car a)
+                (get *function-convert-infix-op* 'op)
+                (cdr a))))
+
+    ;; Docstring (if any)
+    (let ((doc (documentation fn 'function)))
+      (when doc
+        (format t "~%Docstring:~%  ~A~%" doc)))
+
+    '$done))
 
 (defmfun $delete_converter (eqs)
   ;; Allow: delete_converter(f = g)
@@ -596,7 +659,7 @@ and whose second and third elements are valid operator names or a lambda."
        (remhash key *function-convert-hash*)))
    *function-convert-hash*)
   (format t "All user-defined converters deleted.~%"))
-  
+
 ;;; Starter Library of Function Converters for function_convert
 ;;; ------------------------------------------------------------
 
