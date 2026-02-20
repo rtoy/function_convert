@@ -269,20 +269,7 @@ or if an alias (FROM-ALT . TO-ALT) is already present in
       (t
        (error "Malformed converter spec: ~S" spec)))))
 
-(defmfun $larry (sub e)
-  (let* ((f (cadr sub))
-         (g (caddr sub))
-         (path (find-conversion-path f g)))
-    (cond
-      ;; No conversion needed if the path is either empty or has only one element
-      ((null (cdr path)) e)
-      (t
-       (let ((from (pop path)))
-         (while path
-           (let ((to (pop path)))
-             (setq e (function-convert e from to))
-             (setq from to))))
-       e))))
+
 
 (defun find-conversion-path (src dst)
   "Find a shortest conversion path from SRC to DST.
@@ -323,38 +310,65 @@ found."
                             (successor-paths path node)))))))
       (step (list (list src)))))))
 
+(defun apply-path (expr path)
+  ;; Apply each hop in PATH to EXPR.
+  ;; PATH is a list like (f g h k), meaning f→g, g→h, h→k.
+  (if (or (null path)
+          (null (cdr path)))
+      expr
+      (let* ((from  (car path))
+             (to    (cadr path))
+             (expr2 (function-convert expr from to)))
+        (apply-path expr2 (cdr path)))))
+
 ;; The user-level function. The first argument `subs` must either be a single converter 
 ;; or a Maxima list of converters; for example function_convert(sinc = sin, XXX) or 
 ;; function_convert([sinc = sin, sin = exp], XXX). This code checks the validity of the
 ;; first argument.
 (defmfun $function_convert (subs e)
-  (let ((fun-subs-list (if ($listp subs) (cdr subs) (list subs))))
+  (let ((fun-subs-list (if ($listp subs)
+                           (cdr subs)
+                           (list subs))))
     (flet ((fn (x)
              (cond ((stringp x) ($verbify x))
                    ((lambda-p x) x)
-                   ;(t ($nounify x))))
+                   ;; formerly ($nounify x)
                    (t x)))
 
            (check-subs (x)
              (cond
                ((not (consp x))
                 (merror "Bad transformation (a mapatom): ~M" x))
+
                ((not (eq (caar x) *function-convert-infix-op*))
-                (merror "Bad transformation (missing ~M): ~M" *function-convert-infix-op* x))
+                (merror "Bad transformation (missing ~M): ~M"
+                        *function-convert-infix-op* x))
+
                ((not (or (symbolp (second x))
                          (stringp (second x))))
                 (merror "Bad transformation (invalid LHS): ~M" x))
+
                ((not (or (symbolp (third x))
                          (stringp (third x))
                          (lambda-p (third x))))
                 (merror "Bad transformation (invalid RHS): ~M" x))
+
                (t t))))
-      ;; check that the arguments in fun-subs-list are legitimate.
+
+      ;; 1. Validate all substitutions
       (mapc #'check-subs fun-subs-list)
+
+      ;; 2. For each substitution, resolve aliases, find path, apply it
       (dolist (q fun-subs-list)
         (multiple-value-bind (aa bb)
-         (lookup-converter-alias (fn (second q)) (fn (third q)))
-         (setq e (function-convert e aa bb))))
+            (lookup-converter-alias (fn (second q))
+                                    (fn (third q)))
+          (let ((path (find-conversion-path aa bb)))
+            (if (null path)
+                (merror "No conversion path from ~M to ~M" aa bb)
+                (loop for (from to) on path while to do
+                      (setf e (function-convert e from to)))))))
+
       e)))
 
 (defun function-convert (e op-old op-new)
