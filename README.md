@@ -34,8 +34,8 @@ The package provides a simple, declarative way to convert between related functi
 ```
 ### BFS converter dispatch
 
-When a converter, say `f = g` isn't defined, `function_convert` does a breadth-first search (BFS) 
-to attempt to do the conversion. Here is an example
+When a converter isn't defined, `function_convert` does a breadth-first search (BFS) 
+to attempt find a chain of defined converters. Here is an example
 ```maxima
 (%i1) function_convert(sinc = gamma, sinc(z));
                                        1
