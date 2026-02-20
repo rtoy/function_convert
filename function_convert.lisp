@@ -360,35 +360,27 @@ found."
 
       ;; 1. Validate all substitutions
       (mapc #'check-subs fun-subs-list)
-
+      ;; When lookup-coverter-alias fails, send the conversion to apply-path. The function
+      ;; apply-path does a BFS to find a chain of converters.
       (dolist (q fun-subs-list)
         (multiple-value-bind (aa bb)
-         (lookup-converter-alias (fn (second q)) (fn (third q)))
-         (setq e (function-convert e aa bb))))
-      e)))
-      ;; 2. For each substitution, resolve aliases, find path, apply it
-     ; (dolist (q fun-subs-list)
-     ;   (print `(q = ,q))
-     ;   (print (lookup-converter (second q) (second q) (third q)))
-     ;  (multiple-value-bind (aa bb)
-      ;      (lookup-converter-alias (fn (second q))
-;(fn (third q)))
-      ;    (let ((path (find-conversion-path aa bb)))
-      ;      (if (null path)
-       ;         (merror "No conversion path from ~M to ~M" aa bb)
-       ;         (loop for (from to) on path while to do
-       ;               (setf e (function-convert e from to)))))))
+            (lookup-converter-alias (fn (second q)) (fn (third q)))
+            (if (and aa bb)
+               (setq e (function-convert e aa bb))
+               (setq e (apply-path (ftake *function-convert-infix-op* aa bb) e)))))
+     e)))
 
-      ;e)))
-
-(defmfun $larry (sub e)
+(defun apply-path (sub e)
   (let* ((f (cadr sub))
          (g (caddr sub))
          (ff (or (converter-class-of (mop e)) f))
          (path (find-conversion-path ff g)))
     (cond
-      ;; No conversion needed if the path is either empty or has only one element
-      ((null (cdr path)) e)
+      (($mapatom e) e)
+      ;; When path has one or fewer members, convert the arguments of e and apply
+      ;; the operator of e.
+      ((null (cdr path)) 
+        (fapply (mop e) (mapcar #'(lambda (q) (function-convert q ff g)) (cdr e))))
       (t
        (let ((from (pop path)))
          (while path
