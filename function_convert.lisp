@@ -380,7 +380,8 @@ found."
 (defmfun $larry (sub e)
   (let* ((f (cadr sub))
          (g (caddr sub))
-         (path (find-conversion-path f g)))
+         (ff (or (converter-class-of (mop e)) f))
+         (path (find-conversion-path ff g)))
     (cond
       ;; No conversion needed if the path is either empty or has only one element
       ((null (cdr path)) e)
@@ -897,3 +898,6 @@ subexpression."
 
 (defmfun $list_alias ()
   (maphash #'(lambda (a b) (print `(a = ,a b = ,b))) *function-convert-hash-alias*))
+
+(defmfun $list_converters ()
+  (maphash #'(lambda (a b) (print `(a = ,a b = ,b))) *function-convert-hash*))
