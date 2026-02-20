@@ -682,6 +682,27 @@ and whose second and third elements are valid operator names or a lambda."
 
     '$done))
 
+(defmfun $converter_exists (eq)
+  ;; Validate the equation structure
+  (check-converter eq)
+
+  (let* ((from (second eq))
+         (to   (third eq))
+
+         ;; Normalize via alias system
+         (values (multiple-value-list
+                  (lookup-converter-alias from to)))
+         (norm-from (first values))
+         (norm-to   (second values))
+
+         ;; Look up converter function
+         (fn (gethash (cons norm-from norm-to)
+                      *function-convert-hash*)))
+
+    (if fn
+        '$true
+        '$false)))
+        
 (defmfun $delete_converter (eqs)
   ;; Allow: delete_converter(f = g)
   ;;        delete_converter([f = g, h = k])
