@@ -49,7 +49,11 @@
 
 (defmvar *function-convert-hash-reverse-alias*
   (make-hash-table :test 'equal)
-  "Hash table mapping (FROM . TO) operator pairs to converter functions."))
+  "Hash table mapping (FROM . TO) operator pairs to converter functions.")
+
+;; Global list of built-in-converters. The functions that delete converters consult 
+;; this list, no other functions should look at this list.
+(defparameter *built-in-converters* nil))
 
 (defun register-converter (from to fn)
   "Register FN as the converter from FROM to TO."
@@ -216,6 +220,8 @@ Each entry has the form:
     ;; Return results in sorted order
     ($sort (fapply 'mlist (nreverse results)))))
 
+#| keep this until I am 100% the new works OK!
+
 (defmacro define-function-converter (spec lambda-list &body body)
   "Define a converter FROM => TO, optionally with an alias FROM-ALT => TO-ALT.
 
@@ -272,6 +278,129 @@ or if an alias (FROM-ALT . TO-ALT) is already present in
 
       (t
        (error "Malformed converter spec: ~S" spec)))))
+|#
+(defmacro define-function-converter (spec lambda-list &body body)
+  "Define a converter FROM => TO, optionally with an alias FROM-ALT => TO-ALT.
+
+A warning is issued if a converter for (FROM . TO) is already defined,
+or if an alias (FROM-ALT . TO-ALT) is already present in
+*function-convert-hash-alias*.
+
+Optional keyword:
+  :builtin   — mark this converter as built-in (protected from deletion)."
+
+  ;; ------------------------------------------------------------
+  ;; 1. Extract :builtin, docstring, declarations, and real body
+  ;; ------------------------------------------------------------
+  (let ((builtin? nil)
+        (docstring nil)
+        (decls '())
+        (real-body '()))
+
+    ;; Extract :builtin
+    (when (and body (eq (first body) :builtin))
+      (setf builtin? t
+            body (rest body)))
+
+    ;; Extract docstring
+    (when (and body (stringp (first body)))
+      (setf docstring (first body)
+            body (rest body)))
+
+    ;; Partition declarations vs real body
+    (dolist (form body)
+      (if (and (consp form)
+               (eq (car form) 'declare))
+          (push form decls)
+          (push form real-body)))
+
+    (setf decls (nreverse decls)
+          real-body (nreverse real-body))
+
+    ;; ------------------------------------------------------------
+    ;; 2. Warning helpers
+    ;; ------------------------------------------------------------
+    (macrolet
+        ((warn-if-existing-primary (from to)
+           `(when (gethash (cons ,from ,to) *function-convert-hash*)
+              (warn (format nil "Converter for ~A ~A ~A is already defined."
+                            (stripdollar (string-downcase (symbol-name ,from)))
+                            (get *function-convert-infix-op* 'op)
+                            (stripdollar (string-downcase (symbol-name ,to)))))))
+
+         (warn-if-existing-alias (from-alt to-alt)
+           `(when (gethash (cons ,from-alt ,to-alt)
+                           *function-convert-hash-alias*)
+              (warn (format nil "Alias converter for ~A ~A ~A is already defined."
+                            (stripdollar (string-downcase (symbol-name ,from-alt)))
+                            (get *function-convert-infix-op* 'op)
+                            (stripdollar (string-downcase (symbol-name ,to-alt))))))))
+
+      ;; ------------------------------------------------------------
+      ;; 3. Main macro logic
+      ;; ------------------------------------------------------------
+      (cond
+
+        ;; ----------------------------------------------------------
+        ;; Alias form: ((from to) (from-alt to-alt))
+        ;; ----------------------------------------------------------
+        ((and (consp spec)
+              (consp (first spec))
+              (consp (second spec)))
+         (destructuring-bind ((from to) (from-alt to-alt)) spec
+           (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
+                                        from to)
+                                :maxima)))
+             `(progn
+                ,(warn-if-existing-primary from to)
+                ,(warn-if-existing-alias from-alt to-alt)
+
+                (defun ,fname ,lambda-list
+                  ,@(when docstring (list docstring))
+                  ,@decls
+                  ,@real-body)
+
+                (register-converter ',from ',to #',fname)
+                (register-converter-alias ',from-alt ',to-alt ',from ',to)
+
+                ;; Record built-in status
+                ,(when builtin?
+                   `(push (cons ',from ',to) *built-in-converters*))
+
+                ',fname))))
+
+        ;; ----------------------------------------------------------
+        ;; Simple form: (from to)
+        ;; ----------------------------------------------------------
+        ((and (consp spec)
+              (symbolp (first spec))
+              (symbolp (second spec)))
+         (destructuring-bind (from to) spec
+           (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
+                                        from to)
+                                :maxima)))
+             `(progn
+                ,(warn-if-existing-primary from to)
+
+                (defun ,fname ,lambda-list
+                  ,@(when docstring (list docstring))
+                  ,@decls
+                  ,@real-body)
+
+                (register-converter ',from ',to #',fname)
+
+                ;; Record built-in status
+                ,(when builtin?
+                   `(push (cons ',from ',to) *built-in-converters*))
+
+                ',fname))))
+
+        ;; ----------------------------------------------------------
+        ;; Malformed spec
+        ;; ----------------------------------------------------------
+        (t
+         (error "Malformed converter spec: ~S" spec))))))
+;;;;;;;;;;;;;;;;;;;
 
 (defun find-conversion-path (src dst)
   "Find a shortest conversion path from SRC to DST.
@@ -323,6 +452,32 @@ found."
              (expr2 (function-convert expr from to)))
         (apply-path expr2 (cdr path)))))
 
+(defun check-converter (x)
+  "Validate a converter specification of the form  FROM => TO.
+X must be a cons whose car is the infix operator *function-convert-infix-op*,
+and whose second and third elements are valid operator names or a lambda."
+  (cond
+    ;; Must be a cons
+    ((not (consp x))
+     (merror "Bad transformation (a mapatom): ~M" x))
+
+    ;; Must use the correct infix operator
+    ((not (eq (caar x) *function-convert-infix-op*))
+     (merror "Bad transformation (missing ~M): ~M"
+             *function-convert-infix-op* x))
+
+    ;; LHS must be a symbol or string
+    ((not (or (symbolp (second x))
+              (stringp (second x))))
+     (merror "Bad transformation (invalid LHS): ~M" x))
+
+    ;; RHS must be a symbol, string, or lambda
+    ((not (or (symbolp (third x))
+              (stringp (third x))
+              (lambda-p (third x))))
+     (merror "Bad transformation (invalid RHS): ~M" x))
+
+    (t t)))
 ;; The user-level function. The first argument `subs` must either be a single converter 
 ;; or a Maxima list of converters; for example function_convert(sinc = sin, XXX) or 
 ;; function_convert([sinc = sin, sin = exp], XXX). This code checks the validity of the
@@ -336,30 +491,10 @@ found."
              (cond ((stringp x) ($verbify x))
                    ((lambda-p x) x)
                    ;; formerly ($nounify x)
-                   (t x)))
-
-           (check-subs (x)
-             (cond
-               ((not (consp x))
-                (merror "Bad transformation (a mapatom): ~M" x))
-
-               ((not (eq (caar x) *function-convert-infix-op*))
-                (merror "Bad transformation (missing ~M): ~M"
-                        *function-convert-infix-op* x))
-
-               ((not (or (symbolp (second x))
-                         (stringp (second x))))
-                (merror "Bad transformation (invalid LHS): ~M" x))
-
-               ((not (or (symbolp (third x))
-                         (stringp (third x))
-                         (lambda-p (third x))))
-                (merror "Bad transformation (invalid RHS): ~M" x))
-
-               (t t))))
+                   (t x))))
 
       ;; 1. Validate all substitutions
-      (mapc #'check-subs fun-subs-list)
+      (mapc #'check-converter fun-subs-list)
       ;; When lookup-coverter-alias fails, send the conversion to apply-path. The function
       ;; apply-path does a BFS to find a chain of converters.
       (dolist (q fun-subs-list)
@@ -415,6 +550,53 @@ found."
 		    (t (fapply (caar e) 
             (mapcar #'(lambda (q) (function-convert q op-old op-new)) (cdr e))))))
 
+
+
+(defmfun $delete_converter (eqs)
+  ;; Allow: delete_converter(f = g)
+  ;;        delete_converter([f = g, h = k])
+  (setq eqs 
+     (if ($listp eqs)
+          (cdr eqs)
+          (list eqs)))
+
+  ;; Process each equation
+  (dolist (eq eqs)
+    ;; Validate structure
+    (check-converter eq)
+
+    ;; Extract FROM and TO
+    (let ((from (second eq))
+          (to   (third eq)))
+      (delete-user-converter ($nounify from) ($nounify to))))
+
+  '$done)
+
+(defun delete-user-converter (from to)
+  ;(setq from ($nounify from))
+  ;(setq to ($nounify to))
+;(print `(,from ,to))
+  (let ((key (cons from to)))
+    (cond
+      ((member key *built-in-converters* :test #'equal)
+       (format t "Cannot delete built-in converter (~A → ~A).~%" from to))
+
+      ((gethash key *function-convert-hash*)
+       (remhash key *function-convert-hash*)
+       (format t "Deleted converter (~A → ~A).~%" from to))
+
+      (t
+       (format t "No converter (~A → ~A) exists.~%" from to)))))
+
+(defmfun $delete_all_user_converters ()
+  (maphash
+   (lambda (key fn)
+     (declare (ignore fn))
+     (unless (member key *built-in-converters* :test #'equal)
+       (remhash key *function-convert-hash*)))
+   *function-convert-hash*)
+  (format t "All user-defined converters deleted.~%"))
+  
 ;;; Starter Library of Function Converters for function_convert
 ;;; ------------------------------------------------------------
 
@@ -423,30 +605,35 @@ found."
 ;; In define-function-converter, don't quote the source and target functions.
 
 (define-function-converter (%sinc %sin) (op x)
+  :builtin
   "Convert sinc(x) into sin(x)/x."
   (declare (ignore op))
   (let ((z (car x)))
     (div (ftake '%sin z) z)))
 
 (define-function-converter (%sinc %gamma) (op x)
+  :builtin
   "Convert sinc(x) into 1/((gamma(1+x/%pi))*gamma(1-x/%pi))."
    (declare (ignore op))
   (let ((z (div (car x) '$%pi)))
     (div 1 (mul (ftake '%gamma (add 1 z)) (ftake '%gamma (sub 1 z))))))
 
 (define-function-converter (%sin %sinc) (op x)
+  :builtin
   "Convert sin(x) into x*sinc(x)."
   (declare (ignore op))
   (let ((z (car x)))
     (mul z (ftake '%sinc z))))
 
 (define-function-converter (%csc %sin) (op x)
+  :builtin
   "Convert csc(x) into 1/sin(x)."
    (declare (ignore op))
    (let ((z (car x))) (div 1 (ftake '%sin z))))
 
 ;; tan → sin/cos
 (define-function-converter (%tan %sin) (op x)
+  :builtin
 "Convert tan(x) into sin(x)/cos(x)."
   (declare (ignore op))
   (let ((z (car x)))
@@ -455,6 +642,7 @@ found."
 
 ;; tanh → sinh/cosh
 (define-function-converter (%tanh %sinh) (op x)
+  :builtin
 "Convert tanh(x) to sinh(x)/cosh(x)."
   (declare (ignore op))
   (let ((z (car x)))
@@ -462,12 +650,14 @@ found."
          (ftake '%cosh z))))
 
 (define-function-converter (%genfact $pochhammer) (op x)
+  :builtin
   (declare (ignore op))
   (let ((a (car x)) (b (cadr x)) (c (caddr x)))
     (div (ftake 'mexpt c (ftake '$floor b)) (ftake '$pochhammer (add 1 (div a c)) (ftake '$ceiling (neg b))))))
 
 ;; log10(x) → log(x)/log(10)
 (define-function-converter ($log10 %log) (op x)
+  :builtin
   "Convert log10(x) into log(x)/log(10)."
   (declare (ignore op))
   (let ((z (car x)))
@@ -476,6 +666,7 @@ found."
 ;; I could do logarc transformations, but for now, let's not.
 
 (define-function-converter (%binomial mfactorial) (op x)
+  :builtin
 "Convert binomial(n,k) to factorial form."
   (declare (ignore op))
   (let ((n (car x))
@@ -486,18 +677,21 @@ found."
 
  ;;"!" => product does n! => product(%g23,%g23,1,n)
  (define-function-converter (mfactorial $product) (op x)
+    :builtin
   "Convert n! to product(g,g,1,n)."
   (declare (ignore op))
   (let ((z (car x)) (g ($gensym)))
     (ftake '%product g g 1 z)))
 
 (define-function-converter (%atan %log) (op x)
+   :builtin
   "Convert tan(x) to logarc form."
   (declare (ignore op))
   (let ((z (car x)))
     ($logarc (ftake '%atan z))))
 
  (define-function-converter (%gamma_incomplete $expand) (op x)
+    :builtin
    (declare (ignore op))
   (let ((a (car x)) (z (cadr x)) ($gamma_expand t))
     (ftake '%gamma_incomplete a z)))
@@ -508,6 +702,7 @@ found."
 
 ;; All the business about the gensym is to prevent non-trig functions from expanding (well, that's my claim).
 (define-function-converter (mexpt $trigreduce) (op x)
+   :builtin
  "Convert integer powers of trig to a Fourier sum"
   (declare (ignore op))
   (let ((z (car x)) (n (cadr x)))
@@ -520,30 +715,35 @@ found."
 
 ;; erf-like functions
 (define-function-converter (%erfi %erf) (op x)
+  :builtin
   "Convert erfi(x) into -i * erf(i*x)."
   (declare (ignore op))
   (let ((z (car x)))
     (mul -1 '$%i (ftake '%erf (mul '$%i z)))))
 
 (define-function-converter (%erf %erfi) (op x)
+  :builtin
   "Convert erf(x) into i * erfi(-i*x)."
   (declare (ignore op))
   (let ((z (car x)))
     (mul '$%i (ftake '%erfi (mul -1 '$%i z)))))
 
 (define-function-converter (%erf %erfc) (op x)
+   :builtin
   "Convert erf(x) into 1 - erfc(x)."
   (declare (ignore op))
   (let ((z (car x)))
     (sub 1 (ftake '%erfc z))))
 
 (define-function-converter (%erfc %erf) (op x)
+    :builtin
   "Convert erfc(x) into 1 - erf(x)."
   (declare (ignore op))
   (let ((z (car x)))
     (sub 1 (ftake '%erf z))))
 
 (define-function-converter (%erf $integral) (op x)
+    :builtin
   "Convert erfc(x) into an integral representation"
   (declare (ignore op))
   (let ((z (car x))
@@ -552,6 +752,7 @@ found."
            (ftake '%integrate  (ftake 'mexpt '$%e (mul -1 s s)) s  0 z))))
 
 (define-function-converter (%erf %hypergeometric) (op x)
+    :builtin
   "Convert erf(x) into (2*x/sqrt(pi))*hypergeometric([1/2],[3/2],-x^2)."
   (declare (ignore op))
   (let ((z (car x))) 
@@ -559,12 +760,14 @@ found."
   
 ;; abs
 (define-function-converter (mabs %signum) (op x)
+  :builtin
   "Convert abs(x) into x*signum(x)."
   (declare (ignore op))
   (let ((z (car x)))
     (mul z (ftake '%signum z))))
 
 (define-function-converter ((:algebraic mabs) (%signum mabs)) (op x)
+  :builtin
   "Convert subexpressions of the form X*signum(X) into abs(X).  This converter
 does not rewrite signum(X) itself, since X*signum(X) is not a subexpression
 of signum(X); only explicit products matching that pattern are transformed."
@@ -578,24 +781,28 @@ of signum(X); only explicit products matching that pattern are transformed."
     ($expand e 0 0)))
 
 (define-function-converter (mabs %sqrt) (op x)
+   :builtin
   "Convert abs(x) into sqrt(x^2). When radexpand is true, this is simplified back to abs(x)."
   (declare (ignore op))
   (let ((z (car x)))
     (ftake 'mexpt (mul z (ftake '$conjugate z)) (div 1 2))))
 
 (define-function-converter (%signum %hstep) (op x)
+  :builtin
   "Convert signum(x) into 2 hstep(x) - 1."
   (declare (ignore op))
   (let ((z (car x)))
     (sub (mul 2 (ftake '%hstep z)) 1)))
 
 (define-function-converter (%hstep %signum) (op x)
+  :builtin
   "Convert hstep(x) into (1+signum(x))/2."
   (declare (ignore op))
   (let ((z (car x)))
     (div (add 1 (ftake '%signum z)) 2)))
 
 (define-function-converter (:trig $normalize_trig_argument) (op x)
+  :builtin
  "Normalize the argument of trigonometric functions when the argument
 is first degree polynomial in %pi."
   (let ((z (car x))) 
@@ -662,6 +869,7 @@ compared using `alike`."
 ;; converter an alias of (%gamma %sin). So function_convert(gamma = sin, gamma(X)*gamma(1-X)*a*b*X = 42)
 ;; will properly trigger the rule.
 (define-function-converter ((mtimes %sin) (%gamma %sin)) (op x)
+  :builtin
   (declare (ignore op))
   (flet ((gamma-p (s) (and (consp s) (eq (caar s) '%gamma))))
      (let* ((e (fapply 'mtimes x)) (ll (fapply '$set (mapcar #'first (xgather-args-of e '%gamma)))) (ee))
@@ -683,6 +891,7 @@ compared using `alike`."
 
 ;; An example of a converter that uses the class system.
 (define-function-converter (:trig $sin_cos) (op x)
+  :builtin
  ;; "Convert all six trigonometric functions to sin/cos form."
   (let ((z (first x)))
     (case op
@@ -695,23 +904,27 @@ compared using `alike`."
       (t (ftake op z)))))
 
 (define-function-converter (:trig %exp) (op x)
+  :builtin
  "Convert all trigonometric functions to exponential form."
   ($exponentialize (fapply op x)))
 
 (define-function-converter (:hyperbolic %exp) (op x)
+  :builtin
 "Convert all hyperbolic functions to exponential form."
   ($exponentialize (fapply op x)))
 
 (define-function-converter (:inverse_trig $log) (op x)
+  :builtin
 "Convert all inverse trigonometric functions to logarithmic form."
   ($logarc (fapply op x)))
 
 (define-function-converter (:exp :trig) (op x)
+  :builtin
   ($demoivre (fapply op x)))
 
 (define-function-converter (:trig $trig_tan_half_angle) (op x)
-  "
-Rewrite trigonometric functions in terms of the tangent half–angle
+  :builtin
+  "Rewrite trigonometric functions in terms of the tangent half–angle
 substitution t = tan(z/2).  Produces rational functions of t:
 
     sin(z) → 2 t / (1 + t^2)
@@ -742,8 +955,8 @@ unchanged.
     (t    (ftake op z)))))
 
 (define-function-converter (:hyperbolic $hyperbolic_tanh_half_angle) (op x)
-  "
-Rewrite hyperbolic functions in terms of the tanh half–angle substitution
+  :builtin
+  "Rewrite hyperbolic functions in terms of the tanh half–angle substitution
 u = tanh(z/2).  Produces rational functions of u:
 
     sinh(z) → 2 u / (1 - u^2)
@@ -754,8 +967,7 @@ u = tanh(z/2).  Produces rational functions of u:
     coth(z) → (1 + u^2) / (2 u)
 
 If OP is not one of the standard hyperbolic operators, return OP(z)
-unchanged.
-"
+unchanged."
   (let* ((z (car x))
          (u (ftake '%tanh (div z 2))))
     (case op
@@ -774,11 +986,13 @@ unchanged.
       (t    (ftake op z)))))
 
 (define-function-converter (:gamma_like %gamma) (op x)
+  :builtin
   ($makegamma (fapply op x)))
 
 ;; Since gamma(2/3)*gamma(5/3) simplifies to (2/3)*gamma(2/3), this code
 ;; misses conversion of gamma(2/3)*gamma(5/3)/gamma(7/3), for example.
 (define-function-converter ((mtimes %beta) (%gamma %beta)) (op x)
+  :builtin
    "Rewrite products of gamma functions into beta functions when possible.
 This converter looks for subexpressions of the form
     gamma(a) * gamma(b) / gamma(a + b)
@@ -805,6 +1019,7 @@ subexpression."
       e))
 
 (define-function-converter ((mtimes %binomial) (%gamma %binomial)) (op x)
+  :builtin
    "Rewrite products of gamma functions into a binomial coefficient when possible.
 This converter looks for subexpressions of the form
     gamma(a+1) /(gamma(b+1)*gamma(a+1-b)
@@ -832,6 +1047,7 @@ subexpression."
       e))
 
 (define-function-converter ((:algebraic $hyperbolic) (%exp %hyperbolic)) (op x)
+  :builtin
   (setq x (fapply op x))
   (let ((ll (xgather-args-of x 'mexpt)) (g (gensym)))
     (dolist (lx ll)
@@ -860,6 +1076,7 @@ subexpression."
           
   ;; inequations:
  (define-function-converter (:inequation $zero_lhs) (op x)
+   :builtin
   "Normalize an inequation `a op b` to the zero LHS form `(a - b) op 0`."
   (destructuring-bind (a b) x
     (ftake op (resimplify ($factor (sub a b))) 0)))
@@ -892,8 +1109,3 @@ subexpression."
   (declare (ignore op))
   (ftake '%d (car x)))
 
-(defmfun $list_alias ()
-  (maphash #'(lambda (a b) (print `(a = ,a b = ,b))) *function-convert-hash-alias*))
-
-(defmfun $list_converters ()
-  (maphash #'(lambda (a b) (print `(a = ,a b = ,b))) *function-convert-hash*))
