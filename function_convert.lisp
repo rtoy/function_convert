@@ -311,13 +311,13 @@ found."
       (step (list (list src)))))))
 
 (defun apply-path (expr path)
-  ;; Apply each hop in PATH to EXPR.
-  ;; PATH is a list like (f g h k), meaning f→g, g→h, h→k.
+ " The second argument PATH is a list like (f g h k), meaning f→g, g→h, h→k. Apply 
+   these converters (left to right) to the expression expr."
   (if (or (null path)
           (null (cdr path)))
       expr
-      (let* ((from  (car path))
-             (to    (cadr path))
+      (let* ((from (car path))
+             (to (cadr path))
              (expr2 (function-convert expr from to)))
         (apply-path expr2 (cdr path)))))
 
