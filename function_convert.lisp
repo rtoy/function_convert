@@ -615,6 +615,73 @@ and whose second and third elements are valid operator names or a lambda."
 
     '$done))
 
+(defmfun $show_converters ()
+  (format t "~%Converters:~%")
+
+  (maphash
+   (lambda (key fn)
+     (let* ((from (car key))
+            (to   (cdr key))
+            (builtin? (member key *built-in-converters* :test #'equal)))
+       (format t "  ~A ~A ~A   (~A)~%"
+               from
+               (get *function-convert-infix-op* 'op)
+               to
+               (if builtin? "built-in" "user"))))
+   *function-convert-hash*)
+
+  '$done)
+
+  (defmfun $show_aliases ()
+  (format t "~%Converter aliases:~%")
+
+  (maphash
+   (lambda (key val)
+     (format t "  ~A ~A ~A   →   ~A ~A ~A~%"
+             (car key)
+             (get *function-convert-infix-op* 'op)
+             (cdr key)
+             (car val)
+             (get *function-convert-infix-op* 'op)
+             (cdr val)))
+   *function-convert-hash-alias*)
+
+  '$done)
+
+  (defmfun $converter_neighbors (op)
+  (format t "~%Neighbors of ~A:~%" op)
+
+  (maphash
+   (lambda (key fn)
+     (when (eq (car key) op)
+       (format t "  ~A~%" (cdr key))))
+   *function-convert-hash*)
+
+  '$done)
+
+  (defmfun $converter_graph ()
+  (format t "~%Converter graph (adjacency list):~%")
+
+  (let ((nodes '()))
+    ;; Collect all FROM nodes
+    (maphash
+     (lambda (key fn)
+       (pushnew (car key) nodes))
+     *function-convert-hash*)
+
+    ;; Print adjacency for each node
+    (dolist (n (sort nodes #'string< :key #'symbol-name))
+      (format t "~A: " n)
+      (let ((outs '()))
+        (maphash
+         (lambda (key fn)
+           (when (eq (car key) n)
+             (push (cdr key) outs)))
+         *function-convert-hash*)
+        (format t "~A~%" (nreverse outs))))
+
+    '$done))
+
 (defmfun $delete_converter (eqs)
   ;; Allow: delete_converter(f = g)
   ;;        delete_converter([f = g, h = k])
