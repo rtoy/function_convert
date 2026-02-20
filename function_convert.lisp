@@ -269,8 +269,6 @@ or if an alias (FROM-ALT . TO-ALT) is already present in
       (t
        (error "Malformed converter spec: ~S" spec)))))
 
-
-
 (defun find-conversion-path (src dst)
   "Find a shortest conversion path from SRC to DST.
 
@@ -326,6 +324,7 @@ found."
 ;; function_convert([sinc = sin, sin = exp], XXX). This code checks the validity of the
 ;; first argument.
 (defmfun $function_convert (subs e)
+  
   (let ((fun-subs-list (if ($listp subs)
                            (cdr subs)
                            (list subs))))
@@ -358,19 +357,41 @@ found."
       ;; 1. Validate all substitutions
       (mapc #'check-subs fun-subs-list)
 
-      ;; 2. For each substitution, resolve aliases, find path, apply it
       (dolist (q fun-subs-list)
         (multiple-value-bind (aa bb)
-            (lookup-converter-alias (fn (second q))
-                                    (fn (third q)))
-          (let ((path (find-conversion-path aa bb)))
-            (if (null path)
-                (merror "No conversion path from ~M to ~M" aa bb)
-                (loop for (from to) on path while to do
-                      (setf e (function-convert e from to)))))))
-
+         (lookup-converter-alias (fn (second q)) (fn (third q)))
+         (setq e (function-convert e aa bb))))
       e)))
+      ;; 2. For each substitution, resolve aliases, find path, apply it
+     ; (dolist (q fun-subs-list)
+     ;   (print `(q = ,q))
+     ;   (print (lookup-converter (second q) (second q) (third q)))
+     ;  (multiple-value-bind (aa bb)
+      ;      (lookup-converter-alias (fn (second q))
+;(fn (third q)))
+      ;    (let ((path (find-conversion-path aa bb)))
+      ;      (if (null path)
+       ;         (merror "No conversion path from ~M to ~M" aa bb)
+       ;         (loop for (from to) on path while to do
+       ;               (setf e (function-convert e from to)))))))
 
+      ;e)))
+
+(defmfun $larry (sub e)
+  (let* ((f (cadr sub))
+         (g (caddr sub))
+         (path (find-conversion-path f g)))
+    (cond
+      ;; No conversion needed if the path is either empty or has only one element
+      ((null (cdr path)) e)
+      (t
+       (let ((from (pop path)))
+         (while path
+           (let ((to (pop path)))
+             (setq e (function-convert e from to))
+             (setq from to))))
+       e))))
+       
 (defun function-convert (e op-old op-new)
    (cond (($mapatom e) e)
          ;; Case I: both op-old & op-new are symbols. For this case, look up the 
@@ -546,7 +567,7 @@ found."
   (let ((z (car x)))
     (mul z (ftake '%signum z))))
 
-(define-function-converter ((:algebraic mabs) (signum mabs)) (op x)
+(define-function-converter ((:algebraic mabs) (%signum mabs)) (op x)
   "Convert subexpressions of the form X*signum(X) into abs(X).  This converter
 does not rewrite signum(X) itself, since X*signum(X) is not a subexpression
 of signum(X); only explicit products matching that pattern are transformed."
@@ -873,3 +894,6 @@ subexpression."
  (define-function-converter ((%b %d) ($pp $qq)) (op x)
   (declare (ignore op))
   (ftake '%d (car x)))
+
+(defmfun $larry ()
+  (maphash #'(lambda (a b) (print `(a = ,a b = ,b))) *function-convert-hash-alias*))
