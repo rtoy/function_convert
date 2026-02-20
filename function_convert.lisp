@@ -391,7 +391,7 @@ found."
              (setq e (function-convert e from to))
              (setq from to))))
        e))))
-       
+
 (defun function-convert (e op-old op-new)
    (cond (($mapatom e) e)
          ;; Case I: both op-old & op-new are symbols. For this case, look up the 
@@ -895,5 +895,5 @@ subexpression."
   (declare (ignore op))
   (ftake '%d (car x)))
 
-(defmfun $larry ()
+(defmfun $list_alias ()
   (maphash #'(lambda (a b) (print `(a = ,a b = ,b))) *function-convert-hash-alias*))
