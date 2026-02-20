@@ -32,6 +32,20 @@ The package provides a simple, declarative way to convert between related functi
 (%i3) function_convert('sinc = lambda([q], sin(q)/q),1+sinc(x));
 (%o3) sin(x)/x+1
 ```
+### BFS converter dispatch
+
+When a converter, say `f = g` isn't defined, `function_convert` does a breadth-first search (BFS) 
+to attempt to do the conversion. Here is an example
+```maxima
+(%i1) function_convert(sinc = gamma, sinc(z));
+                                       1
+(%o1)                    ─────────────────────────────
+                                    z          z
+                         gamma(1 - ───) gamma(─── + 1)
+                                   %pi        %pi
+```
+There is no explicit `sinc = gamma` converter, but there are built-in converters for `sinc = sin` and for
+`sin = gamma`.
 
 ### Chaining multiple conversions
 To apply two or more conversions, put the converters into a list; for example
@@ -103,12 +117,12 @@ is the definition of the converter for `sinc = sin`
   (let ((z (car x)))
     (div (ftake '%sin z) z)))
 ```
-The function `list_converters` prints the docstring for each converter along with
-the identifier for the rule (`f = g`), so it is useful to include a docstring for
+The function `list_converters` prints the doc string for each converter along with
+the identifier for the rule (`f = g`), so it is useful to include a doc string for
 each converter function.
 
 It is possible to define a rule that applies to a class of functions, for example to all
-trigonmetric functions. Here is the definition of a rule that converts all six trigonometric
+trigonometric functions. Here is the definition of a rule that converts all six trigonometric
 functions to exponential form:
 ```lisp
 (define-function-converter (:trig $exp) (op x)
@@ -117,7 +131,12 @@ functions to exponential form:
 ```
 Unlike the `sinc` to `sin` rule, this rule uses the argument `op`.
 
-
+## Built-in and User-level converters
+A converter can be marked as `built-in`, thus making it impossible to delete it using just user-level functions; for example
+```lisp
+(%i1) delete_converter(sinc = sin);
+Cannot delete built-in converter (%SINC → %SIN).
+```
 
 ## Algorithm and Implementation 
 
@@ -180,6 +199,8 @@ Finally, the package has at least one built-in rule that is difficult to fully d
 - [x] decide if the converter(s) are first `function_convert(f = g,expr)` or last `function_convert(expr, f = g)`
 - [x] Update README.md to reflect the change from "=" to 
 - [x] Remove the sinc package from this repo & commit it to Maxima
+- [x] Build a BFS scheme for chaining converters
+- [x] Build a scheme for marking a converter as built-in and make it impervious to deletion.
 
 
 

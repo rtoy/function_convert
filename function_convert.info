@@ -1,0 +1,80 @@
+This is function_convert.info, produced by makeinfo version 6.8 from
+function_convert.texi.
+
+ -- Function: function_convert (CONVERTERS, EXPR)
+     Apply one or more function-conversion rules to the expression EXPR.
+     The argument CONVERTERS is either a single conversion rule 'f => g'
+     or a list of such rules.
+
+     A conversion rule has the form 'f => g', where 'f' is the source
+     function and 'g' is either a target function name or a lambda
+     expression.
+
+     The operator '=>' indicates a _semantic_ conversion, not a literal
+     renaming.  For example, the rule 'sinc => sin' does not replace the
+     symbol 'sinc' by 'sin'.  Instead, it applies the 'sinc(x) =
+     sin(x)/x'; specifically
+          (%i1) function_convert('sinc => 'sin, sinc(x) + 1);
+                                            sin(x)
+          (%o1)                             ────── + 1
+                                              x
+
+     Users may also supply an explicit conversion by giving a lambda
+     expression on the right-hand side.  For example:
+
+          (%i2) function_convert('erfc => lambda([q], 1-erf(q)), erfc(x)^2);
+                                                       2
+          (%o2)                            (1 - erf(x))
+
+     Multiple conversions may be given in a Maxima list; they are
+     applied from left to right.
+
+     *Example*
+
+          (%i3) function_convert(['sinc => 'sin,'sin => 'exp], sinc(x));
+                                          %i x     - %i x
+                                       (%e     - %e      ) %i
+          (%o3)                      - ──────────────────────
+                                                2 x
+
+ -- Function: list_converters [name_1, name_2, ...]
+
+     Return a list of all registered function converters known to
+     'function_convert'.  In addition to returning this list, each
+     converter is printed as a pair 'FROM => TO' followed by a short
+     description taken from the converter's docstring.
+
+     When called with no arguments, 'list_converters' returns the full
+     set of converters.  When one or more names are supplied, only those
+     converters whose source function matches one of the given names are
+     returned.
+
+          (%i1) list_converters();
+          sinc => sin : Convert sinc(x) into sin(x)/x.
+          csc  => sin : Convert csc(x) into 1/sin(x).
+          cos  => exp : Convert cos(x) to exponential form.
+          tan  => sin : Convert tan(x) into sin(x)/cos(x).
+          sin  => exp : Convert sin(x) to exponential form.
+          (%o1) [sinc => sin, csc => sin, cos => exp, tan => sin, sin => exp]
+
+          (%i2) list_converters(sinc, tan);
+          sinc => sin : Convert sinc(x) into sin(x)/x.
+          tan  => sin : Convert tan(x) into sin(x)/cos(x).
+          (%o2) [sinc => sin, tan => sin]
+
+     The list of converters is maintained internally and entries appear
+     in an unspecified order.
+
+     'function_convert'.
+
+
+
+
+Tag Table:
+
+End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:
