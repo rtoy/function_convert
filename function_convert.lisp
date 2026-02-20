@@ -62,7 +62,8 @@
 
 ;; The table *converter-class-table* allows for class-based dispatch of a single converter to 
 ;; handle families of functions such as trigonometric, hyperbolic, inverse trigonometric, 
-;; inverse hyperbolic, and logarithmic operators, not expression types. 
+;; inverse hyperbolic, and logarithmic operators, not expression types. An operator should be
+;; a member of only one class. 
 (defparameter *converter-class-table*
   '((:trig        . (%sin %cos %tan %sec %csc %cot))
     (:hyperbolic  . (%sinh %cosh %tanh %sech %csch %coth))
@@ -81,6 +82,9 @@
 ;; given an operator such as %sin or %log, return the class keyword
 ;; (:trig, :logarithmic, etc.) whose operator list contains it.
 ;; Returns NIL if the operator does not belong to any registered class.
+
+;; Operators should be in at most one class key. If it's in more than one key, 
+;; this function returns the "first" class that it finds. 
 (defun converter-class-of (op)
   "Return the class key for OP, or NIL if OP belongs to no class."
   (dolist (entry *converter-class-table* nil)
