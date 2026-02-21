@@ -1172,28 +1172,3 @@ subexpression."
   (declare (ignore op))
   (ftake '%d (car x)))
 
-(define-function-converter ((mplus $recur) (:bessel $recur)) (op x)
-  :builtin
-  "Rewrite J_{n+1}(x) using the three-term recurrence relation."
-  (print `(op = ,op))
-  (let ((ll (xgather-args-of x op)))
-     (print ll))
-  69)
-
-  #| 
-  (declare (ignore op))
-  (let* ((n (first args))
-         (x (second args)))
-    ;; If n is of the form k+1, rewrite
-    (if (and (consp n)
-             (eq (car n) 'mplus)
-             (equal (cadr n) 1))
-        (let ((k (caddr n)))
-          ;; J_{k+1}(x) = (2k/x) J_k(x) - J_{k-1}(x)
-          (mminus
-           (mtimes (mquot (mtimes 2 k) x)
-                   (ftake '%bessel_j k x))
-           (ftake '%bessel_j (mminus k 1) x)))
-        ;; Otherwise leave unchanged
-        (ftake '%bessel_j n x))))
-  |#
