@@ -885,40 +885,7 @@ is first degree polynomial in %pi."
       (t  (ftake op z)))))
 
 ;; The function gather-args-of is defined in limit.lisp, but gather-args-of only gathers arguments
-;; that involve a specified varible. Here we want to gather all such arguments. The version has
-;; predicate for final argument that can be used to exclude arguments. The default for this 
-;; predicate is x |-> true. Possibly, this function could replace gather-args-of.
-#| 
-(defun xgather-args-of (e fn &optional
-                           (pred #'(lambda (q) (declare (ignore q)) t))
-                           (max-depth nil)
-                           (depth 0))
-  "Return a list of argument lists for calls to `fn` found in the
-expression `e`. Recurses through all subexpressions, applying `pred`
-to each candidate call; only those for which `pred` returns true
-are included. If `max-depth` is supplied, recursion stops when the
-given depth is reached. Results are returned without duplicates,
-compared using `alike`."
-  (cond
-    ;; Stop if max-depth is given and reached.
-    ((and max-depth (>= depth max-depth)) nil)
-
-    (($mapatom e) nil)
-
-    (t
-     (let* ((subresults
-             (reduce #'append
-                     (mapcar #'(lambda (q) (xgather-args-of q fn pred max-depth (1+ depth))) (cdr e))
-                     :initial-value nil))
-            (head
-             (and (consp e)
-                  (consp (car e))
-                  (eq fn (caar e))
-                  (funcall pred e)
-                  (list (cdr e)))))
-       (remove-duplicates (append head subresults) :test #'alike)))))
-|#
-
+;; that involve a specified varible. Here we want to gather all such arguments. 
 (defun xgather-args-of (e fn)
    (cond (($mapatom e) nil)        
          ((eq fn (caar e)) (list (cdr e)))
@@ -926,7 +893,7 @@ compared using `alike`."
         	(remove-duplicates (reduce #'append 
 			 (mapcar #'(lambda (q) 
 			     (xgather-args-of q fn)) (cdr e))) :test #'alike))))
-           
+
 ;; Experimental converter for gamma(X)*gamma(1-X) => pi/(sin(pi X)). This must dispatch
 ;; on a product, not on gamma--this is likely confusing for a user. So we give the 
 ;; converter an alias of (%gamma %sin). So function_convert(gamma = sin, gamma(X)*gamma(1-X)*a*b*X = 42)
