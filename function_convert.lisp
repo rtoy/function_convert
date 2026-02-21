@@ -615,94 +615,6 @@ and whose second and third elements are valid operator names or a lambda."
 
     '$done))
 
-(defmfun $show_converters ()
-  (format t "~%Converters:~%")
-
-  (maphash
-   (lambda (key fn)
-     (let* ((from (car key))
-            (to   (cdr key))
-            (builtin? (member key *built-in-converters* :test #'equal)))
-       (format t "  ~A ~A ~A   (~A)~%"
-               from
-               (get *function-convert-infix-op* 'op)
-               to
-               (if builtin? "built-in" "user"))))
-   *function-convert-hash*)
-
-  '$done)
-
-  (defmfun $show_aliases ()
-  (format t "~%Converter aliases:~%")
-
-  (maphash
-   (lambda (key val)
-     (format t "  ~A ~A ~A   →   ~A ~A ~A~%"
-             (car key)
-             (get *function-convert-infix-op* 'op)
-             (cdr key)
-             (car val)
-             (get *function-convert-infix-op* 'op)
-             (cdr val)))
-   *function-convert-hash-alias*)
-
-  '$done)
-
-  (defmfun $converter_neighbors (op)
-  (format t "~%Neighbors of ~A:~%" op)
-
-  (maphash
-   (lambda (key fn)
-     (when (eq (car key) op)
-       (format t "  ~A~%" (cdr key))))
-   *function-convert-hash*)
-
-  '$done)
-
-  (defmfun $converter_graph ()
-  (format t "~%Converter graph (adjacency list):~%")
-
-  (let ((nodes '()))
-    ;; Collect all FROM nodes
-    (maphash
-     (lambda (key fn)
-       (pushnew (car key) nodes))
-     *function-convert-hash*)
-
-    ;; Print adjacency for each node
-    (dolist (n (sort nodes #'string< :key #'symbol-name))
-      (format t "~A: " n)
-      (let ((outs '()))
-        (maphash
-         (lambda (key fn)
-           (when (eq (car key) n)
-             (push (cdr key) outs)))
-         *function-convert-hash*)
-        (format t "~A~%" (nreverse outs))))
-
-    '$done))
-
-(defmfun $converter_exists (eq)
-  ;; Validate the equation structure
-  (check-converter eq)
-
-  (let* ((from (second eq))
-         (to   (third eq))
-
-         ;; Normalize via alias system
-         (values (multiple-value-list
-                  (lookup-converter-alias from to)))
-         (norm-from (first values))
-         (norm-to   (second values))
-
-         ;; Look up converter function
-         (fn (gethash (cons norm-from norm-to)
-                      *function-convert-hash*)))
-
-    (if fn
-        '$true
-        '$false)))
-        
 (defmfun $delete_converter (eqs)
   ;; Allow: delete_converter(f = g)
   ;;        delete_converter([f = g, h = k])
@@ -1260,3 +1172,28 @@ subexpression."
   (declare (ignore op))
   (ftake '%d (car x)))
 
+(define-function-converter ((mplus $recur) (:bessel $recur)) (op x)
+  :builtin
+  "Rewrite J_{n+1}(x) using the three-term recurrence relation."
+  (print `(op = ,op))
+  (let ((ll (xgather-args-of x op)))
+     (print ll))
+  69)
+
+  #| 
+  (declare (ignore op))
+  (let* ((n (first args))
+         (x (second args)))
+    ;; If n is of the form k+1, rewrite
+    (if (and (consp n)
+             (eq (car n) 'mplus)
+             (equal (cadr n) 1))
+        (let ((k (caddr n)))
+          ;; J_{k+1}(x) = (2k/x) J_k(x) - J_{k-1}(x)
+          (mminus
+           (mtimes (mquot (mtimes 2 k) x)
+                   (ftake '%bessel_j k x))
+           (ftake '%bessel_j (mminus k 1) x)))
+        ;; Otherwise leave unchanged
+        (ftake '%bessel_j n x))))
+  |#
