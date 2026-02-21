@@ -887,12 +887,14 @@ is first degree polynomial in %pi."
 ;; The function gather-args-of is defined in limit.lisp, but gather-args-of only gathers arguments
 ;; that involve a specified varible. Here we want to gather all such arguments. 
 (defun xgather-args-of (e fn)
-   (cond (($mapatom e) nil)        
-         ((eq fn (caar e)) (list (cdr e)))
-          (t 
-        	(remove-duplicates (reduce #'append 
-			 (mapcar #'(lambda (q) 
-			     (xgather-args-of q fn)) (cdr e))) :test #'alike))))
+  "Return a list of argument lists from all subexpressions of E whose
+   operator is FN. Thus when a subexpression has the form ((FN ...)  args), include (list args) 
+   in the result. Using ALIKE as the equality test, remove duplicates."
+  (cond (($mapatom e) nil)
+        ((eq fn (caar e))  (list (cdr e)))
+        (t
+          (remove-duplicates
+            (reduce #'append (mapcar #'(lambda (q) (xgather-args-of q fn)) (cdr e))) :test #'alike))))
 
 ;; Experimental converter for gamma(X)*gamma(1-X) => pi/(sin(pi X)). This must dispatch
 ;; on a product, not on gamma--this is likely confusing for a user. So we give the 
