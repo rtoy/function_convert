@@ -26,16 +26,18 @@
 \setlist[itemize]{itemsep=2pt, topsep=2pt, parsep=0pt, partopsep=0pt}
 
 % --- Microtypography ---
-\usepackage{microtype}
+%\usepackage{microtype}
+\usepackage[final,tracking=true,kerning=true,spacing=true]{microtype}
 
 % --- General utilities ---
 \usepackage{amsmath}
 \usepackage{mathtools}
-\usepackage{enumitem}
 
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{upgreek}
+
+\newcommand{\ttq}[1]{\texttt{`#1'}}
 
 \DeclareRobustCommand{\funconvert}{\texttt{file\kern0.21em convert}{\hspace{0.2em}}}
 
@@ -404,7 +406,7 @@ handling families of related functions. Adding a new trigonometric operator
 to the system requires only updating the class table; the converter itself
 does not need to be modified.
 
-\section{A more advanced converter}
+\subsection{A more advanced converter}
 
 In this section, we show to to build a converter that rewrites explicit products of the form
 $x  \mathrm{signum}(x)$ as $|x|$.   The converter does not rewrite 
@@ -466,13 +468,17 @@ We end with a few comments about the \funconvert package that are not directly r
 
 \subsection {Motivation} 
 
-Many systems (Maple~\cite{maple-convert}, Mathematica~\cite{mathematica-rules}, SymPy~\cite{sympy-rewrite}) provide built‑in expansions or rewrite mechanisms, but Maxima uses an alphabet soup of functions that perform semantic function‑to‑function conversions; examples include `makefact` and `makegamma`. In other cases, transformations are controlled by option variables—for example, `expintrep`. 
+Many systems (Maple~\cite{maple-convert}, Mathematica~\cite{mathematica-rules}, SymPy~\cite{sympy-rewrite}) provide built‑in expansions or rewrite mechanisms, but Maxima uses an alphabet soup of 
+functions that perform semantic function‑to‑function conversions; examples include  \ttq{makefact}
+and \ttq{makegamma}. In other cases, transformations are controlled by option variables—for example, 
+\ttq{expintrep}. 
 
-These names are easy to forget and are not always easy to locate in the user documentation. The \funconvert package may offer a simple, uniform, and user‑extensible way to perform such conversions.
+These names are easy to forget and are not always easy to locate in the user documentation. 
+The \funconvert package may offer a simple, uniform, and user‑extensible way to perform such conversions.
 
-\subsection{Using `defrule` as an alternative to `function\_convert`}
+\subsection{Using  \ttq{defrule} as an alternative to \funconvert}
 
-Maxima's pattern-base `defrule` tool is an alternative to using `function\_convert`. A simple
+Maxima's pattern-base \ttq{defrule} tool is an alternative to using \funconvert. A simple
 example 
 \begin{maximabox}
 \begin{verbatim}
@@ -483,16 +489,18 @@ example
 	(x*sin(sin(x)/x))/sin(x)
 \end{verbatim}
 \end{maximabox}
-This method works well, especially for single use function-to-function conversions. But a `kill(all)` removes all rules defined by `defrule` and it still relies on an alphabet soup of functions.  Changing
-Maxima to allow rules that cannot be removed by `kill(all)` is, of course, a 
+This method works well, especially for single use function-to-function conversions. But a \ttq{kill(all)} removes all rules defined by 
+\ttq{defrule} and it still relies on an alphabet soup of functions.  Changing
+Maxima to allow rules that cannot be removed by \ttq{kill(all)} is, of course, a 
 small matter of programming~\cite{nardi-small-matter},
 but  it would violate a long‑standing design principle that users must always be able to return the system to a clean, rule‑free state.
 
 Additionally, it is difficult to define rules that need to match two or more terms in a sum or 
 product.  The \funconvert package has several converters that do just that.  Often these 
 converters internally rely on the \texttt{ratsubst} to do semantic substitutions--something
-that is difficult for a rule defined by `defrule`
-Finally, the package has at least one built-in rule that is difficult to fully duplicate using `defrule`: 
+that is difficult for a rule defined by \ttq{defrule}.
+Finally, the package has at least one built-in rule that is difficult to fully duplicate using 
+\ttq{defrule}: 
 \begin{maximabox}
 \begin{verbatim}
 (%i1) function_convert('gamma = 'sin, 20252*x*gamma(x)*gamma(1-x) < %pi);
