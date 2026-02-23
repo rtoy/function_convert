@@ -18,3 +18,48 @@
 *.err
 *.log
 *.html
+# LaTeX auxiliary files
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex
+*.nav
+*.snm
+*.vrb
+
+# BibTeX
+*.bbl
+*.blg
+
+# Indexing
+*.idx
+*.ilg
+*.ind
+
+# Glossaries
+*.acn
+*.acr
+*.alg
+*.glg
+*.glo
+*.gls
+*.ist
+
+# MetaPost / PSTricks
+*.mp
+*.mpx
+
+# TeXworks / TeXShop
+*.pdfsync
+*.texpadtmp
+
+# Editors
+*~
+*.swp
+*.bak

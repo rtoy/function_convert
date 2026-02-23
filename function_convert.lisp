@@ -829,7 +829,7 @@ and whose second and third elements are valid operator names or a lambda."
   (let ((z (car x)))
     (mul z (ftake '%signum z))))
 
-(define-function-converter ((:algebraic mabs) (%signum mabs)) (op x)
+(define-function-converter ((mtimes mabs) (%signum mabs)) (op x)
   :builtin
   "Convert subexpressions of the form X*signum(X) into abs(X).  This converter
 does not rewrite signum(X) itself, since X*signum(X) is not a subexpression
@@ -1113,6 +1113,20 @@ subexpression."
   (destructuring-bind (a b) x
     (ftake op (resimplify ($factor (sub a b))) 0)))
 
+#| undone or miscelaneous
+(define-function-converter ((mplus $bessel_recursion) (%bessel_j $bessel_recursion)) (op x)
+ :builtin
+ (let* ((e (fapply 'mplus x)) (ll (xgather-args-of e '%bessel_j)) (pp))
+   ;; Each member of ll has the form (order, xxx). Task I: Make a list of lists with
+   ;; the same xxx and varying orders. I think the easiest way is to convert the argument
+   ;; list to a list of Maxima lists and to use $equiv_classes.
+   (setq ll (fapply '$set (mapcar #'(lambda (s) (fapply 'mlist s)) ll)))
+   (setq pp ($equiv_classes ll #'(lambda (a b) (alike1 (third a) (third b)))))
+   ;; Now pp is a Maxima set of sets, and each inner most set member is a Maxima
+   ;; list of the form [order, xxx]
+   (setq pp (cdr pp))
+   
+   pp))
 
 ;;; These are toy converters that I used to test find-converter-path. There remains some issues with
 ;;; find-converter-path used with class keys and aliases. So let's keep these for
@@ -1141,3 +1155,10 @@ subexpression."
   (declare (ignore op))
   (ftake '%d (car x)))
 
+(define-function-converter ($larry $pooh) (op x)
+  (declare (ignore op))
+  (ftake '%larry (ftake '%larry (car x))))
+
+(define-function-converter ((mexpt $expand) ($power $expand_powers)) (op x)
+  ($expand (fapply 'mexpt x)))
+|#

@@ -1,0 +1,523 @@
+\documentclass[12pt,fleqn]{article}
+% Enable a table of contents
+\setcounter{tocdepth}{2}   % sections and subsections
+\setcounter{secnumdepth}{2}
+
+% Optional: add the ToC to the PDF bookmarks if using hyperref
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=blue,
+  citecolor=black,
+  pdfborder={0 0 0}
+}
+
+% --- Page layout ---
+
+\usepackage{setspace}        % Optional: adjust line spacing
+\setstretch{1.08}
+\usepackage[margin=0.75in]{geometry}
+% --- Fonts ---
+\usepackage{tgtermes}        % Modern serif text font (TeX Gyre Termes)
+\usepackage{newtxmath}       % Matching math font with good coverage
+
+\usepackage{enumitem}
+\setlist[itemize]{itemsep=2pt, topsep=2pt, parsep=0pt, partopsep=0pt}
+
+% --- Microtypography ---
+\usepackage{microtype}
+
+% --- General utilities ---
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{enumitem}
+
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{upgreek}
+
+\DeclareRobustCommand{\funconvert}{\texttt{file\kern0.21em convert}{\hspace{0.2em}}}
+
+% --- Section styling (optional, but elegant) ---
+\usepackage{titlesec}
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+
+
+\usepackage{tcolorbox}
+\tcbuselibrary{skins, breakable}
+\tcbuselibrary{listings}
+
+\newenvironment{maximabox}
+  {\begin{tcolorbox}[
+      breakable,
+      enhanced,
+      colback=black!2,
+      colframe=black!50,
+      boxrule=0.4pt,
+      arc=2pt,
+      left=6pt,
+      right=6pt,
+      top=6pt,
+      bottom=6pt,
+      before skip=10pt,
+      after skip=10pt
+    ]}
+  {\end{tcolorbox}}
+
+
+\newtcblisting{lisplike}{
+  listing only,
+  verbatim
+}
+
+\DeclareMathOperator{\erf}{erf}
+\DeclareMathOperator{\erfc}{erfc}
+\DeclareMathOperator{\erfi}{erfi}
+
+%magic for formating for the bib
+\usepackage{etoolbox}
+\apptocmd{\thebibliography}{\raggedright}{}{}
+
+% --- Metadata ---
+\title{Writing Converters for the Function Convert Package}
+\author{Barton Willis}
+\date{\today}
+
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+
+\section{Introduction and prerequisites}
+
+Maxima's \funconvert package~\cite{willis-function-convert} does semantic function-to-function conversions 
+on Maxima~\cite{maxima} expressions. This document is a tutorial on how to extend the mathematical 
+capabilities of this package by writing your own converters. To do this, 
+you will need
+\begin{itemize}
+  \item to know how to use Maxima and how to use the function convert package,
+  \item to know how to program Maxima using Common Lisp.
+\end{itemize}
+\paragraph*{Source Note} Some text in this tutorial is taken from, or adapted from, the project's
+\texttt{README.md} on GitHub, with the permission of the author.
+
+
+
+
+\section{Features}
+
+We give an overview of the features of the \funconvert package. For basic
+usage, here an example of a converter that replaces each subexpression 
+of a Maxima expression of the form 
+$\erfc(X)$ by $1 - \erf(X)$, where $\erf$ and $\erfc$ are error functions
+and $X$ matches any expression. This converter is built-in to the \funconvert
+ package. To use it, input:
+\begin{maximabox}
+\begin{verbatim}
+(%i1) function_convert(erfc = erf, erfc(x));
+(%o1)                             1 - erf(x)
+\end{verbatim}
+\end{maximabox} 
+\noindent  Of course, the input can be any expression, including nested calls to $\erf$; for 
+example
+\begin{maximabox}
+\begin{verbatim}
+(%i2) function_convert(erfc = erf, x*erfc(x + erfc(z)));
+(%o2)                     x (erf(erf(z) - x - 1) + 1)
+\end{verbatim}
+\end{maximabox} 
+The function \texttt{function\_convert} walks an expression tree and replaces function calls according to well‑defined rules. In that sense, it is straightforward code of a kind repeated many times in Maxima. It is not a pattern matcher or a general rewrite engine.
+
+The package is implemented in Common Lisp. It has been tested using Clozure Common Lisp version 1.13 and SBCL version 2.4.7.
+\subsection{Naming and the alias system}
+In these examples, the left-hand side of the conversion rule \texttt{erfc = erf},
+is the \emph{source function} and the right-hand side is called \texttt{erf} the
+\emph{target function}. The rule \texttt{erfc = erf} does not literally
+replace the source function with the target function, but it instead applies the 
+identity $\erfc(x) = 1 - \erf(x)$ to an expression, replacing the left side with 
+the right side. 
+
+The name of the target function is best thought of a mnemonic for recalling 
+the identity $\erfc(x) = 1 - \erf(x)$, not as a literal function. Actually, the name of the 
+target function could be any Maxima symbol; for example, the rule could be named 
+\texttt{erfc = erfc\_to\_erf}.
+
+Similarly, the alias system also allows the source function to be a
+mnemonic as well.  This feature is useful for naming a converter for an identity 
+such as 
+\begin{equation}
+\Gamma\left(z\right)\Gamma\left(1-z\right)=\uppi/\sin\left(\uppi z\right). \label{gammaid}
+\end{equation}
+Here the left-hand-side of this identity is a product, so the source function for this identity must be multiplication (internally \texttt{mtimes}), not the gamma function. But to a user the conversion rule \texttt{”*” = sin} may seem unnatural.  The alias system allows the converter for this identity to have a much more natural name. The converter for identity Eq. (\ref{gammaid}) is built-in to the \funconvert package;  the alias for this converter is \texttt{gamma = sin}.
+
+A macro takes care of the messy details of defining an alias, along with other housekeeping duties. 
+ 
+ \subsection{Self-documentation feature}
+ 
+ Every converter function should have a doc string.  The doc string is available to the user
+ via the function \texttt{describe\_converter}; for example
+\begin{maximabox}
+  \begin{verbatim}
+    (%i1) describe_converter(sinc = sin);
+Converter: %SINC = %SIN
+Function: #<FUNCTION FUNCTION-CONVERTER-%SINC-%SIN>
+Type: built-in
+
+Docstring:
+  Convert sinc(x) into sin(x)/x.
+  \end{verbatim}
+\end{maximabox}
+If a user-package properly includes a doc string for a converter, that documentation will
+be available via the function \texttt{describe\_converter} once the package is loaded.
+
+\subsection{Class Keys and Class-Based Dispatch}
+
+Converter functions often need to apply the same transformation to an entire
+family of related operators. For example, a converter that rewrites
+trigonometric functions into exponential functions should apply uniformly to
+all six trigonometric functions. Writing six separate converters is tedious and 
+error-prone. The \emph{class key} mechanism provides a solution.
+
+\paragraph{Purpose of Class Keys} A \emph{class key} is a symbolic tag (such as \texttt{:trig} or
+\texttt{:hyperbolic}) that represents a category of operators. The converter
+system uses these tags to perform \emph{class-based dispatch}: a single
+converter registered for a class key is automatically applied to every
+operator belonging to that class.
+
+Class keys classify operators, not expression types. For example, the class
+\texttt{:algebraic} contains the operators \texttt{mplus}, \texttt{mtimes}, and \texttt{mexpt}.
+But if the head operator of an expression belongs to the class \texttt{:algebraic}, that does not imply that the expression itself is algebraic.
+
+\paragraph{The Class Table} The mapping from class keys to operators resides in the 
+global \texttt{*converter-class-table*}. This table is 
+
+\begin{verbatim}
+(defparameter *converter-class-table*
+  '((:trig        . (%sin %cos %tan %sec %csc %cot))
+    (:hyperbolic  . (%sinh %cosh %tanh %sech %csch %coth))
+    (:inv_trig    . (%asin %acos %atan %asec %acsc %acot))
+    (:inv_hyperbolic . (%asinh %acosh %atanh %asech %acsch %acoth))
+    (:exp            . (mexpt))
+    (:gamma_like     . (%gamma %beta %binomial %double_factorial
+                        mfactorial $pochhammer))
+    (:bessel  . (%bessel_j %bessel_y %bessel_i %bessel_k
+                 %hankel_1 %hankel_2 %airy_ai %airy_bi
+                 %airy_dai %airy_dbi))
+    (:algebraic . (mplus mtimes mexpt))
+    (:inequation . (mequal mlessp mleqp mnotequal mgreaterp mgeqp
+                    $notequal $equal))
+    (:logarithmic . (%log)))
+  "Mapping from class keys to lists of operator symbols.")
+\end{verbatim}
+
+Each entry associates a class key with the list of operators that belong to
+that class. The system assumes that \emph{An operator belongs to exactly one class}.
+This ensures unambiguous dispatch: when the converter system encounters an
+operator, it can determine its class uniquely and apply the appropriate
+class-level converter.
+
+\paragraph{How Class Dispatch Works} When the converter system processes an expression, it identifies the operator at the head of the form. It then:
+\begin{enumerate}[label=(\alph*), noitemsep, topsep=0pt]
+  \item looks up the operator in \texttt{*converter-class-table*};
+  \item determines the corresponding class key (e.g., \texttt{:trig});
+  \item checks whether a converter is registered for that class;
+  \item if so, applies that converter to the entire expression.
+\end{enumerate}
+
+\paragraph{Why Class Keys Matter} Class keys provide:
+\begin{itemize}
+  \item \textbf{Abstraction}: one converter per conceptual family.
+  \item \textbf{Extensibility}: adding a new operator to a class requires no
+        changes to existing converters.
+  \item \textbf{Uniformity}: guarantees consistent behavior across related
+        operators.
+  \item \textbf{Clarity}: the class table documents the structure of the
+        operator space.
+\end{itemize}
+
+\subsection{Chaining multiple conversions}
+To apply two or more conversions, put the converters into a list; for example
+
+\begin{maximabox}
+\begin{verbatim}
+(%i1) function_convert(['sinc = 'sin, 'sin = 'exp], sinc(x)^2);
+(%o1) -((%e^(%i*x)-%e^-(%i*x))^2/(4*x^2))
+\end{verbatim}
+\end{maximabox}
+\noindent Changing multiple conversions is handled by the function \texttt{function\_convert}; a writer of
+a converter doesn't need to do anything to allow chaining to work. Converters are applied left-to-right
+
+\subsection{Implicit Dispatch via Breadth-First Search}
+
+The converter system automatically discovers multistep conversion chains.
+If a converter is defined from $f$ to $g$ and another from
+$g$ to $h$, the system is able to convert $f$ to $h$ without any
+additional user-defined rule. In other words, there is no need to define a
+direct converter $f$ to $h$.
+
+This behavior is enabled by a breadth-first search (BFS) over the converter
+graph. The search locates the shortest available path between two operators
+and composes the corresponding converters.  Writers of converters only need
+to know that \funconvert uses BFS, not anything about the internals of this
+mechanism.
+
+\subsection{Errors and Debugging}
+
+When a converter is redefined, Maxima will issue a warning, and when a converter
+doesn't exist,  Maxima returns the input unchanged, but doesn't issue a warning; 
+for example
+\begin{maximabox}
+\begin{verbatim}
+(%i2) function_convert(f = g, a+b);
+(%o2)                                b + a
+\end{verbatim}
+\end{maximabox}
+
+When writing a new converter, if a converter doesn't trigger, the problem is likely due to either
+a typo or some confusion between Maxima nouns and verbs. If a converter that doesn't trigger 
+correctly, try tracing the Common Lisp function \texttt{lookup-converter}. From there, you 
+might be able to diagnose the problem.
+
+\section{Writing converter functions}
+A macro \texttt{define-function-converter} takes care of many of the housekeeping 
+details in writing a converter, including optionally marking the converter as built-in
+and gathering the doc string for the converter to use a user-documentation. The 
+macro also automatically handles the alias system.
+
+Additionally, the function \texttt{function\_convert} does the work of properly mapping
+the converter over the expression tree; all this allows the converter code to be relatively simple.
+We'll begin by examining the source code of the \texttt{erfc = erf} converter.
+
+\subsection{The $\erfc$ to $\erf$ converter}
+
+ The source code for the $\erfc$ to $\erf$ converter is 
+\begin{maximabox}
+\begin{verbatim}
+(define-function-converter (%erfc %erf) (op x)
+    :builtin
+  "Convert erfc(x) into 1 - erf(x)."
+  (declare (ignore op))
+  (let ((z (car x)))
+    (sub 1 (ftake '%erf z))))
+\end{verbatim}
+\end{maximabox}
+The arguments \texttt{\%erf \%erfc} are the source and target functions, 
+respectively.  For this converter, the argument \texttt{op} is bound to the source
+function \texttt{\%erfc}, but  this converter doesn't use this argument, so the
+converter code should declare to ignore it.  The argument \texttt{x} is
+a Common Lisp list of the argument to the function \texttt{\%erfc}.
+
+The optional keyword argument \texttt{:builtin} declares that this converter cannot be
+deleted using user-level functions. The doc string is optional, but important because supplies
+the converter with documentation. The optional keyword must be placed before the doc string.
+
+The mathematical part of the code, that is
+\begin{maximabox}
+\begin{verbatim}
+  (let ((z (car x)))
+    (sub 1 (ftake '%erf z)))
+\end{verbatim}
+\end{maximabox}
+\noindent implements the identity $\erfc(x) = 1 - \erf(x)$.  Notice that since \texttt{x} is a Common Lisp list
+of the argument to \texttt{\%erfc}, it is necessary to apply \texttt{\%erf} to the car of \texttt{x}, and
+not to \texttt{x} itself.  Alternatively, if you prefer, this bit of code can be changed to 
+\begin{maximabox}
+\begin{verbatim}
+      (sub 1 (fapply '%erf x))
+\end{verbatim}
+\end{maximabox}
+All the other details are handled by the macro \texttt{define-function-converter}. 
+\subsection{Alias Dispatch}
+
+As we discussed before, both the source and the target functions of a converter can be given an alias.  This can be useful when the actual source function is a poor mnemonic for the converter name.
+
+Again, the macro \texttt{define-function-converter} takes care of the housekeeping 
+for defining an alias.  The best way to explain how to use alias dispatch is by an 
+example.  Here we give a converter that expands explicit powers, but not 
+products of sums.  The source function must be \texttt{mexpt}, but we'll make
+\texttt{power = expand} an alias for \verb|”^” = expand|. This is how it is done:
+\begin{maximabox}
+\begin{verbatim}
+(define-function-converter ((mexpt $expand) ($power $expand)) (op x)
+  ($expand (fapply 'mexpt x)))
+\end{verbatim}
+\end{maximabox}
+There are two ways to invoke this converter:
+\begin{maximabox}
+\begin{verbatim}
+(%i1) function_convert("^" = expand, (a+b)*x + (1+x)^2);
+(%o1) x^2+(b+a)*x+2*x+1
+
+(%i2) function_convert(power = expand_powers, (a+b)*x + (1+x)^2);
+(%o2) x^2+(b+a)*x+2*x+1
+\end{verbatim}
+\end{maximabox}
+
+
+
+\subsection{Class Key Converter Dispatch}
+
+Class-key converters allow a single definition to handle an entire family of
+related operators. The following example illustrates this idea using the
+trigonometric class \texttt{:trig}. Any operator listed under the
+\texttt{:trig} class key in \texttt{*converter-class-table*} will be handled
+by the same converter, without the need to define six separate rules. For
+this converter, we finally have a reason for the \texttt{op} argument--this
+argument will be bound to anyone of the six trigonometric functions.  The
+main code uses a \texttt{case} statement to handle each of the six cases.
+
+\begin{verbatim}
+(define-function-converter (:trig $sin_cos) (op x)
+  :builtin
+  ;; Convert all six trigonometric functions to sin/cos form.
+  (let ((z (first x)))
+    (case op
+      (%sin (ftake '%sin z))
+      (%cos (ftake '%cos z))
+      (%tan (div (ftake '%sin z) (ftake '%cos z)))
+      (%sec (div 1 (ftake '%cos z)))
+      (%csc (div 1 (ftake '%sin z)))
+      (%cot (div (ftake '%cos z) (ftake '%sin z)))
+      (t (ftake op z)))))
+\end{verbatim}
+This converter is registered for the class key \texttt{:trig}, not for any
+individual operator. When the dispatch system encounters an expression such as
+\texttt{(\%tan x)} or \texttt{(\%csc x)}, it determines that the operator
+belongs to the \texttt{:trig} class and invokes the converter above.
+
+The body of the converter receives two arguments: the operator \texttt{op}
+and its argument list \texttt{x}. The converter then rewrites each
+trigonometric function into its sine--cosine form. Because the class key
+handles the grouping, the converter itself contains only the mathematical
+logic; it does not need to know how many operators belong to the class or
+where they appear in the system.
+
+Class-key converters therefore provide a uniform and extensible mechanism for
+handling families of related functions. Adding a new trigonometric operator
+to the system requires only updating the class table; the converter itself
+does not need to be modified.
+
+\section{A more advanced converter}
+
+In this section, we show to to build a converter that rewrites explicit products of the form
+$x  \mathrm{signum}(x)$ as $|x|$.   The converter does not rewrite 
+\(\mathrm{signum}(x)\) itself, because the pattern \(x \mathrm{signum}(x)\) is 
+not a subexpression of \(\mathrm{signum}(x)\); only explicit products matching that pattern
+are transformed--this is what makes writing the converter somewhat tricky.  The converter logic
+needs to scan the arguments of each product and gather the terms that have $\mathrm{signum}$
+as their head operator.  For each of these terms,  the converter does a rational substitution (\texttt{ratsimp}) of the form \texttt{ratsubst(abs(s), s*signum(s), e)} on the expression \texttt{e},
+that must be a product. The definition is:
+
+\begin{maximabox}
+\begin{verbatim}
+(define-function-converter ((mtimes mabs) (%signum mabs)) (op x)
+  :builtin
+  "Convert subexpressions of the form X*signum(X) into abs(X).  This converter
+does not rewrite signum(X) itself, since X*signum(X) is not a subexpression
+of signum(X); only explicit products matching that pattern are transformed."
+  (let* ((e  (fapply op x))
+         (ll (xgather-args-of e '%signum)))
+    (dolist (lx ll)
+      (let ((s (car lx)))
+        (setq e ($ratsubst (ftake 'mabs s)
+                           (mul s (ftake '%signum s))
+                           e))))
+    ($expand e 0 0)))
+\end{verbatim}
+\end{maximabox}
+
+\subsection*{How the converter works}
+
+\begin{enumerate}[label=(\alph*), noitemsep, topsep=0pt]
+  \item The converter receives the head operator \texttt{op} and its
+        argument list \texttt{x}.  The call \texttt{(fapply op x)}
+        reconstructs the full expression \(e\).
+
+  \item The function \texttt{xgather-args-of} scans \(e\) for
+        occurrences of \texttt{\%signum} and returns a list of matches.
+        Each element of this list contains the argument \(X\) of a
+        subexpression \(\mathrm{signum}(X)\).
+
+  \item For each such argument \(s\), the converter constructs the
+        product \(s \cdot \mathrm{signum}(s)\) and replaces it with
+        \(\mathrm{abs}(s)\) using \texttt{\$ratsubst}.  Only explicit
+        products are rewritten; no algebraic inference is performed.
+
+  \item After all substitutions, the expression is expanded with
+        \texttt{\$expand} to restore a canonical algebraic form.
+\end{enumerate}
+
+This converter is intentionally conservative: it rewrites only the
+literal pattern \(X \cdot \mathrm{signum}(X)\), never the function
+\(\mathrm{signum}\) itself, and never expressions that are merely
+algebraically equivalent. 
+
+
+\section{Miscellaneous}
+
+We end with a few comments about the \funconvert package that are not directly related to the process of writing conveter functions.
+
+\subsection {Motivation} 
+
+Many systems (Maple~\cite{maple-convert}, Mathematica~\cite{mathematica-rules}, SymPy~\cite{sympy-rewrite}) provide built‑in expansions or rewrite mechanisms, but Maxima uses an alphabet soup of functions that perform semantic function‑to‑function conversions; examples include `makefact` and `makegamma`. In other cases, transformations are controlled by option variables—for example, `expintrep`. 
+
+These names are easy to forget and are not always easy to locate in the user documentation. The \funconvert package may offer a simple, uniform, and user‑extensible way to perform such conversions.
+
+\subsection{Using `defrule` as an alternative to `function\_convert`}
+
+Maxima's pattern-base `defrule` tool is an alternative to using `function\_convert`. A simple
+example 
+\begin{maximabox}
+\begin{verbatim}
+	matchdeclare(aa,true)$
+	defrule(sinc_rule, sinc(aa), sin(aa)/aa);
+	sinc_rule:sinc(aa)\-\>sin(aa)/aa
+	apply1(sinc(sinc(x)), sinc_rule);
+	(x*sin(sin(x)/x))/sin(x)
+\end{verbatim}
+\end{maximabox}
+This method works well, especially for single use function-to-function conversions. But a `kill(all)` removes all rules defined by `defrule` and it still relies on an alphabet soup of functions.  Changing
+Maxima to allow rules that cannot be removed by `kill(all)` is, of course, a 
+small matter of programming~\cite{nardi-small-matter},
+but  it would violate a long‑standing design principle that users must always be able to return the system to a clean, rule‑free state.
+
+Additionally, it is difficult to define rules that need to match two or more terms in a sum or 
+product.  The \funconvert package has several converters that do just that.  Often these 
+converters internally rely on the \texttt{ratsubst} to do semantic substitutions--something
+that is difficult for a rule defined by `defrule`
+Finally, the package has at least one built-in rule that is difficult to fully duplicate using `defrule`: 
+\begin{maximabox}
+\begin{verbatim}
+(%i1) function_convert('gamma = 'sin, 20252*x*gamma(x)*gamma(1-x) < %pi);
+(%o1) (20252*%pi*x)/sin(%pi*x) < %pi
+\end{verbatim}
+\end{maximabox}
+\bibliographystyle{plain}
+\bibliography{references}
+
+
+\end{document}
+%\begin{thebibliography}{9}
+\bibitem{maple-convert}
+Maplesoft.
+\newblock \emph{The \texttt{convert} Function}.
+\newblock Maple Documentation.
+\newblock \url{https://www.maplesoft.com/support/help/maple/view.aspx?path=convert}.
+
+\bibitem{mathematica-rules}
+Wolfram Research.
+\newblock \emph{Rules}.
+\newblock Wolfram Language Documentation.
+\newblock \url{https://reference.wolfram.com/language/guide/Rules.html}.
+
+\bibitem{sympy-rewrite}
+SymPy Development Team.
+\newblock \emph{Term Rewriting}.
+\newblock SymPy Documentation.
+\newblock \url{https://docs.sympy.org/latest/modules/rewriting.html}.
+
+\end{thebibliography}
+\end{document}
