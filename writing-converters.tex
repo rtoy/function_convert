@@ -96,9 +96,15 @@ Maxima’s \funconvert package~\cite{willis-function-convert} performs semantic 
 \begin{itemize} \item using Maxima and the \funconvert package, and 
 \item programming Maxima in Common Lisp. 
 \end{itemize}
+This guide is written for people who want to create new converters. It focuses on the writing converters: patterns, idioms, and design principles.  Here we include only the API elements that matter when you are authoring a converter.
+
+To install this package, place the file \ttq{file\_convert.lisp} in a directory on Maxima’s search path and load it with  \ttq{load("function\_convert");}.  Eventually, this package might be migrated to 
+Maxima's /src folder--when this happens, loading the package will not be needed.
+
 We begin with the basic usage of the \funconvert package and an overview of its main features.
 
 \paragraph*{Source Note} Portions of this tutorial are taken from, or adapted from, the project’s \texttt{README.md} on GitHub~\cite{willis-function-convert}, with the permission of the author.
+
 
 \section{Usage and Features}
 
@@ -626,23 +632,5 @@ Sections I might include
 - debugging tools or strategies,
 - how to inspect the converter registry.
 
-For the API something like:
 
-\appendix
-\section{API Reference}
-
-This appendix summarizes the public functions provided by the
-\funconvert package. Each entry lists the function name, its arguments,
-a brief description of its behavior, and any important notes or
-restrictions.
-
-\subsection{Converter Management}
-
-\begin{description}
-
-  
-
-  \item[\texttt{delete\_converter(source = target)}]
-    Removes a user-defined converter. Built-in converters cannot be
-    removed; attempting to do so signals an error.
 
