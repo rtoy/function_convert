@@ -478,6 +478,59 @@ This converter is intentionally conservative: it rewrites only the
 literal pattern \(X  \signum(X)\), never the function
 \(\mathrm{signum}\) itself.
 
+\section{Best Practices for Writing Converters}
+
+ The guidelines below help ensure that new converters integrate smoothly into
+the \funconvert system.
+
+\begin{itemize}
+
+  \item \textbf{Base converters on identities.}
+        A converter should be based on a mathematical identity.
+        It should not change the meaning of an expression outside its
+        intended domain. If a transformation is only valid under certain
+        assumptions, the converter should check them explicitly or decline
+        to apply the transformation. It is discouraged, but possible, to
+        write a converter that, for example, replaces every product by the
+        number~42.
+
+  \item \textbf{Include a doc string.}
+        Each converter should have a doc string so that \funconvert is
+        self-documenting. If a converter requires a domain restriction or
+        mathematical convention, document it. Clear documentation prevents
+        misuse and helps future contributors maintain the system.
+
+  \item \textbf{Use clear, descriptive names.}
+        Converter names or aliases should reflect the mathematical
+        transformation they perform. This helps users understand the
+        converter registry and simplifies debugging.
+
+  \item \textbf{Keep converters small and focused.}
+        A converter should perform one clear transformation, such as
+        rewriting \(\erfc(x)\) as \(1 - \erf(x)\) or converting
+        \(\tan(x)\) to \(\sin(x)/\cos(x)\). Small, focused converters
+        compose more reliably and are easier to test and debug.
+
+  \item \textbf{Dispatch on functions, not patterns.}
+        Converters operate on function calls, not syntactic patterns. Let
+        the converter receive the arguments directly and compute the
+        replacement semantically. This avoids brittle rules and reduces
+        unintended matches.
+
+  \item \textbf{Ensure termination.}
+        Converters should not create expressions that trigger themselves
+        again unless the transformation is guaranteed to converge.
+
+  \item \textbf{Write regression tests.}
+        Each converter should have regression tests covering typical
+        inputs, edge cases, and expressions where the converter should
+        \emph{not} apply. Tests help maintain stability as the system
+        evolves.
+
+\end{itemize}
+
+
+
 
 \section{Miscellaneous}
 
@@ -527,6 +580,8 @@ Finally, the package has at least one built-in rule that is difficult to fully d
 \end{verbatim}
 \end{maximabox}
 
+
+
 \paragraph*{About the Author}
 This manual was written by Barton Willis, a long-time contributor to the
 Maxima computer algebra system and the author of the \funconvert package.
@@ -553,4 +608,41 @@ developers who wish to extend the mathematical capabilities of the
 \bibliography{references}
 
 
-\end{document}
+\end{document} 
+
+Sections I might include 
+
+- Quick Start
+- Conceptual Overview
+
+- Error Handling and Debugging
+- Regression tests
+- Appendix: Built‑In Converters
+- API of all public functions
+
+-Error Handling and Debugging:
+- common mistakes,
+- how to interpret converter warnings,
+- debugging tools or strategies,
+- how to inspect the converter registry.
+
+For the API something like:
+
+\appendix
+\section{API Reference}
+
+This appendix summarizes the public functions provided by the
+\funconvert package. Each entry lists the function name, its arguments,
+a brief description of its behavior, and any important notes or
+restrictions.
+
+\subsection{Converter Management}
+
+\begin{description}
+
+  
+
+  \item[\texttt{delete\_converter(source = target)}]
+    Removes a user-defined converter. Built-in converters cannot be
+    removed; attempting to do so signals an error.
+
