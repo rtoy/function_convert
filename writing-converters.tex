@@ -466,18 +466,19 @@ of signum(X); only explicit products matching that pattern are transformed."
         argument list \texttt{x}.  The call \texttt{(fapply op x)}
         reconstructs the full expression  \ttq{e}.
 
-  \item The function \texttt{xgather-args-of} scans \ttq{e}. for
-        occurrences of \texttt{\%signum} and returns a list of matches.
+  \item The function \ttq{xgather-args-of} scans \ttq{e}. for
+        occurrences of \ttq{\%signum} and returns a list of matches.
         Each element of this list contains the argument \(X\) of a
-        subexpression \(\mathrm{signum}(X)\).
+        subexpression \(\mathrm{signum}(X)\). The \funconvert
+        package defines the function \ttq{xgather-args-of}.
 
   \item For each such argument \(s\), the converter constructs the
         product \(s \cdot \mathrm{signum}(s)\) and replaces it with
         \(\mathrm{abs}(s)\) using \ttq{ratsubst}.  Only explicit
         products are rewritten; no algebraic inference is performed.
 
-  \item After all substitutions, the expression is expanded with
-        \texttt{\$expand} to restore a canonical algebraic form.
+  \item After all substitutions, the expression is resimplified with a
+        call to \ttq{expand}.
 \end{enumerate}
 
 This converter is intentionally conservative: it rewrites only the
