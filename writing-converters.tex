@@ -97,28 +97,18 @@
 
 \section{Introduction and prerequisites}
 
-Maxima's \funconvert package~\cite{willis-function-convert} does semantic function-to-function conversions 
-on Maxima~\cite{maxima} expressions. This document is a tutorial on how to extend the mathematical 
-capabilities of this package by writing your own converters. To do this, 
-you will need
-\begin{itemize}
-  \item to know how to use Maxima and how to use the function convert package,
-  \item to know how to program Maxima using Common Lisp.
+Maxima’s \funconvert package~\cite{willis-function-convert} performs semantic function‑to‑function conversions on Maxima~\cite{maxima} expressions. This tutorial explains how to extend the package’s mathematical capabilities by writing your own converters. To follow this tutorial, you should be comfortable with:
+\begin{itemize} \item using Maxima and the \funconvert package, and 
+\item programming Maxima in Common Lisp. 
 \end{itemize}
-\paragraph*{Source Note} Some text in this tutorial is taken from, or adapted from, the project's
-\texttt{README.md} on GitHub~\cite{willis-function-convert}, with the permission of the author.
+We begin with the basic usage of the \funconvert package and an overview of its main features.
 
+\paragraph*{Source Note} Portions of this tutorial are taken from, or adapted from, the project’s \texttt{README.md} on GitHub~\cite{willis-function-convert}, with the permission of the author.
 
+\section{Usage and Features}
 
-
-\section{Features}
-
-We give an overview of the features of the \funconvert package. We start
-with basic usage; here an example of a converter that replaces each subexpression 
-of a Maxima expression of the form 
-$\erfc(X)$ by $1 - \erf(X)$, where $\erf$ and $\erfc$ are error functions
-and $X$ matches any expression. This converter is built-in to the \funconvert
- package. To use it, input:
+The most basic use of the package is a converter that replaces each subexpression of a Maxima expression of the form  $\erfc(X)$  with by $1 - \erf(X)$, where  and  are the error functions and 
+$X$ may be any expression. This converter is built into the \funconvert package. To use it, enter:
 \begin{maximabox}
 \begin{verbatim}
 (%i1) function_convert(erfc = erf, erfc(x));
@@ -133,12 +123,8 @@ example
 (%o2)                     x (erf(erf(z) - x - 1) + 1)
 \end{verbatim}
 \end{maximabox} 
-The function \texttt{function\_convert} walks an expression tree and replaces function calls according to well‑defined rules. In that sense, it is straightforward code of a kind repeated many times in Maxima. It is not a pattern matcher or a general rewrite engine.
-
-The package is implemented in Common Lisp. It has been tested using Clozure Common Lisp~\cite{ccl} version 1.13 and SBCL~\cite{sbcl} version 2.4.7.
-\subsection{Naming and the alias system}
-In these examples, the left-hand side of the conversion rule \ttq{erfc = erf},
-is the \emph{source function} and the right-hand side is called \ttq{erf} the
+The first argument \ttq{erfc = erf} is called a \emph{conversion rule} (or simply a `rule'), the left-hand side
+is the \emph{source function} and the right-hand side \ttq{erf} is called  the
 \emph{target function}. The rule \ttq{erfc = erf} does not literally
 replace the source function with the target function, but it instead applies the 
 identity $\erfc(x) = 1 - \erf(x)$ to an expression, replacing the left side with 
@@ -149,15 +135,48 @@ the identity $\erfc(x) = 1 - \erf(x)$, not as a literal function. Actually, the 
 target function could be any Maxima symbol; for example, the rule could be named 
 \ttq{erfc = erfc\_to\_erf}.
 
-Similarly, the alias system also allows the source function to be a
+\subsection{Algorithm and Implementation}
+
+The function \texttt{function\_convert} walks an expression tree and replaces function calls according to well‑defined rules. In that sense, it is straightforward code of a kind repeated many times in Maxima. It is not a pattern matcher or a general rewrite engine.
+
+The package is implemented in Common Lisp. It has been tested using Clozure Common Lisp~\cite{ccl} version 1.13 and SBCL~\cite{sbcl} version 2.4.7.
+
+\subsection{Naming and the Alias System}
+
+We've seen that the name of the target function is best thought of an alias for the identity being 
+applied.  The \funconvert package has an alias system allows the source function to be a
 mnemonic as well.  This feature is useful for naming a converter for an identity 
 such as 
 \begin{equation}
 \Gamma\left(z\right)\Gamma\left(1-z\right)=\uppi/\sin\left(\uppi z\right). \label{gammaid}
 \end{equation}
-Here the left-hand-side of this identity is a product, so the source function for this identity must be multiplication (internally \ttq{mtimes}), not the gamma function. But to a user the conversion rule \texttt{”*” = sin} may seem unnatural.  The alias system allows the converter for this identity to have a much more natural name. The converter for identity Eq. (\ref{gammaid}) is built-in to the \funconvert package;  the alias for this converter is \ttq{gamma = sin}.
+Here the left-hand-side of this identity is a product, so the source function for this identity must be multiplication (internally \ttq{mtimes}), not the gamma function. But the rule \texttt{”*” = sin} is
+hard to remember and unnatural.  The alias system allows the converter for this identity to have a much more natural name. For the identity in Eq. (\ref{gammaid}), using the alias system we can 
+name this rule \ttq{gamma = sin}. Actually, this converter  built-in to the \funconvert package:
+
+\begin{maximabox}
+\begin{verbatim}
+(%i1) function_convert(gamma = sin, gamma(x)*gamma(1-x));
+(%o1) %pi/sin(%pi*x)
+
+(%i2) function_convert(gamma = sin, gamma(2 + x)*gamma(1-x));
+(%o2) gamma(1-x)*gamma(x+2)
+\end{verbatim}
+\end{maximabox}
 
 A macro takes care of the messy details of defining an alias, along with other housekeeping duties. 
+ 
+ 
+ \subsection{Built-in converters}
+
+A converter may be marked as built-in. Built-in converters cannot be removed using any user-level function. For example, the converter \ttq{erfc = erf} is built-in; attempting to remove it with \ttq{delete\_converter} produces an error:
+\begin{maximabox}
+\begin{verbatim}
+(%i1) delete_converter(erfc = erf);
+Cannot delete built-in converter (%ERFC → %ERF).
+\end{verbatim}
+\end{maximabox}
+ 
  
  \subsection{Self-documentation feature}
  
@@ -222,7 +241,7 @@ global \texttt{*converter-class-table*}. This table is
 \end{verbatim}
 \end{maximabox}
 Each entry associates a class key with the list of operators that belong to
-that class. The system assumes that \emph{An operator belongs to exactly one class}.
+that class. The system assumes that \emph{an operator belongs to exactly one class}.
 This ensures unambiguous dispatch: when the converter system encounters an
 operator, it can determine its class uniquely and apply the appropriate
 class-level converter.
@@ -255,8 +274,10 @@ To apply two or more conversions, put the converters into a list; for example
 (%o1) -((%e^(%i*x)-%e^-(%i*x))^2/(4*x^2))
 \end{verbatim}
 \end{maximabox}
-\noindent Changing multiple conversions is handled by the function \texttt{function\_convert}; a writer of
-a converter doesn't need to do anything to allow chaining to work. Converters are applied left-to-right
+\noindent Converters are applied left-to-right. 
+
+Changing multiple conversions is handled by the function \texttt{function\_convert}; a writer of
+a converter doesn't need to do anything to allow chaining to work. 
 
 \subsection{Implicit Dispatch via Breadth-First Search}
 
@@ -291,10 +312,10 @@ might be able to diagnose the problem.
 
 \section{Writing converter functions}
 A macro \texttt{define-function-converter} takes care of many of the housekeeping 
-details in writing a converter, naming the internal function that does the conversing, 
-including optionally marking the converter as built-in, and gathering the doc string 
+details in writing a converter, including naming the internal function that applies the rule, 
+optionally marking the converter as built-in, and gathering the doc string 
 for the converter to use a user-documentation. The macro also automatically handles 
-the alias system.
+the details needed to make the alias system work. 
 
 The function \texttt{function\_convert} does the work of mapping
 the converter over the expression tree; this allows the converter code to be relatively simple.
@@ -319,9 +340,9 @@ function \texttt{\%erfc}, but  this converter doesn't use this argument, so the
 converter code should declare to ignore it.  The argument \texttt{x} is
 a Common Lisp list of the argument to the function \texttt{\%erfc}.
 
-The optional keyword argument \texttt{:builtin} declares that this converter cannot be
-deleted using user-level functions. The doc string is optional, but important because supplies
-the converter with documentation. The optional keyword must be placed before the doc string.
+The optional keyword argument  \ttq{:builtin} declares that this converter cannot be
+deleted using user-level functions. To mark a rule as built-in, the keyword \ttq{:builtin}  must be placed before the doc string. For a non-built-in rule,  omit the  \ttq{:builtin} keyword.
+The doc string is optional, but important because supplies the converter with documentation. 
 
 The mathematical part of the code, that is
 \begin{maximabox}
@@ -338,22 +359,24 @@ not to \texttt{x} itself.  Alternatively, if you prefer, this bit of code can be
       (sub 1 (fapply '%erf x))
 \end{verbatim}
 \end{maximabox}
-All the other details are handled by the macro \texttt{define-function-converter}. 
+
 \subsection{Alias Dispatch}
 
 As we discussed before, both the source and the target functions of a converter can be given an alias.  This can be useful when the actual source function is a poor mnemonic for the converter name.
 
-Again, the macro \texttt{define-function-converter} takes care of the housekeeping 
+Again, the macro \ttq{define-function-converter} takes care of the housekeeping 
 for defining an alias.  The best way to explain how to use alias dispatch is by an 
 example.  Here we give a converter that expands explicit powers, but not 
-products of sums.  The source function must be \texttt{mexpt}, but we'll make
-\texttt{power = expand} an alias for \verb|”^” = expand|. This is how it is done:
+products of sums.  The source function must be \ttq{mexpt}, but we'll make
+\ttq{power = expand} an alias for \verb|”^” = expand|. This is how it is done:
 \begin{maximabox}
 \begin{verbatim}
 (define-function-converter ((mexpt $expand) ($power $expand)) (op x)
   ($expand (fapply 'mexpt x)))
 \end{verbatim}
 \end{maximabox}
+\noindent A rule can have at most one alias.
+
 There are two ways to invoke this converter:
 \begin{maximabox}
 \begin{verbatim}
@@ -370,13 +393,15 @@ There are two ways to invoke this converter:
 \subsection{Class Key Converter Dispatch}
 
 Class-key converters allow a single definition to handle an entire family of
-related operators. The following example illustrates this idea using the
-trigonometric class \texttt{:trig}. Any operator listed under the
+related operators, for example all trigonometric functions. The following example 
+illustrates this idea using the trigonometric class \texttt{:trig}. Any operator listed under the
 \texttt{:trig} class key in \texttt{*converter-class-table*} will be handled
-by the same converter, without the need to define six separate rules. For
-this converter, we finally have a reason for the \texttt{op} argument--this
-argument will be bound to anyone of the six trigonometric functions.  The
-main code uses a \texttt{case} statement to handle each of the six cases.
+by the same converter, without the need to define six separate rules. 
+
+Specifically,  we'll show how to define a rule that rewrites all trigonometric functions in terms of sine
+and cosine. For this converter, we finally have a reason for the \ttq{op} argument--this
+argument will be bound to one of the six trigonometric functions.  The
+main code uses a \ttq{case} statement to handle each of the six cases. The code is
 
 \begin{maximabox}
 \begin{verbatim}
@@ -394,22 +419,17 @@ main code uses a \texttt{case} statement to handle each of the six cases.
       (t (ftake op z)))))
 \end{verbatim}
 \end{maximabox}
-This converter is registered for the class key \texttt{:trig}, not for any
+This converter is registered for the class key \ttq{:trig}, not for any
 individual operator. When the dispatch system encounters an expression such as
 \texttt{(\%tan x)} or \texttt{(\%csc x)}, it determines that the operator
-belongs to the \texttt{:trig} class and invokes the converter above.
+belongs to the \ttq{:trig} class and invokes the converter above.
 
-The body of the converter receives two arguments: the operator \texttt{op}
-and its argument list \texttt{x}. The converter then rewrites each
+The body of the converter receives two arguments: the operator \ttq{op}
+and its argument list \ttq{x}. The converter then rewrites each
 trigonometric function into its sine--cosine form. Because the class key
 handles the grouping, the converter itself contains only the mathematical
 logic; it does not need to know how many operators belong to the class or
 where they appear in the system.
-
-Class-key converters therefore provide a uniform and extensible mechanism for
-handling families of related functions. Adding a new trigonometric operator
-to the system requires only updating the class table; the converter itself
-does not need to be modified.
 
 \subsection{A more advanced converter}
 
@@ -445,16 +465,16 @@ of signum(X); only explicit products matching that pattern are transformed."
 \begin{enumerate}[label=(\alph*), noitemsep, topsep=0pt]
   \item The converter receives the head operator \texttt{op} and its
         argument list \texttt{x}.  The call \texttt{(fapply op x)}
-        reconstructs the full expression \(e\).
+        reconstructs the full expression  \ttq{e}.
 
-  \item The function \texttt{xgather-args-of} scans \(e\) for
+  \item The function \texttt{xgather-args-of} scans \ttq{e}. for
         occurrences of \texttt{\%signum} and returns a list of matches.
         Each element of this list contains the argument \(X\) of a
         subexpression \(\mathrm{signum}(X)\).
 
   \item For each such argument \(s\), the converter constructs the
         product \(s \cdot \mathrm{signum}(s)\) and replaces it with
-        \(\mathrm{abs}(s)\) using \texttt{\$ratsubst}.  Only explicit
+        \(\mathrm{abs}(s)\) using \ttq{ratsubst}.  Only explicit
         products are rewritten; no algebraic inference is performed.
 
   \item After all substitutions, the expression is expanded with
@@ -463,13 +483,12 @@ of signum(X); only explicit products matching that pattern are transformed."
 
 This converter is intentionally conservative: it rewrites only the
 literal pattern \(X \cdot \mathrm{signum}(X)\), never the function
-\(\mathrm{signum}\) itself, and never expressions that are merely
-algebraically equivalent. 
+\(\mathrm{signum}\) itself.
 
 
 \section{Miscellaneous}
 
-We end with a few comments about the \funconvert package that are not directly related to the process of writing conveter functions.
+We end with a few comments about the \funconvert package that are not directly related to the process of writing converter functions.
 
 \subsection {Motivation} 
 
@@ -512,6 +531,28 @@ Finally, the package has at least one built-in rule that is difficult to fully d
 (%o1) (20252*%pi*x)/sin(%pi*x) < %pi
 \end{verbatim}
 \end{maximabox}
+
+\section*{Colophon}
+
+This manual was typeset using the \texttt{pdflatex} engine, the
+\texttt{extarticle} document class.
+
+All examples were executed using Maxima~\cite{maxima} from
+the from the current development branch together with the \funconvert package~\cite{willis-function-convert} also from the current development branch.
+
+The body text is set in a serif typeface chosen for
+clarity in extended technical prose. Code fragments and Maxima sessions
+are rendered in a monospaced font with consistent verbatim handling.
+
+
+Portions of this document were adapted from the project's
+\texttt{README.md} on GitHub, with the permission of the author.
+Bibliographic data were managed using \texttt{bibtex}.
+
+This manual is intended as a long-term reference for users and
+developers who wish to extend the mathematical capabilities of the
+\funconvert package by writing custom converters.
+
 \bibliographystyle{IEEEtran}
 \bibliography{references}
 
