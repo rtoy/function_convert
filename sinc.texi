@@ -1,0 +1,39 @@
+
+@ifnotinfo
+@settitle Function sinc
+@top Function sinc
+@end ifnotinfo
+
+@deffn sinc (x)
+Return the normalized sinc function. Explicitly, this function is defined as
+@displaymath
+sinc(x) = sin(x)/x   for x != 0
+sinc(0) = 1
+@end displaymath
+
+@displaymath
+sinc(x) = sin(x)/x   (x != 0)
+sinc(0) = 1
+@end displaymath
+
+For nonzero @var{x}, @code{sinc(x)} evaluates to @code{sin(x)/x}.
+At @code{x = 0} the value is defined to be @code{1}.
+
+@example
+(%i1) sinc(%pi/3);
+...
+@end example
+
+@itemize @bullet
+@item
+@samp{sinc(x)} is an even function.
+
+@item
+The singularity at @code{x = 0} is removable.
+
+@item
+Symbolic simplification rewrites @code{sinc(x)} to @code{sin(x)/x}
+when @code{x != 0}.
+@end itemize
+
+@end deffn
