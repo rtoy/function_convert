@@ -70,15 +70,10 @@
   {\end{tcolorbox}}
 
 
-\newtcblisting{lisplike}{
-  listing only,
-  verbatim
-}
-
 \DeclareMathOperator{\erf}{erf}
 \DeclareMathOperator{\erfc}{erfc}
 \DeclareMathOperator{\erfi}{erfi}
-
+\DeclareMathOperator{\signum}{signum}
 %magic for formatting for the bib
 \usepackage{etoolbox}
 \apptocmd{\thebibliography}{\raggedright}{}{}
@@ -276,13 +271,13 @@ To apply two or more conversions, put the converters into a list; for example
 \end{maximabox}
 \noindent Converters are applied left-to-right. 
 
-Changing multiple conversions is handled by the function \texttt{function\_convert}; a writer of
+Chaining multiple conversions is handled by the function \texttt{function\_convert}; a writer of
 a converter doesn't need to do anything to allow chaining to work. 
 
 \subsection{Implicit Dispatch via Breadth-First Search}
 
 The converter system automatically discovers multistep conversion chains.
-If a converter is defined from $f$ to $g$ and another from
+For example, if a converter is defined from $f$ to $g$ and another from
 $g$ to $h$, the system is able to convert $f$ to $h$ without any
 additional user-defined rule. In other words, there is no need to define a
 direct converter $f$ to $h$.
@@ -319,7 +314,7 @@ the details needed to make the alias system work.
 
 The function \texttt{function\_convert} does the work of mapping
 the converter over the expression tree; this allows the converter code to be relatively simple.
-We'll begin by examining the source code of the \texttt{erfc = erf} converter.
+We'll begin by examining the source code of the \ttq{erfc = erf} converter.
 
 \subsection{The $\erfc$ to $\erf$ converter}
 
@@ -334,11 +329,11 @@ We'll begin by examining the source code of the \texttt{erfc = erf} converter.
     (sub 1 (ftake '%erf z))))
 \end{verbatim}
 \end{maximabox}
-The arguments \texttt{\%erf \%erfc} are the source and target functions, 
-respectively.  For this converter, the argument \texttt{op} is bound to the source
-function \texttt{\%erfc}, but  this converter doesn't use this argument, so the
-converter code should declare to ignore it.  The argument \texttt{x} is
-a Common Lisp list of the argument to the function \texttt{\%erfc}.
+The arguments \ttq{\%erf \%erfc} are the source and target functions, 
+respectively.  For this converter, the argument \ttq{op} is bound to the source
+function \ttq{\%erfc}, but  this converter doesn't use this argument, so the
+converter code should declare to ignore it.  The argument \ttq{x} is
+a Common Lisp list of the argument to the function \ttq{\%erfc}.
 
 The optional keyword argument  \ttq{:builtin} declares that this converter cannot be
 deleted using user-level functions. To mark a rule as built-in, the keyword \ttq{:builtin}  must be placed before the doc string. For a non-built-in rule,  omit the  \ttq{:builtin} keyword.
@@ -388,8 +383,6 @@ There are two ways to invoke this converter:
 \end{verbatim}
 \end{maximabox}
 
-
-
 \subsection{Class Key Converter Dispatch}
 
 Class-key converters allow a single definition to handle an entire family of
@@ -421,7 +414,7 @@ main code uses a \ttq{case} statement to handle each of the six cases. The code 
 \end{maximabox}
 This converter is registered for the class key \ttq{:trig}, not for any
 individual operator. When the dispatch system encounters an expression such as
-\texttt{(\%tan x)} or \texttt{(\%csc x)}, it determines that the operator
+\texttt{((\%tan) x)} or \texttt{((\%csc) x)}, it determines that the operator
 belongs to the \ttq{:trig} class and invokes the converter above.
 
 The body of the converter receives two arguments: the operator \ttq{op}
@@ -434,12 +427,12 @@ where they appear in the system.
 \subsection{A more advanced converter}
 
 In this section, we show to to build a converter that rewrites explicit products of the form
-$x  \mathrm{signum}(x)$ as $|x|$.   The converter does not rewrite 
-\(\mathrm{signum}(x)\) itself, because the pattern \(x \mathrm{signum}(x)\) is 
-not a subexpression of \(\mathrm{signum}(x)\); only explicit products matching that pattern
+$x  \signum(x)$ as $|x|$.   The converter does not rewrite 
+\(\mathrm{signum}(x)\) itself, because the pattern \(x \signum(x)\) is 
+not a subexpression of \(\signum(x)\); only explicit products matching that pattern
 are transformed--this is what makes writing the converter somewhat tricky.  The converter logic
-needs to scan the arguments of each product and gather the terms that have $\mathrm{signum}$
-as their head operator.  For each of these terms,  the converter does a rational substitution (\texttt{ratsimp}) of the form \texttt{ratsubst(abs(s), s*signum(s), e)} on the expression \texttt{e},
+needs to scan the arguments of each product and gather the terms that have $\signum$
+as their head operator.  For each of these terms,  the converter does a rational substitution (\ttq{ratsimp}) of the form \ttq{ratsubst(abs(s), s*signum(s), e)} on the expression \ttq{e},
 that must be a product. The definition is:
 
 \begin{maximabox}
@@ -482,7 +475,7 @@ of signum(X); only explicit products matching that pattern are transformed."
 \end{enumerate}
 
 This converter is intentionally conservative: it rewrites only the
-literal pattern \(X \cdot \mathrm{signum}(X)\), never the function
+literal pattern \(X  \signum(X)\), never the function
 \(\mathrm{signum}\) itself.
 
 
@@ -506,11 +499,13 @@ Maxima's pattern-base \ttq{defrule} tool is an alternative to using \funconvert.
 example 
 \begin{maximabox}
 \begin{verbatim}
-	matchdeclare(aa,true)$
-	defrule(sinc_rule, sinc(aa), sin(aa)/aa);
-	sinc_rule:sinc(aa)\-\>sin(aa)/aa
-	apply1(sinc(sinc(x)), sinc_rule);
-	(x*sin(sin(x)/x))/sin(x)
+(%i1) matchdeclare(aa,true)$
+
+(%i2) defrule(sinc_rule, sinc(aa), sin(aa)/aa);
+(%o2) sinc_rule:marrow(sinc(aa),sin(aa)/aa)
+
+(%i3) apply1(sinc(sinc(x)), sinc_rule);
+(%o3) (x*sin(sin(x)/x))/sin(x)
 \end{verbatim}
 \end{maximabox}
 This method works well, especially for single use function-to-function conversions. But a \ttq{kill(all)} removes all rules defined by 
@@ -532,22 +527,23 @@ Finally, the package has at least one built-in rule that is difficult to fully d
 \end{verbatim}
 \end{maximabox}
 
-\section*{Colophon}
+\paragraph*{About the Author}
+This manual was written by Barton Willis, a long-time contributor to the
+Maxima computer algebra system and the author of the \funconvert package.
+He has worked with symbolic computation, mathematical software, and
+technical documentation for many years.
 
-This manual was typeset using the \texttt{pdflatex} engine, the
-\texttt{extarticle} document class.
-
-All examples were executed using Maxima~\cite{maxima} from
-the from the current development branch together with the \funconvert package~\cite{willis-function-convert} also from the current development branch.
-
-The body text is set in a serif typeface chosen for
+\paragraph*{Colophon} This manual was typeset using the \texttt{pdflatex} engine, the
+\texttt{extarticle} document class. The body text is set in a serif typeface chosen for
 clarity in extended technical prose. Code fragments and Maxima sessions
-are rendered in a monospaced font with consistent verbatim handling.
+are rendered in a monospaced font with consistent verbatim handling. Bibliographic data were managed using \texttt{bibtex} using the \texttt{IEEEtran} style.
 
+All examples were executed using Maxima from
+the from the current development branch together with the \funconvert package also from the current development branch.
 
 Portions of this document were adapted from the project's
 \texttt{README.md} on GitHub, with the permission of the author.
-Bibliographic data were managed using \texttt{bibtex}.
+
 
 This manual is intended as a long-term reference for users and
 developers who wish to extend the mathematical capabilities of the
