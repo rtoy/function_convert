@@ -1054,9 +1054,22 @@ subexpression."
   (destructuring-bind (a b) x
     (ftake op (resimplify ($factor (sub a b))) 0)))
 
-#| undone or miscelaneous
+;; experimental code...
+(defun three-term-recusion-reduce (e fn x n)
+  (while (> n 1)
+    (setq e ($substitute (funcall fn n x) e))
+    (setq n (sub n 1)))
+  e)
+
+(defun bessel-j-recursion (n x) 
+           (ftake 'mequal 
+              (ftake '%bessel_j n x)
+              (sub (mul 2 (sub n 1) (div 1 x) (ftake '%bessel_j (sub n 1) x)) 
+                  (ftake '%bessel_j (sub n 2) x))))
+
 (define-function-converter ((mplus $bessel_recursion) (%bessel_j $bessel_recursion)) (op x)
  :builtin
+ (declare (ignore op))
  (let* ((e (fapply 'mplus x)) (ll (xgather-args-of e '%bessel_j)) (pp))
    ;; Each member of ll has the form (order, xxx). Task I: Make a list of lists with
    ;; the same xxx and varying orders. I think the easiest way is to convert the argument
@@ -1065,13 +1078,21 @@ subexpression."
    (setq pp ($equiv_classes ll #'(lambda (a b) (alike1 (third a) (third b)))))
    ;; Now pp is a Maxima set of sets, and each inner most set member is a Maxima
    ;; list of the form [order, xxx]
+   ;; Loop through the equivalence classes:
    (setq pp (cdr pp))
-   
-   pp))
+   (dolist (pk pp)
+     ;; equivalent now means that the order differs by an integer
+     (let ((qq ($equiv_classes pk #'(lambda (a b) (integerp (sub ($first a) ($first b)))))))
+       (setq qq (cdr qq))
+       ;; loop over each equivalence class
+       (dolist (qqk qq)
+          (setq qqk ($sort ($listify qqk) #'(lambda (a b) (> (sub ($first a) ($first b))))))
+          (setq e (three-term-recusion-reduce e #'bessel-j-recursion ($second ($first qqk)) ($first ($first qqk)))))))
+         
+   e))
 
-;;; These are toy converters that I used to test find-converter-path. There remains some issues with
-;;; find-converter-path used with class keys and aliases. So let's keep these for
-
+#| 
+;;; These are toy converters that I used to test find-converter-path. 
 (define-function-converter (%a %b) (op x)
   (declare (ignore op))
   (ftake '%b (car x)))
@@ -1095,10 +1116,6 @@ subexpression."
  (define-function-converter ((%b %d) ($pp $qq)) (op x)
   (declare (ignore op))
   (ftake '%d (car x)))
-
-(define-function-converter ($larry $pooh) (op x)
-  (declare (ignore op))
-  (ftake '%larry (ftake '%larry (car x))))
 
 (define-function-converter ((mexpt $expand) ($power $expand_powers)) (op x)
   ($expand (fapply 'mexpt x)))
