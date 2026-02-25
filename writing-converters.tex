@@ -555,8 +555,8 @@ The \funconvert package may offer a simple, uniform, and user‑extensible way t
 
 \subsection{Using  \ttq{defrule} as an alternative to \funconvert}
 
-Maxima's pattern-base \ttq{defrule} tool is an alternative to using \funconvert. A simple
-example 
+Maxima's pattern-based \ttq{defrule} tool is an alternative to using \funconvert. A simple
+example: 
 \begin{maximabox}
 \begin{verbatim}
 (%i1) matchdeclare(aa,true)$
@@ -576,8 +576,8 @@ but  it would violate a long‑standing design principle that users must always 
 
 Additionally, it is difficult to define rules that need to match two or more terms in a sum or 
 product.  The \funconvert package has several converters that do just that.  Often these 
-converters internally rely on the \texttt{ratsubst} to do semantic substitutions--something
-that is difficult for a rule defined by \ttq{defrule}.
+converters internally rely on \texttt{ratsubst} to do semantic substitutions--something
+that is difficult for a rule defined by \ttq{defrule} to do.
 Finally, the package has at least one built-in rule that is difficult to fully duplicate using 
 \ttq{defrule}: 
 \begin{maximabox}
@@ -595,13 +595,12 @@ Maxima computer algebra system and the author of the \funconvert package.
 He has worked with symbolic computation, mathematical software, and
 technical documentation for many years.
 
-\paragraph*{Colophon} This manual was typeset using the \texttt{pdflatex} engine, the
+\paragraph*{Colophon} This manual was typeset using the \texttt{pdflatex} engine with the
 \texttt{extarticle} document class. The body text is set in a serif typeface chosen for
 clarity in extended technical prose. Code fragments and Maxima sessions
 are rendered in a monospaced font with consistent verbatim handling. Bibliographic data were managed using \texttt{bibtex} using the \texttt{IEEEtran} style.
 
-All examples were executed using Maxima from
-the from the current development branch together with the \funconvert package also from the current development branch.
+All examples were executed using Maxima from the current development branch together with the \funconvert package also from the current development branch.
 
 Portions of this document were adapted from the project's
 \texttt{README.md} on GitHub, with the permission of the author.
