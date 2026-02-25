@@ -220,65 +220,6 @@ Each entry has the form:
     ;; Return results in sorted order
     ($sort (fapply 'mlist (nreverse results)))))
 
-#| keep this until I am 100% the new works OK!
-
-(defmacro define-function-converter (spec lambda-list &body body)
-  "Define a converter FROM => TO, optionally with an alias FROM-ALT => TO-ALT.
-
-A warning is issued if a converter for (FROM . TO) is already defined,
-or if an alias (FROM-ALT . TO-ALT) is already present in
-*function-convert-hash-alias*."
-  
-  (macrolet 
-      ((warn-if-existing-primary (from to)
-       `(when (gethash (cons ,from ,to) *function-convert-hash*)
-          (warn (format nil "Converter for ~A ~A ~A is already defined."
-                        (stripdollar (string-downcase (symbol-name ,from)))
-                        (get *function-convert-infix-op* 'op)
-                        (stripdollar (string-downcase (symbol-name ,to)))))))
-     (warn-if-existing-alias (from-alt to-alt)
-       `(when (gethash (cons ,from-alt ,to-alt)
-                       *function-convert-hash-alias*)
-          (warn (format nil "Alias converter for ~A ~A ~A is already defined."
-                        (stripdollar (string-downcase (symbol-name ,from-alt)))
-                        (get *function-convert-infix-op* 'op)
-                        (stripdollar (string-downcase (symbol-name ,to-alt))))))))
-    (cond
-      ;; Alias form: ((from to) (from-alt to-alt))
-      ((and (consp spec)
-            (consp (first spec))
-            (consp (second spec)))
-       (destructuring-bind ((from to) (from-alt to-alt)) spec
-         (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
-                                      from to)
-                              :maxima)))
-           `(progn
-              ,(warn-if-existing-primary from to)
-              ,(warn-if-existing-alias from-alt to-alt)
-              (defun ,fname ,lambda-list
-                ,@body)
-              (register-converter ',from ',to #',fname)
-              (register-converter-alias ',from-alt ',to-alt ',from ',to)
-              ',fname))))
-
-      ;; Simple form: (from to)
-      ((and (consp spec)
-            (symbolp (first spec))
-            (symbolp (second spec)))
-       (destructuring-bind (from to) spec
-         (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
-                                      from to)
-                              :maxima)))
-           `(progn
-              ,(warn-if-existing-primary from to)
-              (defun ,fname ,lambda-list
-                ,@body)
-              (register-converter ',from ',to #',fname)
-              ',fname))))
-
-      (t
-       (error "Malformed converter spec: ~S" spec)))))
-|#
 (defmacro define-function-converter (spec lambda-list &body body)
   "Define a converter FROM => TO, optionally with an alias FROM-ALT => TO-ALT.
 
@@ -824,10 +765,10 @@ and whose second and third elements are valid operator names or a lambda."
 ;; abs
 (define-function-converter (mabs %signum) (op x)
   :builtin
-  "Convert abs(x) into x*signum(x)."
+  "Convert abs(x) into conjugate(x)*signum(x)."
   (declare (ignore op))
   (let ((z (car x)))
-    (mul z (ftake '%signum z))))
+    (mul (ftake '$conjugate z) (ftake '%signum z))))
 
 (define-function-converter ((mtimes mabs) (%signum mabs)) (op x)
   :builtin
@@ -1162,3 +1103,4 @@ subexpression."
 (define-function-converter ((mexpt $expand) ($power $expand_powers)) (op x)
   ($expand (fapply 'mexpt x)))
 |#
+
