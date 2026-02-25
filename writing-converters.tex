@@ -485,6 +485,58 @@ This converter is intentionally conservative: it rewrites only the
 literal pattern \(X  \signum(X)\), never the function
 \(\signum\) itself.
 
+%%%%%%%%%%%%%%
+\section{Regression Tests for \funconvert}
+
+This section describes how to write regression tests for the \ttq{function\_convert} package 
+and how to run them. 
+
+\paragraph{Test File Format} A regression test file is an ordinary Maxima batch file.  
+Each test consists of \emph{exactly two lines}:
+\begin{maximabox}
+\begin{verbatim}
+input;
+expected output$
+\end{verbatim}
+\end{maximabox}
+\noindent
+The first line is the Maxima expression to evaluate, and the second line is the expected result.
+Terminating the input line with a semicolon and the expected output with a dollar sign clarifies
+the intent of each line, but the line terminators can be either a semicolon or a dollar sign, if you
+prefer. A file can have as many tests as needed. Here is an example of one test:
+\begin{maximabox}
+\begin{verbatim}
+function_convert('cos = 'exp, cos(x));
+(%e^(%i*x)+%e^-(%i*x))/2$
+\end{verbatim}
+\end{maximabox}
+
+\paragraph{Running the Tests} If your tests are in a file \ttq{rtest\_my\_function\_convert}, to run the regression tests, use:
+\begin{maximabox}
+\begin{verbatim}
+batch(rtest_my_function_convert, 'test);
+\end{verbatim}
+\end{maximabox}
+\noindent The command \ttq{batch} with an optional second argument of \ttq{test}, loads the test file, evaluates each input expression, compares the actual output with the expected output, and reports any mismatches.   A successful run prints no errors.
+
+\paragraph{What to Test} 
+
+\begin{itemize}
+\item bogus, unexpected (boolean values, strings, or \dots ),  or invalid input,
+  \item complex numbers,
+  \item nested expressions and multiple occurrences the source function,
+  \item  converters applied to expressions containing unknown functions.
+\end{itemize}
+
+\paragraph{Writing Good Tests} A good regression test is minimal, documents the intended behavior of the converter system, and  isolates a single behavior. If a converter is based on an identity, each such converter should have an explicit test of the identity; here is an example that tests the identity 
+$\erfc(x) = 1-\erf(x)$:
+\begin{maximabox}
+\begin{verbatim}
+erf(x) + function_convert(erfc = erf, erfc(x));
+1$
+\end{verbatim}
+\end{maximabox}
+
 \section{Best Practices for Writing Converters}
 
  The guidelines below help ensure that new converters integrate smoothly into

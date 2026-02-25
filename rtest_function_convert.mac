@@ -116,6 +116,9 @@ ratdisrep(taylor(function_convert([erf = hypergeometric], erf(x/7)) - erf(x/7),x
 function_convert(erfc = erf, erf(x/5) + erfc(x/5));
 1$
 
+erf(x) + function_convert(erfc = erf, erfc(x));
+1$
+
 /* erfi to erf */
 function_convert(erfi = erf, erfi(x));
 -(%i*erf(%i*x))$
@@ -240,3 +243,23 @@ function_convert(sinc = gamma, sinc(x));
 block([ans : function_convert(sinc = gamma, sinc(x))], 
   taylor(ans/sinc(x),x,0,9));
 1$
+
+/* abs => signum */
+function_convert('abs = 'signum, abs(x));
+x*signum(x)$
+
+block([ans],
+   declare(x,complex),
+   ans : map(lambda([s], subst(x=s,abs(x) - function_convert('abs = 'signum, abs(x)))), [-8,0,-%i, %i, 42]),
+   remove(x,complex),
+   ans);
+[0,0,0,0,0]$
+
+
+facts();
+[]$
+
+values;
+[]$
+
+ 
