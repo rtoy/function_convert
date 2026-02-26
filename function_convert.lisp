@@ -75,7 +75,7 @@
     (:inv_hyperbolic . (%asinh %acosh %atanh %asech %acsch %acoth))
     (:exp            . (mexpt))
     (:gamma_like     . (%gamma %beta %binomial %double_factorial mfactorial $pochhammer))
-    (:bessel  . (%bessel_j %bessel_y %bessel_i %bessel_k %hankel_1 %hankel_2 %airy_ai %airy_bi %airy_dai %airy_dbi ))
+    (:bessel  . (%bessel_j %bessel_y %bessel_i %bessel_k %hankel_1 %hankel_2))
     (:algebraic . (mplus mtimes mexpt))
     (:inequation . (mequal mlessp mleqp mnotequal mgreaterp mgeqp $notequal $equal))
     (:logarithmic . (%log)))
@@ -94,6 +94,13 @@
   (dolist (entry *converter-class-table* nil)
     (when (member op (cdr entry) :test #'eq)
       (return (car entry)))))
+
+(defun class-table-members (class-key)
+  "Return the list of operator symbols associated with CLASS-KEY
+in *converter-class-table*. CLASS-KEY should be a keyword such as
+:trig, :bessel, :gamma_like, etc. Returns NIL if CLASS-KEY is not
+present in the table."
+  (cdr (assoc class-key *converter-class-table* :test #'eq)))
 
 (defun list-converter-aliases ()
   "Print all alias mappings stored in *function-convert-hash-alias*."
@@ -1055,22 +1062,34 @@ subexpression."
     (ftake op (resimplify ($factor (sub a b))) 0)))
 
 ;; experimental code...
-(defun three-term-recusion-reduce (e fn x n)
-  (while (> n 1)
-    (setq e ($substitute (funcall fn n x) e))
-    (setq n (sub n 1)))
-  e)
+(defun three-term-recusion-reduce (e fn op x n kmin)
+  (mtell "e = ~M ; op = ~M ~%" e op)
+  (let ((k (sub n kmin)))
+    (while (>= k 1)
+       (setq e ($substitute (funcall fn op n x) e))
+       (setq k (sub k 1))
+       (setq n (sub n 1)))
+  e))
 
-(defun bessel-j-recursion (n x) 
+(defun bessel-recursion (op n x) 
            (ftake 'mequal 
-              (ftake '%bessel_j n x)
-              (sub (mul 2 (sub n 1) (div 1 x) (ftake '%bessel_j (sub n 1) x)) 
-                  (ftake '%bessel_j (sub n 2) x))))
+              (ftake op n x)
+              (sub (mul 2 (sub n 1) (div 1 x) (ftake op (sub n 1) x)) 
+                  (ftake op (sub n 2) x))))
 
-(define-function-converter ((mplus $bessel_recursion) (%bessel_j $bessel_recursion)) (op x)
+(define-function-converter ((mplus $bessel_recursion) (:bessel $bessel_recursion)) (op x)
  :builtin
- (declare (ignore op))
- (let* ((e (fapply 'mplus x)) (ll (xgather-args-of e '%bessel_j)) (pp))
+ ;; To start `x` is a summand and `op` is addition. First we express `e` as the sum
+ ;; of the members of `x`, then we map `bessel-order-downward-recurse` over all 
+ ;; members of the :bessel class.
+ (let* ((e (fapply op x)) (fn (class-table-members :bessel)))
+  (dolist (fk fn)
+    (setq e (bessel-order-downward-recurse e fk)))
+  e))
+   
+(defun bessel-order-downward-recurse (e op)
+  ;; Assumptions: the argument `e` is a sum and `op` is a member of the bessel class
+ (let* ((ll (xgather-args-of e op)) (pp))
    ;; Each member of ll has the form (order, xxx). Task I: Make a list of lists with
    ;; the same xxx and varying orders. I think the easiest way is to convert the argument
    ;; list to a list of Maxima lists and to use $equiv_classes.
@@ -1082,15 +1101,17 @@ subexpression."
    (setq pp (cdr pp))
    (dolist (pk pp)
      ;; equivalent now means that the order differs by an integer
-     (let ((qq ($equiv_classes pk #'(lambda (a b) (integerp (sub ($first a) ($first b)))))))
+     (let ((kmin) (qq ($equiv_classes pk #'(lambda (a b) (integerp (sub ($first a) ($first b)))))))
        (setq qq (cdr qq))
        ;; loop over each equivalence class
        (dolist (qqk qq)
           (setq qqk ($sort ($listify qqk) #'(lambda (a b) (> (sub ($first a) ($first b))))))
-          (setq e (three-term-recusion-reduce e #'bessel-j-recursion ($second ($first qqk)) ($first ($first qqk)))))))
+          (setq kmin ($first ($last qqk)))
+          (mtell "kmin = ~M ~%" kmin)
+          (setq e (three-term-recusion-reduce e #'bessel-recursion
+               op ($second ($first qqk)) ($first ($first qqk)) kmin)))))
          
    e))
-
 #| 
 ;;; These are toy converters that I used to test find-converter-path. 
 (define-function-converter (%a %b) (op x)

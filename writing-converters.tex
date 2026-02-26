@@ -272,6 +272,36 @@ class-level converter.
         operator space.
 \end{itemize}
 
+\subsection{Class--Key Utilities}
+\label{subsec:class-key-utilities}
+
+There are two small utility functions that give convenient access to 
+class--key information. 
+
+\paragraph{From class key to operators.}
+The function \ttq{class-table-members} returns the list of operator symbols
+associated with a given class key.  For example,
+\begin{maximabox}
+\begin{verbatim}
+> (class-table-members :bessel)
+(%BESSEL_J %BESSEL_Y %BESSEL_I %BESSEL_K %HANKEL_1 %HANKEL_2)
+\end{verbatim}
+\end{maximabox}
+
+
+
+\paragraph{From operator to class key.}
+The inverse query is handled by \ttq{converter-class-of}, which scans the
+class table and returns the unique class key containing the operator, or
+\texttt{NIL} if the operator belongs to no class; for example
+
+\begin{maximabox}
+  \begin{verbatim}
+    > (converter-class-of '%bessel_j)
+     :BESSEL
+  \end{verbatim}
+\end{maximabox}
+
 \subsection{Chaining Multiple Conversions}
 To apply two or more conversions, put the converters into a Maxima list; for example
 
