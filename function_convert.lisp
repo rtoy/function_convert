@@ -389,16 +389,7 @@ found."
                             (successor-paths path node)))))))
       (step (list (list src)))))))
 
-(defun apply-path (expr path)
- " The second argument PATH is a list like (f g h k), meaning f→g, g→h, h→k. Apply 
-   these converters (left to right) to the expression expr."
-  (if (or (null path)
-          (null (cdr path)))
-      expr
-      (let* ((from (car path))
-             (to (cadr path))
-             (expr2 (function-convert expr from to)))
-        (apply-path expr2 (cdr path)))))
+
 
 (defun check-converter (x)
   "Validate a converter specification of the form  FROM => TO.
@@ -426,51 +417,56 @@ and whose second and third elements are valid operator names or a lambda."
      (merror "Bad transformation (invalid RHS): ~M" x))
 
     (t t)))
+
+(defun apply-path (expr path)
+ " The second argument PATH is a list like (f g h k), meaning f→g, g→h, h→k. Apply 
+   these converters (left to right) to the expression expr."
+  (if (or (null path)
+          (null (cdr path)))
+      expr
+      (let* ((from (car path))
+             (to (cadr path))
+             (expr2 (function-convert expr from to)))
+        (apply-path expr2 (cdr path)))))
+
+(defun note-no-such-converter (from to)
+  "Print an informational note that no converter FROM => TO exists. Returns NIL."
+  (format t "~&function_convert: no converter from ~A to ~A; expression unchanged.~%"
+          from to)
+  nil)
+
 ;; The user-level function. The first argument `subs` must either be a single converter 
 ;; or a Maxima list of converters; for example function_convert(sinc = sin, XXX) or 
 ;; function_convert([sinc = sin, sin = exp], XXX). This code checks the validity of the
 ;; first argument.
 (defmfun $function_convert (subs e)
-  
   (let ((fun-subs-list (if ($listp subs)
                            (cdr subs)
                            (list subs))))
     (flet ((fn (x)
              (cond ((stringp x) ($verbify x))
                    ((lambda-p x) x)
-                   ;; formerly ($nounify x)
                    (t x))))
-
-      ;; 1. Validate all substitutions
+      ;; Validate substitutions
       (mapc #'check-converter fun-subs-list)
-      ;; When lookup-coverter-alias fails, send the conversion to apply-path. The function
-      ;; apply-path does a BFS to find a chain of converters.
+
+      ;; Apply each substitution
       (dolist (q fun-subs-list)
         (multiple-value-bind (aa bb)
             (lookup-converter-alias (fn (second q)) (fn (third q)))
-            (if (and aa bb)
-               (setq e (function-convert e aa bb))
-               (setq e (apply-path (ftake *function-convert-infix-op* aa bb) e)))))
-     e)))
 
-(defun apply-path (sub e)
-  (let* ((f (cadr sub))
-         (g (caddr sub))
-         (ff (or (converter-class-of (mop e)) f))
-         (path (find-conversion-path ff g)))
-    (cond
-      (($mapatom e) e)
-      ;; When path has one or fewer members, convert the arguments of e and apply
-      ;; the operator of e.
-      ((null (cdr path)) 
-        (fapply (mop e) (mapcar #'(lambda (q) (function-convert q ff g)) (cdr e))))
-      (t
-       (let ((from (pop path)))
-         (while path
-           (let ((to (pop path)))
-             (setq e (function-convert e from to))
-             (setq from to))))
-       e))))
+          (cond
+            ;; direct alias hit
+            ((and aa bb)
+             (setq e (function-convert e aa bb)))
+
+            ;; no alias → compute path
+            (t
+             (let ((path (find-conversion-path aa bb)))
+               (if (null path)
+                       (note-no-such-converter aa bb)
+                       (setq e (apply-path e path))))))))
+      e)))
 
 (defun function-convert (e op-old op-new)
    (cond (($mapatom e) e)
