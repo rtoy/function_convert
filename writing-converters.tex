@@ -325,10 +325,11 @@ additional user-defined rule. In other words, there is no need to define a
 direct converter $f$ to $h$.
 
 This behavior is enabled by a breadth-first search (BFS) over the converter
-graph.~\cite{clrs} The search locates a shortest available path between two operators
-and composes the corresponding converters.  Writers of converters only need
-to know that \funconvert uses BFS, not anything about the internals of this
-mechanism.
+graph.~\cite{clrs} The search locates the shortest available path between two operators
+and composes the corresponding converters. When several shortest paths exist, the system 
+selects one according to its internal traversal order; the choice among equal-length 
+paths is not user‑configurable. Writers of converters only need
+to know that \funconvert uses BFS, not anything about the internals of this mechanism.
 
 \subsection{Errors and Debugging}
 
@@ -671,8 +672,6 @@ The package has at least one built-in rule that does just that --- it is difficu
 (%o1) (20252*%pi*x)/sin(%pi*x) < %pi
 \end{verbatim}
 \end{maximabox}
-
-
 
 \paragraph*{About the Author}
 This manual was written by Barton Willis, a long-time contributor to the
