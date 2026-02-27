@@ -419,15 +419,14 @@ and whose second and third elements are valid operator names or a lambda."
     (t t)))
 
 (defun apply-path (expr path)
- " The second argument PATH is a list like (f g h k), meaning f→g, g→h, h→k. Apply 
+" The second argument PATH is a list of symbols such as (f g h k), meaning f => g, g => h, h => k. Apply 
    these converters (left to right) to the expression expr."
-  (if (or (null path)
-          (null (cdr path)))
-      expr
-      (let* ((from (car path))
-             (to (cadr path))
-             (expr2 (function-convert expr from to)))
-        (apply-path expr2 (cdr path)))))
+  (cond
+    ((or (null path) (null (cdr path)))  expr)
+    (t
+     (apply-path
+       (function-convert expr (car path) (cadr path))
+       (cdr path)))))
 
 (defun note-no-such-converter (from to)
   "Print an informational note that no converter FROM => TO exists. Returns NIL."
