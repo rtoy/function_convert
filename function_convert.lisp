@@ -506,6 +506,15 @@ Return the final transformed expression."
             (mapcar #'(lambda (q) (function-convert q op-old op-new)) (cdr e))))))
 
 (defmfun $describe_converter (eq)
+"Describe the converter specified by EQ.
+
+EQ must be a single converter of the form f => g. If the converter is
+defined, print: print the converter,  whether the converter is built-in 
+or user-defined, and the function's docstring if one is present. 
+If no such converter exists, a message stating this is printed.
+
+The function returns the symbol $done."
+
   ;; Accept only a single equation
   (check-converter eq)
 
