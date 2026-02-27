@@ -439,6 +439,18 @@ and whose second and third elements are valid operator names or a lambda."
 ;; function_convert([sinc = sin, sin = exp], XXX). This code checks the validity of the
 ;; first argument.
 (defmfun $function_convert (subs e)
+"Apply one or more function conversion rules to the expression E.
+
+The first argument SUBS must be either a single converter of the form
+f => g or a Maxima list of such converters, for example  [f => g, g => h].
+
+Each converter is validated and any defined alias is resolved.
+If a converter exists, it is applied immediately.  Otherwise
+a conversion path from f to g is computed and applied in order.
+
+Converters are applied left-to-right in the order given in SUBS.
+Return the final transformed expression."
+  
   (let ((fun-subs-list (if ($listp subs)
                            (cdr subs)
                            (list subs))))
