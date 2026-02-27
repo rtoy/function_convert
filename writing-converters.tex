@@ -193,12 +193,10 @@ Cannot delete built-in converter (%ERFC → %ERF).
 \begin{maximabox}
   \begin{verbatim}
     (%i1) describe_converter(sinc = sin);
-Converter: %SINC = %SIN
-Function: #<FUNCTION FUNCTION-CONVERTER-%SINC-%SIN>
-Type: built-in
-
-Docstring:
-  Convert sinc(x) into sin(x)/x.
+          Converter sinc = sin
+          Type: built-in
+          Docstring: Convert sinc(x) into sin(x)/x.
+    (%o1)                                done
   \end{verbatim}
 \end{maximabox}
 If a user-package properly includes a docstring for a converter, once the package is loaded, that documentation will be available via the function \ttq{describe\_converter} .  
