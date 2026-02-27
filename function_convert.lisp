@@ -525,50 +525,24 @@ Return the final transformed expression."
          ;; Built-in?
          (builtin? (member (cons norm-from norm-to)
                            *built-in-converters*
-                           :test #'equal))
+                           :test #'equal)))
 
-         ;; Aliases pointing to this converter
-         (aliases '()))
+    (cond ((null fn)
+       (mtell "No converter defined for ~M ~M ~M ~%"
+              from (get *function-convert-infix-op* 'op) to))
 
-    ;; Collect aliases
-    (maphash
-     (lambda (key val)
-       (when (equal val (cons norm-from norm-to))
-         (push key aliases)))
-     *function-convert-hash-alias*)
-
-    ;; If no converter exists
-    (unless fn
-      (format t "No converter defined for ~A ~A ~A.~%"
+      (t
+       (mtell (intl:gettext "Converter ~M ~M ~M ~%")
               from (get *function-convert-infix-op* 'op) to)
-      '$false)
 
-    ;; Print description
-    (format t "~%Converter: ~A ~A ~A~%"
-            from (get *function-convert-infix-op* 'op) to)
+       (mtell (intl:gettext "Type: ~M~%")
+              (if builtin? "built-in" "user-defined"))
 
-    (when (or (not (eq from norm-from))
-              (not (eq to norm-to)))
-      (format t "Normalized via alias to: ~A ~A ~A~%"
-              norm-from (get *function-convert-infix-op* 'op) norm-to))
-
-    (format t "Function: ~A~%" fn)
-    (format t "Type: ~A~%" (if builtin? "built-in" "user-defined"))
-
-    (when aliases
-      (format t "Aliases:~%")
-      (dolist (a aliases)
-        (format t "  ~A ~A ~A~%"
-                (car a)
-                (get *function-convert-infix-op* 'op)
-                (cdr a))))
-
-    ;; Docstring (if any)
-    (let ((doc (documentation fn 'function)))
-      (when doc
-        (format t "~%Docstring:~%  ~A~%" doc)))
-
+       (let ((doc (documentation fn 'function)))
+         (when doc
+           (mtell (intl:gettext "Docstring: ~M ~%") doc)))))
     '$done))
+
 
 (defmfun $delete_converter (eqs)
   ;; Allow: delete_converter(f = g)
@@ -857,6 +831,7 @@ is first degree polynomial in %pi."
 ;; will properly trigger the rule.
 (define-function-converter ((mtimes %sin) (%gamma %sin)) (op x)
   :builtin
+  "Apply the identity gamma(X)*gamma(1-X) = pi/(sin(pi X))"
   (declare (ignore op))
   (flet ((gamma-p (s) (and (consp s) (eq (caar s) '%gamma))))
      (let* ((e (fapply 'mtimes x)) (ll (fapply '$set (mapcar #'first (xgather-args-of e '%gamma)))) (ee))
