@@ -103,14 +103,35 @@ The function `function_convert` validates each rule and signals an error for mal
 
 ## Extensibility
 
-Users may define new conversions by supplying a lambda expression using `function_convert(f = lambda([u], some_expression_in_u), expr);`
+A user can add rules in three ways.
 
-No modification of Maxima’s simplifier or pattern matcher is required.
+### Explicit lambda expression
 
-Additionally, a converter can be defined using `register_converter`. An example:
+Users may define a rule by supplying a lambda expression for the target function. This option is good for single use. Here are two examples:
 ```maxima
-(%i1) register_converter ("^", expand, ppp,qqq, lambda([a,b], expand(a^b)),"Expand powers, but not products.")$
+(%i1) function_convert('erfc = lambda([s], 1-erf(s)), erfc(x^2));
 
+(%o1) 1-erf(x^2)
+(%i2) function_convert('erfc = lambda([s], 1-erf(s)), 1/(1 + erfc(x)));
+
+(%o2) 1/(2-erf(x))
+```
+No modification of Maxima’s simplifier or pattern matcher is required. Rules defined this way are 
+temporary and are not available to the BFS chaining mechanism. 
+
+### Register_converter utility
+
+A rule be defined using `register_converter`. An example:
+```maxima
+(%i1) register_converter ("^" = expand, ppp = qqq, lambda([a,b], expand(a^b)),"Expand powers, but not products.")$
+```
+The first and second arguments are the rule and its alias; the third argument is a Maxima lambda form.
+In this case, since the source function is "^" (a function of two arguments), the lambda form must be
+a function with two arguments as well. The final argument is optional, and it is the documentation for the
+rule.
+
+Rules define this way are fully integrated into the converter system. For example, the function `describe_converter` will print information about them:
+```maxima
 (%i2) describe_converter(ppp=qqq);
 Converter ppp = qqq
 Type: user-defined
@@ -123,6 +144,7 @@ Docstring: Expand powers, but not products.
 An advantage of this method over using a converter that explicitly uses a lambda form is that 
 `register_converter` makes the converter available to the BFS scheme for chaining converters.
 
+### Defining a rule in Common Lisp
 Users who have some understanding of Common Lisp and Maxima internals should
 be able to define new built-in conversions. The file `function_convert` has some examples; here
 is the definition of the converter for `sinc = sin`
