@@ -107,6 +107,22 @@ Users may define new conversions by supplying a lambda expression using `functio
 
 No modification of Maxima’s simplifier or pattern matcher is required.
 
+Additionally, a converter can be defined using `register_converter`. An example:
+```maxima
+(%i1) register_converter ("^", expand, ppp,qqq, lambda([a,b], expand(a^b)),"Expand powers, but not products.")$
+
+(%i2) describe_converter(ppp=qqq);
+Converter ppp = qqq
+Type: user-defined
+Docstring: Expand powers, but not products.
+(%o2)                                done
+(%i3) function_convert(ppp=qqq, a*(b+c) + (x+1)^2);
+                            2
+(%o3)                      x  + 2 x + a (c + b) + 1
+```
+An advantage of this method over using a converter that explicitly uses a lambda form is that 
+`register_converter` makes the converter available to the BFS scheme for chaining converters.
+
 Users who have some understanding of Common Lisp and Maxima internals should
 be able to define new built-in conversions. The file `function_convert` has some examples; here
 is the definition of the converter for `sinc = sin`
@@ -130,6 +146,8 @@ functions to exponential form:
   ($exponentialize (fapply op x)))
 ```
 Unlike the `sinc` to `sin` rule, this rule uses the argument `op`.
+
+
 
 ## Built-in and User-level converters
 A converter can be marked as `built-in`, thus making it impossible to delete it using just user-level functions; for example

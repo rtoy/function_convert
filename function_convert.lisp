@@ -51,6 +51,8 @@
   (make-hash-table :test 'equal)
   "Hash table mapping (FROM . TO) operator pairs to converter functions.")
 
+(defvar *function-convert-doc*  (make-hash-table :test 'equal))
+
 ;; Global list of built-in-converters. The functions that delete converters consult 
 ;; this list, no other functions should look at this list.
 (defparameter *built-in-converters* nil))
@@ -479,22 +481,48 @@ Return the final transformed expression."
                        (setq e (apply-path e path))))))))
       e)))
 
+(defvar *caseatom* 0)
+(defvar *case0* 0)
+(defvar *case1* 0)
+(defvar *case2* 0)
+(defvar *case3* 0)
 (defun function-convert (e op-old op-new)
-   (cond (($mapatom e) e)
-         ;; Case I: both op-old & op-new are symbols. For this case, look up the 
-         ;; transformation in the *function-convert-hash* hashtable.
+   (let ((fn (if (and (consp e) (symbolp op-new) (symbolp op-old))
+                 (lookup-converter (caar e) op-old op-new)
+                 nil)))
+   (cond 
+       ;; Case 0: e is a mapatom--return e
+       (($mapatom e)
+        (incf *case0* 1)
+        e)
+
+       ;; Case 1: User supplied lambda form; for exmaple
+       ;; function_convert(sin = lambda([s], fff(s)), sin(sin(x)));
+       ((and (consp e) 
+             (lambda-p op-new) 
+             (eq (caar e) op-old))
+           (incf *case1* 1)
+          (apply 'mfuncall (cons op-new 
+              (mapcar #'(lambda (q) (function-convert q op-old op-new)) (cdr e)))))
+
+        ((and (lambda-p fn))
+          (incf *case2* 1)
+          (apply 'mfuncall (cons fn 
+              (mapcar #'(lambda (q) (function-convert q op-old op-new)) (cdr e)))))
+         ;; Case II: both op-old & op-new are symbols.
          ((and (consp e)
                (symbolp op-new)
                (symbolp op-old)
-               ;; bind converter fn inside conjunction--it's OK!
-               (let ((fn (lookup-converter (caar e) op-old op-new)))
-                 (and fn
-                   (funcall fn (caar e) (mapcar (lambda (q) (function-convert q op-old op-new)) (cdr e)))))))
-        ;; Case II: op-old is a symbol and op-new is a Maxima lambda form
-        ((and (consp e)
-              (eq (caar e) op-old)
-              (lambda-p op-new))
-          ($apply op-new (fapply 'mlist (mapcar (lambda (q) (function-convert q op-old op-new)) (cdr e)))))
+               fn)
+               (incf *case3* 1)
+               (funcall fn (caar e) (mapcar (lambda (q) (function-convert q op-old op-new)) (cdr e))))
+        ;; Case III: op-old is a symbol and op-new is a Maxima lambda form
+     ;   ((and (consp e) 
+     ;         (eq (caar e) op-old)
+     ;         (lambda-p op-new))
+     ;     (incf *case3* 1)
+      ;     (apply 'mfuncall (cons op-new 
+      ;        (mapcar #'(lambda (q) (function-convert q op-old op-new)) (cdr e)))))
 
         (($subvarp (mop e)) ;subscripted function
 		      (subfunmake 
@@ -503,7 +531,7 @@ Return the final transformed expression."
 			       (mapcar #'(lambda (q) (function-convert q op-old op-new)) (subfunargs e))))
 
 		    (t (fapply (caar e) 
-            (mapcar #'(lambda (q) (function-convert q op-old op-new)) (cdr e))))))
+            (mapcar #'(lambda (q) (function-convert q op-old op-new)) (cdr e)))))))
 
 (defmfun $describe_converter (eq)
 "Describe the converter specified by EQ.
@@ -547,7 +575,10 @@ The function returns the symbol $done."
        (mtell (intl:gettext "Type: ~M~%")
               (if builtin? "built-in" "user-defined"))
 
-       (let ((doc (documentation fn 'function)))
+       (let ((doc (or                  
+                     (gethash (converter-key from to) *function-convert-doc*)
+                     (gethash (converter-key norm-from norm-to) *function-convert-doc*)
+                     (documentation fn 'function))))
          (when doc
            (mtell (intl:gettext "Docstring: ~M ~%") doc)))))
     '$done))
@@ -1131,5 +1162,37 @@ subexpression."
 
 (define-function-converter ((mexpt $expand) ($power $expand_powers)) (op x)
   ($expand (fapply 'mexpt x)))
-|#
+
+
+
+(defmfun $register_converter (from to from_alias to_alias fn)
+    (register-converter-alias from_alias to_alias from to)
+    (register-converter from to fn))
+
+
+    
+ |#
+
+(defmfun $larry ()
+  (show-converter-contents))
+
+(defun show-converter-contents ()
+  (maphash #'(lambda (a b) (print `(,a ,b)))  *function-convert-hash*)
+  (mtell "~%----alias--------------------~%")
+  (maphash #'(lambda (a b) (print `(,a ,b)))  *function-convert-hash-alias*)
+  (mtell " ~% ~%"))
+
+(defun $billy ()
+   (maphash #'(lambda (a b) (print `(,a ,b)))  *function-convert-doc*))
+
+(defvar *function-convert-doc*  (make-hash-table :test 'equal))
+
+(defmfun $register_converter (from to from_alias to_alias fn &optional (doc nil))
+    (setq from ($verbify from))
+    (register-converter-alias from_alias to_alias from to)
+    (register-converter from to fn)
+    (when doc
+      (setf (gethash (cons from to) *function-convert-doc*) doc))
+    '$done)
+
 

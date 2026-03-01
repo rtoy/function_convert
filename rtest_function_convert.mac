@@ -14,6 +14,19 @@ errcatch(function_convert(a,b,c));
 errcatch(function_convert(a+b,c));
 []$
 
+/* User supplied lambda forms  */
+function_convert(sin = lambda([s], fff(s)), 29+sin(x)+2^sin(sin(x)));
+fff(x)+2^fff(fff(x))+29$
+
+function_convert("^" = lambda([a,b], exp(b*log(a))), 2^x);
+%e^(log(2)*x)$
+
+function_convert("^" = lambda([a,b], exp(b*log(a))), 2^x/(1+3^x));
+%e^(log(2)*x)/(%e^(log(3)*x)+1)$
+
+function_convert("^" = lambda([a,b], exp(b*log(a))), exp(2^x));
+%e^%e^(log(2)*x)$
+
 /* log10 conversions */
 
 function_convert(log10 = log, log10(x));
