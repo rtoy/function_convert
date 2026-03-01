@@ -80,4 +80,68 @@ The list of converters is maintained internally and entries appear in an unspeci
 @seealso{function_convert}
 @end deffn
 
+@defun describe_converter (eq)
+Describe the converter specified by @var{eq}.
+
+@var{eq} must be a single converter equation of the form @code{f => g}.
+The operators @code{f} and @code{g} are validated and normalized through
+the converter alias system.  If a converter from @code{f} to @code{g}
+is defined, information about it is printed: the converter itself,
+whether it is built-in or user-defined, and the function's docstring
+if one is present.
+
+If no such converter exists, a message stating this is printed.
+
+The function returns the symbol @code{$done}.
+@end defun
+
+@defun delete_converter (eqs)
+Delete one or more user-defined converters.
+
+The argument @var{eqs} may be either a single converter equation of the
+form @code{f = g} or a list of such equations.  Each equation is checked
+for proper structure, and for every pair @code{f}, @code{g} the
+corresponding user-defined converter is removed.  Converter names are
+normalized through @code{$nounify} before deletion.
+
+If a listed converter does not exist as a user-defined converter, no
+error is signaled; the converter is simply not present and therefore
+nothing is removed.
+
+The function returns the symbol @code{$done}.
+@end defun
+
+@defun delete_all_user_converters ()
+Delete all user-defined converters.
+
+This function removes every converter that is not marked as built-in.
+All entries in the converter hash table are examined, and any converter
+whose key does not appear in @code{*built-in-converters*} is deleted.
+Built-in converters are preserved.
+
+A message is printed indicating that all user-defined converters have
+been removed.  The function does not return a value.
+@end defun
+
+@defun register_converter (a b fn &optional doc)
+Register a new converter.
+
+The arguments @var{a} and @var{b} must each be converter specifications
+of the form @code{f => g}.  The operators are validated, and the
+@code{from} operator is normalized through @code{$verbify}.  If a
+converter from @code{f} to @code{g} already exists, an error is signaled:
+built‑in converters cannot be redefined, and redefining a user‑defined
+converter also signals an error.
+
+If @var{b} contains alias operators, they are registered before the
+converter itself.  The argument @var{fn} must be a Maxima lambda form;
+otherwise an error is signaled.  The converter is then installed in the
+converter registry.  If @var{doc} is supplied, it is stored as the
+documentation string for this converter.
+
+The function returns the symbol @code{$done}.
+@end defun
+
+
+
 
