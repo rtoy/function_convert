@@ -614,6 +614,56 @@ The function returns the symbol $done."
    *function-convert-hash*)
   (format t "All user-defined converters deleted.~%"))
 
+(defun converter-exists-p (from to)
+   (gethash (converter-key from to) *function-convert-hash*))
+
+(defun converter-built-in-p (from to)
+  (member (converter-key from to) *built-in-converters* :test #'equal))
+
+(defmfun $register_converter (a b fn &optional doc)
+  ;; Validate the converter specs
+  (check-converter a)
+  (check-converter b)
+
+  ;; Require that fn is a Maxima lambda form
+  (when (not (lambda-p fn))
+    (merror (intl:gettext
+             "The third arument to `register_converter` nust be a Maxima lambda form; found ~M")
+            fn))
+
+  ;; Extract (FROM TO) from A
+  (destructuring-bind (from to)
+      (cdr a)
+
+    ;; Extract (FROM-ALIAS TO-ALIAS) from B
+    (destructuring-bind (from-alias to-alias)
+        (cdr b)
+
+      ;; Normalize FROM
+      (setq from ($verbify from))
+
+      (when (converter-exists-p from to)
+        (if (converter-built-in-p from to)
+            (merror (intl:gettext
+                     "Cannot redefine built-in converter: ~M ~M ~M ~%")
+                    from *function-convert-infix-op* to)
+            (merror (intl:gettext
+                     "Redefining converter ~M ~M ~M ~%")
+                    from *function-convert-infix-op* to)))
+
+      ;; Register alias first (if any)
+      (when (and from-alias to-alias)
+        (register-converter-alias from-alias to-alias from to))
+
+      ;; Register the actual converter
+      (register-converter from to fn)
+
+      ;; Optional documentation
+      (when doc
+        (setf (gethash (cons from to) *function-convert-doc*) doc))
+
+      '$done)))
+      
 ;;; Starter Library of Function Converters for function_convert
 ;;; ------------------------------------------------------------
 
@@ -1119,54 +1169,6 @@ subexpression."
          
    e))
 
-(defun converter-exists-p (from to)
-   (gethash (converter-key from to) *function-convert-hash*))
 
-(defun converter-built-in-p (from to)
-  (member (converter-key from to) *built-in-converters* :test #'equal))
-
-(defmfun $register_converter (a b fn &optional doc)
-  ;; Validate the converter specs
-  (check-converter a)
-  (check-converter b)
-
-  ;; Require that fn is a Maxima lambda form
-  (when (not (lambda-p fn))
-    (merror (intl:gettext
-             "The third arument to `register_converter` nust be a Maxima lambda form; found ~M")
-            fn))
-
-  ;; Extract (FROM TO) from A
-  (destructuring-bind (from to)
-      (cdr a)
-
-    ;; Extract (FROM-ALIAS TO-ALIAS) from B
-    (destructuring-bind (from-alias to-alias)
-        (cdr b)
-
-      ;; Normalize FROM
-      (setq from ($verbify from))
-
-      (when (converter-exists-p from to)
-        (if (converter-built-in-p from to)
-            (merror (intl:gettext
-                     "Cannot redefine built-in converter: ~M ~M ~M ~%")
-                    from *function-convert-infix-op* to)
-            (merror (intl:gettext
-                     "Redefining converter ~M ~M ~M ~%")
-                    from *function-convert-infix-op* to)))
-
-      ;; Register alias first (if any)
-      (when (and from-alias to-alias)
-        (register-converter-alias from-alias to-alias from to))
-
-      ;; Register the actual converter
-      (register-converter from to fn)
-
-      ;; Optional documentation
-      (when doc
-        (setf (gethash (cons from to) *function-convert-doc*) doc))
-
-      '$done)))
 
 
