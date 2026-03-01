@@ -481,48 +481,33 @@ Return the final transformed expression."
                        (setq e (apply-path e path))))))))
       e)))
 
-(defvar *caseatom* 0)
-(defvar *case0* 0)
-(defvar *case1* 0)
-(defvar *case2* 0)
-(defvar *case3* 0)
 (defun function-convert (e op-old op-new)
    (let ((fn (if (and (consp e) (symbolp op-new) (symbolp op-old))
                  (lookup-converter (caar e) op-old op-new)
                  nil)))
    (cond 
        ;; Case 0: e is a mapatom--return e
-       (($mapatom e)
-        (incf *case0* 1)
-        e)
+       (($mapatom e)  e)
 
-       ;; Case 1: User supplied lambda form; for exmaple
+       ;; Case 1: User supplied lambda form; for example
        ;; function_convert(sin = lambda([s], fff(s)), sin(sin(x)));
        ((and (consp e) 
              (lambda-p op-new) 
              (eq (caar e) op-old))
-           (incf *case1* 1)
           (apply 'mfuncall (cons op-new 
               (mapcar #'(lambda (q) (function-convert q op-old op-new)) (cdr e)))))
 
+        ;; Case 2: rule defined via register_converter; here fn is a Maxima lambda form
         ((and (lambda-p fn))
-          (incf *case2* 1)
           (apply 'mfuncall (cons fn 
               (mapcar #'(lambda (q) (function-convert q op-old op-new)) (cdr e)))))
-         ;; Case II: both op-old & op-new are symbols.
+       
+         ;; Case 3: fn is a CL function
          ((and (consp e)
                (symbolp op-new)
                (symbolp op-old)
                fn)
-               (incf *case3* 1)
                (funcall fn (caar e) (mapcar (lambda (q) (function-convert q op-old op-new)) (cdr e))))
-        ;; Case III: op-old is a symbol and op-new is a Maxima lambda form
-     ;   ((and (consp e) 
-     ;         (eq (caar e) op-old)
-     ;         (lambda-p op-new))
-     ;     (incf *case3* 1)
-      ;     (apply 'mfuncall (cons op-new 
-      ;        (mapcar #'(lambda (q) (function-convert q op-old op-new)) (cdr e)))))
 
         (($subvarp (mop e)) ;subscripted function
 		      (subfunmake 
@@ -1129,70 +1114,59 @@ subexpression."
        (dolist (qqk qq)
           (setq qqk ($sort ($listify qqk) #'(lambda (a b) (> (sub ($first a) ($first b))))))
           (setq kmin ($first ($last qqk)))
-          (mtell "kmin = ~M ~%" kmin)
           (setq e (three-term-recusion-reduce e #'bessel-recursion
                op ($second ($first qqk)) ($first ($first qqk)) kmin)))))
          
    e))
-#| 
-;;; These are toy converters that I used to test find-converter-path. 
-(define-function-converter (%a %b) (op x)
-  (declare (ignore op))
-  (ftake '%b (car x)))
 
-(define-function-converter (%b %c) (op x)
- (declare (ignore op))
-  (ftake '%c (car x)))
+(defun converter-exists-p (from to)
+   (gethash (converter-key from to) *function-convert-hash*))
 
-(define-function-converter (%c %d) (op x)
- (declare (ignore op))
-  (ftake '%d (car x)))
+(defun converter-built-in-p (from to)
+  (member (converter-key from to) *built-in-converters* :test #'equal))
 
-(define-function-converter (%d %e) (op x)
- (declare (ignore op))
-  (ftake '%e (car x)))
+(defmfun $register_converter (a b fn &optional doc)
+  ;; Validate the converter specs
+  (check-converter a)
+  (check-converter b)
 
-(define-function-converter (%b %e) (op x)
- (declare (ignore op))
- (ftake '%e (car x)))
+  ;; Require that fn is a Maxima lambda form
+  (when (not (lambda-p fn))
+    (merror (intl:gettext
+             "The third arument to `register_converter` nust be a Maxima lambda form; found ~M")
+            fn))
 
- (define-function-converter ((%b %d) ($pp $qq)) (op x)
-  (declare (ignore op))
-  (ftake '%d (car x)))
+  ;; Extract (FROM TO) from A
+  (destructuring-bind (from to)
+      (cdr a)
 
-(define-function-converter ((mexpt $expand) ($power $expand_powers)) (op x)
-  ($expand (fapply 'mexpt x)))
+    ;; Extract (FROM-ALIAS TO-ALIAS) from B
+    (destructuring-bind (from-alias to-alias)
+        (cdr b)
 
+      ;; Normalize FROM
+      (setq from ($verbify from))
 
+      (when (converter-exists-p from to)
+        (if (converter-built-in-p from to)
+            (merror (intl:gettext
+                     "Cannot redefine built-in converter: ~M ~M ~M ~%")
+                    from *function-convert-infix-op* to)
+            (merror (intl:gettext
+                     "Redefining converter ~M ~M ~M ~%")
+                    from *function-convert-infix-op* to)))
 
-(defmfun $register_converter (from to from_alias to_alias fn)
-    (register-converter-alias from_alias to_alias from to)
-    (register-converter from to fn))
+      ;; Register alias first (if any)
+      (when (and from-alias to-alias)
+        (register-converter-alias from-alias to-alias from to))
 
+      ;; Register the actual converter
+      (register-converter from to fn)
 
-    
- |#
+      ;; Optional documentation
+      (when doc
+        (setf (gethash (cons from to) *function-convert-doc*) doc))
 
-(defmfun $larry ()
-  (show-converter-contents))
-
-(defun show-converter-contents ()
-  (maphash #'(lambda (a b) (print `(,a ,b)))  *function-convert-hash*)
-  (mtell "~%----alias--------------------~%")
-  (maphash #'(lambda (a b) (print `(,a ,b)))  *function-convert-hash-alias*)
-  (mtell " ~% ~%"))
-
-(defun $billy ()
-   (maphash #'(lambda (a b) (print `(,a ,b)))  *function-convert-doc*))
-
-(defvar *function-convert-doc*  (make-hash-table :test 'equal))
-
-(defmfun $register_converter (from to from_alias to_alias fn &optional (doc nil))
-    (setq from ($verbify from))
-    (register-converter-alias from_alias to_alias from to)
-    (register-converter from to fn)
-    (when doc
-      (setf (gethash (cons from to) *function-convert-doc*) doc))
-    '$done)
+      '$done)))
 
 
