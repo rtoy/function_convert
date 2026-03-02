@@ -484,16 +484,20 @@ Return the final transformed expression."
 (defun function-convert (e op-old op-new)
    (let ((fn (if (and (consp e) (symbolp op-new) (symbolp op-old))
                  (lookup-converter (caar e) op-old op-new)
-                 nil)))
+                 nil))
+          (e-op (if (consp e) (mop e) nil)))
    (cond 
        ;; Case 0: e is a mapatom--return e
        (($mapatom e)  e)
+
+       ((and ($subvarp e-op) (eq (caar e-op) op-old)) 42)
+         
 
        ;; Case 1: User supplied lambda form; for example
        ;; function_convert(sin = lambda([s], fff(s)), sin(sin(x)));
        ((and (consp e) 
              (lambda-p op-new) 
-             (eq (caar e) op-old))
+             (eq (mop e) op-old))
           (apply 'mfuncall (cons op-new 
               (mapcar #'(lambda (q) (function-convert q op-old op-new)) (cdr e)))))
 
@@ -515,7 +519,7 @@ Return the final transformed expression."
 			       (subfunsubs e) ;don't convert subscripts, but map over arguments
 			       (mapcar #'(lambda (q) (function-convert q op-old op-new)) (subfunargs e))))
 
-		    (t (fapply (caar e) 
+		    (t (fapply (mop e) 
             (mapcar #'(lambda (q) (function-convert q op-old op-new)) (cdr e)))))))
 
 (defmfun $describe_converter (eq)
@@ -663,7 +667,7 @@ The function returns the symbol $done."
         (setf (gethash (cons from to) *function-convert-doc*) doc))
 
       '$done)))
-      
+
 ;;; Starter Library of Function Converters for function_convert
 ;;; ------------------------------------------------------------
 
@@ -1169,6 +1173,14 @@ subexpression."
          
    e))
 
+(defun make-subscripted-fun (fname indices args)
+  (cons (list 'mqapply 'simp) (cons (cons (list fname 'simp 'array) indices) args)))
 
-
-
+;; A converter for a subscripted function:
+(define-function-converter ((mqapply $psi_half) ($psi $psi_half)) (op x)
+  (declare (ignore op))
+ (let* ((fn (mop (car x))) (args (cdr x)) (subscript (cdr (car x))) (z (div (car args) 2)) (n (car subscript)))
+  (cond ((and (eql n 0) (eq fn '$psi))
+          (add (div (add (make-subscripted-fun fn (list 0) (list z))
+                    (make-subscripted-fun fn (list 0) (list (add (div 1 2) z)))) 2) (ftake '%log 2)))
+        (t (make-subscripted-fun fn subscript args)))))
