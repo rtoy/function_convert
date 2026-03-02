@@ -184,10 +184,6 @@ The function `function_convert` walks an expression tree and replaces function c
 
 The package is implemented in Common Lisp. It has been tested using Clozure Common Lisp version 1.13 and SBCL version 2.4.7.
 
-## Limitations & Bugs
-
-The source function can not be subscripted, for example `li[2](x)`. 
-
 ## Motivation
 
 Many systems (Maple, Mathematica, SymPy) provide built‑in expansions or rewrite mechanisms, but Maxima uses an alphabet soup of functions that perform semantic function‑to‑function conversions; examples include `makefact` and `makegamma`. In other cases, transformations are controlled by option variables—for example, `expintrep`. 
@@ -234,15 +230,15 @@ Finally, the package has at least one built-in rule that is difficult to fully d
 - [x] build a self-documenting feature
 - [x] re-examine the code that converts to the internal name of an operator
 - [x] build a library of useful core rules (a good start)
-- [ ] regression tests for `function_convert`
-- [x] texinfo documentation for `function_convert` (at least a good start)
-- [x] decide if the converter(s) are first `function_convert(f = g,expr)` or last `function_convert(expr, f = g)`
+- [ ] regression tests for all converters
+- [x] texinfo documentation
+- [x] decide argument order for `function_convert(f = g,expr)`
 - [x] Update README.md to reflect the change from "=" to 
 - [ ] Remove the package from this repo & commit it to Maxima
 - [x] Build a BFS scheme for chaining converters
 - [x] Build a scheme for marking a converter as built-in and make it impervious to deletion.
 - [x] User-level utility to define a converter
-
+- [x] Allow rules for subscripted functions
 
 
 
