@@ -595,14 +595,14 @@ The function returns the symbol $done."
   (let ((key (cons from to)))
     (cond
       ((member key *built-in-converters* :test #'equal)
-       (format t "Cannot delete built-in converter (~A → ~A).~%" from to))
+       (mtell "Cannot delete built-in converter ~M ~M ~M. ~%" from (get *function-convert-infix-op* 'op) to))
 
       ((gethash key *function-convert-hash*)
        (remhash key *function-convert-hash*)
-       (format t "Deleted converter (~A → ~A).~%" from to))
+       (mtell "Deleted converter ~M ~M ~M. ~%" from (get *function-convert-infix-op* 'op) to))
 
       (t
-       (format t "No converter (~A → ~A) exists.~%" from to)))))
+       (mtell "No converter ~M ~M ~M exists. ~%" from (get *function-convert-infix-op* 'op) to)))))
 
 (defmfun $delete_all_user_converters ()
   (maphash
