@@ -1,0 +1,12 @@
+maximabox
+docstring
+defrule
+ratsubst
+pdflatex
+expintrep
+makefact
+SymPy
+rtestmyfunctionconvert
+functionconvert
+makegamma
+xgather-args-of

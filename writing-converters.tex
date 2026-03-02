@@ -111,8 +111,6 @@ Maxima's /src folder --- when this happens, loading the package will not be need
 
 We begin with the basic usage of the \funconvert package and an overview of its main features.
 
-\paragraph*{Source Note} Portions of this tutorial are taken from, or adapted from, the project’s \texttt{README.md} on GitHub~\cite{willis-function-convert}, with the permission of the author.
-
 
 \section{Usage and Features}
 
@@ -142,6 +140,10 @@ The name of the target function is best thought of a mnemonic for recalling
 the identity $\erfc(x) = 1 - \erf(x)$, not as a literal function. Actually, the name of the 
 target function could be any Maxima symbol; for example, the rule could be named 
 \ttq{erfc = erfc\_to\_erf}.
+
+This use of  to define a rule is similar to its use in the Maxima function substitute, with one difference: here the operator \ttq{=} indicates a semantic conversion, not a literal renaming. One might argue that it would be clearer to define a rule using an arrow‑like operator such as \ttq{=>}. Using \ttq{=} instead of an arrow‑like symbol is consistent with substitute and preserves arrow‑like operators for other purposes.
+
+
 
 \subsection{Algorithm and Implementation}
 
@@ -326,7 +328,38 @@ and composes the corresponding converters. When several shortest paths exist, th
 selects one according to its internal traversal order; the choice among equal-length 
 paths is not user‑configurable. Writers of converters only need
 to know that \funconvert uses BFS, not anything about the internals of this mechanism.
+%%%%%%%%%%%%%%%%
+\subsection{User-level converters}
+\label{sec:register-converter}
 
+The function \ttq{register\_converter} provides a user-level method to define a new converter using just the Maxima language.  A converter is specified by: (a) a name for the rule,  (b) the alias for the rule, and (c) a Maxima lambda expression implementing the conversion.  An optional documentation string may 
+also be supplied.
+
+Here is an example of a rule that expands noncommuative powers, but not noncommuative products
+of sums.  We'll give the rule and its alias the same name:
+\begin{maximabox}
+\begin{verbatim}
+(%i1)	register_converter("^^" = expand, "^^" = expand, 
+      lambda([a,b], expand(a^^b)), "Expand noncommutative powers.");
+(%o1)	done
+
+(%i2)	function_convert("^^" =  expand, a.(b+c) + (1+x)^^3);
+(%o2)	x^^3+3*x^^2+3*x+a.(c+b)+1
+\end{verbatim}
+\end{maximabox}
+\noindent A converter defined this way is fully integrated into the built-in converter graph, and user-defined rules are discoverable by the BFS mechanism.  Also, \ttq{describe\_converter} works on 
+user-defined rules:
+\begin{maximabox}
+\begin{verbatim}
+(%i3)	describe_converter("^^" = expand);
+Converter "^^""="expand
+Type: "user-defined"
+Docstring: "Expand noncommutative powers."
+(%o3)	done
+\end{verbatim}
+\end{maximabox}
+
+%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Errors and Debugging}
 
 When a converter is redefined, Maxima will issue a warning, and when a converter
@@ -669,6 +702,16 @@ The package has at least one built-in rule that does just that --- it is difficu
 \end{verbatim}
 \end{maximabox}
 
+
+
+
+
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\clearpage
+
 \paragraph*{About the Author}
 This manual was written by Barton Willis, a long-time contributor to the
 Maxima computer algebra system and the author of the \funconvert package.
@@ -682,17 +725,16 @@ are rendered in a monospaced font with consistent verbatim handling. Bibliograph
 
 All examples were executed using Maxima from the current development branch together with the \funconvert package also from the current development branch.
 
-Portions of this document were adapted from the project's
-\texttt{README.md} on GitHub, with the permission of the author.
-
-
 This manual is intended as a long-term reference for users and
 developers who wish to extend the mathematical capabilities of the
 \funconvert package by writing custom converters.
 
-\bibliographystyle{IEEEtran}
-\bibliography{references}
-
+\begin{flushleft}
+\textcopyright 2026 Barton Willis\\
+Version 1.0\\
+Portions adapted from the GitHub project README~\cite{willis-function-convert} with permission.\\[1ex]
+Permission is granted to copy and distribute this document, in print or electronically, for any purpose, provided that the content is not modified and this notice is preserved.
+\end{flushleft}
 
 \end{document} 
 
