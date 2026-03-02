@@ -64,6 +64,11 @@
     ]}
   {\end{tcolorbox}}
 
+% reduce vertical space for display math
+\setlength{\abovedisplayskip}{6pt}
+\setlength{\belowdisplayskip}{6pt}
+\setlength{\abovedisplayshortskip}{4pt}
+\setlength{\belowdisplayshortskip}{4pt}
 
 \DeclareMathOperator{\erf}{erf}
 \DeclareMathOperator{\erfc}{erfc}
@@ -97,7 +102,7 @@
 \tableofcontents
 
 
-\section{Introduction and Prerequisites}
+\section{Introduction and prerequisites}
 
 Maxima’s \funconvert package~\cite{willis-function-convert} performs semantic function‑to‑function conversions on Maxima~\cite{maxima} expressions. This tutorial explains how to extend the package’s mathematical capabilities by writing your own converters. To follow this tutorial, you should be comfortable with:
 \begin{itemize} 
@@ -112,7 +117,7 @@ Maxima's /src folder --- when this happens, loading the package will not be need
 We begin with the basic usage of the \funconvert package and an overview of its main features.
 
 
-\section{Usage and Features}
+\section{Usage and features}
 
 The most basic use of the package is a converter that replaces each subexpression of a Maxima expression of the form  $\erfc(X)$  by $1 - \erf(X)$, where  $\erfc$ and  $\erf$ are error functions and 
 $X$ may be any expression. This converter is built into the \funconvert package. To use it, enter:
@@ -145,13 +150,13 @@ This use of  to define a rule is similar to its use in the Maxima function subst
 
 
 
-\subsection{Algorithm and Implementation}
+\subsection{Algorithm and implementation}
 
 The function \ttq{function\_convert} walks an expression tree and replaces function calls according to well‑defined rules. In that sense, it is straightforward code of a kind repeated many times in Maxima. It is not a pattern matcher or a general rewrite engine.
 
 The package is implemented in Common Lisp. It has been tested using Clozure Common Lisp~\cite{ccl} version 1.13 and SBCL~\cite{sbcl} version 2.4.7.
 
-\subsection{Naming and the Alias System}
+\subsection{Naming and the alias system}
 
 We've seen that the name of the target function is best thought of an alias for the identity being 
 applied.  The \funconvert package has an alias system allows the source function to be a
@@ -177,7 +182,7 @@ name this rule \ttq{gamma = sin}, for example. Actually, this converter is built
 A macro takes care of the messy details of defining an alias, along with other housekeeping duties. 
  
  
- \subsection{Built-in Converters}
+ \subsection{Built-in converters}
 
 A converter may be marked as built-in. Built-in converters cannot be removed using any user-level function. For example, the converter \ttq{erfc = erf} is built-in; attempting to remove it with \ttq{delete\_converter} produces an error:
 \begin{maximabox}
@@ -188,7 +193,7 @@ Cannot delete built-in converter (%ERFC → %ERF).
 \end{maximabox}
  
  
- \subsection{Self-documentation Feature}
+ \subsection{Self-documentation feature}
  
  Every converter function should have a docstring.  The docstring is available to the user
  via the function \ttq{describe\_converter}; for example
@@ -204,7 +209,7 @@ Cannot delete built-in converter (%ERFC → %ERF).
 If a user-package properly includes a docstring for a converter, once the package is loaded, that documentation will be available via the function \ttq{describe\_converter} .  
 
 
-\subsection{Class Keys and Class-Based Dispatch}
+\subsection{Class keys and class-based dispatch}
 
 Converter functions often need to apply the same transformation to an entire
 family of related operators. For example, a converter that rewrites
@@ -268,7 +273,7 @@ class-level converter.
         operator space.
 \end{itemize}
 
-\subsection{Class--Key Utilities}
+\subsection{Class--Key utilities}
 \label{subsec:class-key-utilities}
 
 There are two small utility functions that give convenient access to 
@@ -298,7 +303,7 @@ class table and returns the unique class key containing the operator, or
   \end{verbatim}
 \end{maximabox}
 
-\subsection{Chaining Multiple Conversions}
+\subsection{Chaining multiple conversions}
 To apply two or more conversions, put the converters into a Maxima list; for example
 
 \begin{maximabox}
@@ -312,7 +317,7 @@ To apply two or more conversions, put the converters into a Maxima list; for exa
 Chaining multiple conversions is handled by the function \ttq{function\_convert}; a writer of
 a converter doesn't need to do anything to allow chaining to work. 
 
-\subsection{Implicit Dispatch via Breadth-First Search}
+\subsection{Implicit dispatch via breadth-first search}
 
 The converter system automatically discovers multistep conversion chains.
 For example, if a converter is defined from $f$ to $g$ and another from
@@ -361,7 +366,7 @@ Docstring: "Expand noncommutative powers."
 \end{maximabox}
 
 %%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Errors and Debugging}
+\subsection{Errors and debugging}
 
 When a converter is redefined, Maxima will issue a warning, and when a converter
 doesn't exist,  Maxima returns the input unchanged, but doesn't issue a warning; 
@@ -378,7 +383,7 @@ a typographical error or some confusion between Maxima nouns and verbs. If a con
 correctly, try tracing the Common Lisp function \ttq{lookup-converter}. From there, you 
 might be able to diagnose the problem.
 
-\section{Writing Converter Functions}
+\section{Writing converter functions}
 A macro \ttq{define-function-converter} takes care of many of the housekeeping 
 details in writing a converter, including naming the internal function that applies the rule, 
 optionally marking the converter as built-in, and gathering the docstring 
@@ -428,7 +433,7 @@ not to \ttq{x} itself.  Alternatively, if you prefer, this bit of code can be ch
 \end{verbatim}
 \end{maximabox}
 
-\subsection{Alias Dispatch}
+\subsection{Alias dispatch}
 
 As we discussed before, both the source and the target functions of a converter can be given an alias.  This can be useful when the actual source function is a poor mnemonic for the converter name.
 
@@ -456,7 +461,7 @@ There are two ways to invoke this converter:
 \end{verbatim}
 \end{maximabox}
 
-\subsection{Class Key Converter Dispatch}
+\subsection{Class key converter dispatch}
 
 Class-key converters allow a single definition to handle an entire family of
 related operators, for example all trigonometric functions. The following example 
@@ -494,7 +499,72 @@ The body of the converter receives two arguments: the operator \ttq{op}
 and its argument list \ttq{x}. The converter then rewrites each
 trigonometric function into its sine-cosine form. 
 
-\subsection{A more Advanced Converter}
+\subsection{Converters for subscripted functions}
+
+Maxima represents both the polygamma and the polylogarithm function as subscripted functions. For definitions of these functions, see DLMF  §5.15 and §25.12~\cite{DLMF}. Writing a converter for these functions, and for subscripted functions in general, requires understanding the internal structure of these expressions and using several higher‑level functions that extract their components. To illustrate this, we will build a converter that applies the polygamma half‑argument identity. This identity is
+ \begin{equation}
+ \psi_0\left(z\right)=\tfrac{1}{2} \psi_0\left(\tfrac{z}{2}\right)+
+   \tfrac{1}{2} \psi_0\left(\tfrac{z+1}{2}\right)+\ln\left(2\right).
+ \end{equation}
+ To construct the converter, we first need to understand Maxima's internal structure for subscripted 
+ functions.  Specifically, for the polygamma function, the internal structure of \(\psi_{n}(x)\)
+ is \ttq{((MQAPPLY SIMP) ((\$PSI SIMP ARRAY) \$N) \$X)}. We say that \ttq{\$Psi} is the \emph{name} of the expression; the Common Lisp list \ttq{(\$N)} is its \emph{subscript}, and the Common Lisp list \ttq{(\$X)} is its \emph{argument}.
+
+The head operator of all subscripted functions is \ttq{mqapply}.  Thus,
+the target function for a converter for a subscripted function must be \ttq{mqapply}. 
+We will almost surely want to use an alias dispatch when dealing such cases.
+
+Second, we need to know how to use several high-level functions that provide access the name, subscripts, and augments of  of a subscripted function. For any subscripted function expression \ttq{e}, we have 
+ \begin{enumerate}[label=(\alph*), itemsep=0pt, topsep=0pt, parsep=0pt]
+  \item  \ttq{(subfunname e)} returns the name of the subscripted function.
+    
+  \item  \ttq{(subfunsubs e)} returns a CL list of the subscripts.
+  
+  \item \ttq{(subfunargs e)} returns a CL list of the arguments.
+  
+  \item \ttq{(subfunmake fn subs args)} constructs a subscripted function
+  with name \ttq{fn}, subscripts \ttq{subs}, and arguments \ttq{args}.
+ \end{enumerate}
+ \noindent  With these functions we can define the converter as
+ 
+ \begin{maximabox}
+ \begin{verbatim}
+ (define-function-converter ((mqapply $psi_half) ($psi $psi_half)) (op x)
+ "Apply the polygamma half-argument identity; see http://dlmf.nist.gov/5.5.E8"
+ (let* ((e (fapply op x)) 
+        (fn (subfunname e)) 
+        (subscripts (subfunsubs e)) 
+        (args (subfunargs e)) 
+        (z (div (car args) 2)) 
+        (n (car subscripts)))
+  (cond ((and (eql n 0) (eq fn '$psi))
+          (add (div (add (subfunmake  fn subscripts (list z))
+                         (subfunmake fn subscripts (list (add (div 1 2) z))))
+                 2) (ftake '%log 2)))
+        (t e))))
+   \end{verbatim}
+ \end{maximabox}
+In the \ttq{let*}, we first reconstruct the entire subscripted function, and then use
+the functions \ttq{subfunname}, \ttq{subfunsubs}, and \ttq{subfunargs} to find the function name,
+subscripts, and arguments.  After that, we check if the lone subscript is zero and if
+the function name is \ttq{\$psi}, and if so, we
+apply the half-argument identity; if not we return the entire subscripted function. 
+
+Because the head operator of every subscripted function is \ttq{mqapply}, every converter
+defined for a subscripted function must correctly handle every subscripted function, not just
+the specific one that it is intended to handle. So when testing, be sure to check that your
+converter handles a variety of subscripted functions correctly; for example
+\begin{maximabox}
+\begin{verbatim}
+(%i1) function_convert(psi = psi_half, psi[0](x));
+(%o1) (psi[0](x/2)+psi[0](x/2+1/2))/2+log(2)
+
+(%i2) function_convert(psi = psi_half, li[2](x) + psi[1](x) + psi[0](x));
+(%o2) li[2](x)+psi[1](x)+(psi[0](x/2)+psi[0](x/2+1/2))/2+log(2)
+\end{verbatim}
+\end{maximabox}
+
+\subsection{An advanced converter}
 
 In this section, we show to build a converter that rewrites explicit products of the form
 $x  \signum(x)$ as $|x|$.   The converter does not rewrite 
@@ -523,7 +593,7 @@ of signum(X); only explicit products matching that pattern are transformed."
 \end{verbatim}
 \end{maximabox}
 
-\subsection*{How the Converter Works}
+\subsection*{How the converter works}
 
 \begin{enumerate}[label=(\alph*), noitemsep, topsep=0pt]
   \item The converter receives the head operator \ttq{op} and its
@@ -550,7 +620,7 @@ literal pattern \(X  \signum(X)\), never the function
 \(\signum\) itself.
 
 %%%%%%%%%%%%%%
-\section{Regression Tests}
+\section{Regression tests}
 
 This section describes how to write regression tests for the \ttq{function\_convert} package 
 and how to run them. 
@@ -601,7 +671,7 @@ erf(x) + function_convert(erfc = erf, erfc(x));
 \end{verbatim}
 \end{maximabox}
 
-\section{Best Practices for Writing Converters}
+\section{Best practices for writing converters}
 
  The guidelines below help ensure that new converters integrate smoothly into
 the \funconvert system.
@@ -668,7 +738,7 @@ and \ttq{makegamma}. In other cases, transformations are controlled by option va
 These names are easy to forget and are not always easy to locate in the user documentation. 
 The \funconvert package may offer a simple, uniform, and user‑extensible way to perform such conversions.
 
-\subsection{Using  \ttq{defrule} as an Alternative to \funconvert}
+\subsection{Using  \ttq{defrule} as an alternative to \funconvert}
 
 Maxima's pattern-based \ttq{defrule} tool is an alternative to using \funconvert. A simple
 example: 
@@ -714,12 +784,10 @@ The package has at least one built-in rule that does just that --- it is difficu
 \clearpage
 
 \paragraph*{About the Author}
-This manual was written by Barton Willis, a long-time contributor to the
-Maxima computer algebra system and the author of the \funconvert package.
-He has worked with symbolic computation, mathematical software, and
-technical documentation for many years.
+This manual was written by Barton Willis, Professor Emeritus of Mathematics at the University of Nebraska at Kearney, a long‑time contributor to the Maxima computer algebra system, and the author of the \funconvert package. He has worked in symbolic computation, mathematical software, and technical documentation for many years.
 
-\paragraph*{Colophon} This manual was typeset using the \texttt{lualatex} engine with the
+
+\paragraph*{Colophon} This manual was typeset using the \texttt{LuaLaTeX}  engine with the
 \texttt{extarticle} document class. The body text is set in a serif typeface chosen for
 clarity in technical prose. Code fragments and Maxima sessions
 are rendered in a monospaced font with consistent verbatim handling. Bibliographic data were managed using \texttt{bibtex} using the \texttt{IEEEtran} style.

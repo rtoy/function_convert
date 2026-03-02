@@ -484,8 +484,7 @@ Return the final transformed expression."
 (defun function-convert (e op-old op-new)
    (let ((fn (if (and (consp e) (symbolp op-new) (symbolp op-old))
                  (lookup-converter (caar e) op-old op-new)
-                 nil))
-          (e-op (if (consp e) (mop e) nil)))
+                 nil)))
    (cond 
        ;; Case 0: e is a mapatom--return e
        (($mapatom e)  e)
@@ -1169,14 +1168,18 @@ subexpression."
          
    e))
 
-(defun make-subscripted-fun (fname indices args)
-  (cons (list 'mqapply 'simp) (cons (cons (list fname 'simp 'array) indices) args)))
-
 ;; A converter for a subscripted function:
 (define-function-converter ((mqapply $psi_half) ($psi $psi_half)) (op x)
-  (declare (ignore op))
- (let* ((fn (mop (car x))) (args (cdr x)) (subscript (cdr (car x))) (z (div (car args) 2)) (n (car subscript)))
+ "Apply the polygamma half-argument identity; see DLMF http://dlmf.nist.gov/5.5.E8"
+ (let* ((e (fapply op x)) 
+        (fn (subfunname e)) 
+        (subscripts (subfunsubs e)) 
+        (args (subfunargs e)) 
+        (z (div (car args) 2)) 
+        (n (car subscripts)))
+
   (cond ((and (eql n 0) (eq fn '$psi))
-          (add (div (add (make-subscripted-fun fn (list 0) (list z))
-                    (make-subscripted-fun fn (list 0) (list (add (div 1 2) z)))) 2) (ftake '%log 2)))
-        (t (make-subscripted-fun fn subscript args)))))
+          (add (div (add (subfunmake  fn subscripts (list z))
+                         (subfunmake fn subscripts (list (add (div 1 2) z))))
+                 2) (ftake '%log 2)))
+        (t e))))
