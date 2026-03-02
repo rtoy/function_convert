@@ -489,10 +489,6 @@ Return the final transformed expression."
    (cond 
        ;; Case 0: e is a mapatom--return e
        (($mapatom e)  e)
-
-       ((and ($subvarp e-op) (eq (caar e-op) op-old)) 42)
-         
-
        ;; Case 1: User supplied lambda form; for example
        ;; function_convert(sin = lambda([s], fff(s)), sin(sin(x)));
        ((and (consp e) 
