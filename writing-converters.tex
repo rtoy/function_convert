@@ -109,7 +109,7 @@ Maxima’s \funconvert package~\cite{willis-function-convert} performs semantic 
 \item using Maxima and the \funconvert package, and 
 \item programming Maxima in Common Lisp. 
 \end{itemize}
-This guide is written for people who want to create new converters. It focuses on writing converters. Here we include only the API elements that matter when you are authoring a converter.
+This guide is intended for users who want to create new converters. It concentrates on the converter‑writing process and includes only the API elements relevant to authoring converters.
 
 To install this package, place the file \ttq{function\_convert.lisp} in a directory on Maxima’s search path and load it with  \ttq{load("function\_convert");}.  Eventually, this package might be migrated to 
 Maxima's /src folder --- when this happens, loading the package will not be needed.
@@ -147,7 +147,8 @@ the identity $\erfc(x) = 1 - \erf(x)$, not as a literal function. Actually, the 
 target function could be any Maxima symbol; for example, the rule could be named 
 \ttq{erfc = erfc\_to\_erf}.
 
-This use of  to define a rule is similar to its use in the Maxima function substitute, with one difference: here the operator \ttq{=} indicates a semantic conversion, not a literal renaming. One might argue that it would be clearer to define a rule using an arrow‑like operator such as \ttq{=>}. Using \ttq{=} instead of an arrow‑like symbol is consistent with substitute and preserves arrow‑like operators for other purposes.
+This use of the infix operator \ttq{=} to define a rule is similar to its use in the Maxima function substitute, with one difference: here the operator \ttq{=}  indicates a semantic conversion rather than a literal renaming. One might argue that an arrow‑like operator such as \ttq{=>} would make this distinction clearer. Using \ttq{=}   instead of an arrow‑like symbol, however, keeps the notation consistent with substitute and preserves arrow‑like operators for other purposes.
+
 
 
 
@@ -164,9 +165,10 @@ applied.  The \funconvert package has an alias system allows the source function
 mnemonic as well.  This feature is useful for naming a converter for an identity 
 such as 
 \begin{equation}
-\Gamma\left(z\right)\Gamma\left(1-z\right)=\uppi/\sin\left(\uppi z\right). \label{gammaid}
+\Gamma(z)\Gamma(1-z)=\uppi/\sin(\uppi z).
+\label{gammaid}
 \end{equation}
-Here the left-hand side of this identity is a product, so the source function for this identity must be multiplication (internally \ttq{mtimes}), not the gamma function. But the rule \ttq{”*” = sin} is
+Here the left-hand side of this identity is a product so the source function for this identity must be multiplication (internally \ttq{mtimes}), not the gamma function. But the rule \ttq{”*” = sin} is
 hard to remember and unnatural.  The alias system allows the converter for this identity to have a much more natural name. For the identity in Eq. (\ref{gammaid}), using the alias system we can 
 name this rule \ttq{gamma = sin}, for example. Actually, this converter is built-in to the \funconvert package:
 
@@ -201,7 +203,7 @@ Cannot delete built-in converter (%ERFC → %ERF).
 \begin{maximabox}
   \begin{verbatim}
     (%i1) describe_converter(sinc = sin);
-          Converter sinc = sin
+          Converter: sinc = sin
           Type: built-in
           Docstring: Convert sinc(x) into sin(x)/x.
     (%o1)                                done

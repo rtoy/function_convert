@@ -553,7 +553,7 @@ The function returns the symbol $done."
               from (get *function-convert-infix-op* 'op) to))
 
       (t
-       (mtell (intl:gettext "Converter ~M ~M ~M ~%")
+       (mtell (intl:gettext "Converter: ~M ~M ~M ~%")
               from (get *function-convert-infix-op* 'op) to)
 
        (mtell (intl:gettext "Type: ~M~%")
