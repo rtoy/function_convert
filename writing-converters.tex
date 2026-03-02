@@ -119,7 +119,7 @@ We begin with the basic usage of the \funconvert package and an overview of its 
 
 \section{Usage and features}
 
-The most basic use of the package is a converter that replaces each subexpression of a Maxima expression of the form  $\erfc(X)$  by $1 - \erf(X)$, where  $\erfc$ and  $\erf$ are error functions and 
+The most basic example use of the package is a converter that replaces each subexpression of a Maxima expression of the form  $\erfc(X)$  by $1 - \erf(X)$, where  $\erfc$ and  $\erf$ are error functions and 
 $X$ may be any expression. This converter is built into the \funconvert package. To use it, enter:
 \begin{maximabox}
 \begin{verbatim}
@@ -136,13 +136,13 @@ example
 \end{verbatim}
 \end{maximabox} 
 The first argument \ttq{erfc = erf} is called a \emph{conversion rule} (or simply a rule), 
-the left-hand side is the \emph{source function} and the right-hand side \ttq{erf} is called  the
+the left-hand side of a rule is the \emph{source function} and the right-hand side \ttq{erf} is called  the
 \emph{target function}. The rule \ttq{erfc = erf} does not literally
 replace the source function with the target function, but it instead applies the 
 identity $\erfc(x) = 1 - \erf(x)$ to an expression, replacing the left-hand side with 
 the right-hand side. 
 
-The name of the target function is best thought of a mnemonic for recalling 
+The target function is best thought of a mnemonic for recalling 
 the identity $\erfc(x) = 1 - \erf(x)$, not as a literal function. Actually, the name of the 
 target function could be any Maxima symbol; for example, the rule could be named 
 \ttq{erfc = erfc\_to\_erf}.
@@ -217,7 +217,7 @@ If a user-package properly includes a docstring for a converter, once the packag
 
 Converter functions often need to apply the same transformation to an entire
 family of related operators. For example, a converter that rewrites
-trigonometric functions into exponential functions should apply uniformly to
+trigonometric functions into exponential functions should apply to
 all six trigonometric functions. Writing six separate converters is tedious and 
 error-prone. The \emph{class key} mechanism provides a solution.
 
@@ -324,22 +324,17 @@ a converter doesn't need to do anything to allow chaining to work.
 \subsection{Implicit dispatch via breadth-first search}
 
 The converter system automatically discovers multistep conversion chains.
-For example, if a converter is defined from $f$ to $g$ and another from
-$g$ to $h$, the system is able to convert $f$ to $h$ without any
-additional user-defined rule. In other words, there is no need to define a
-direct converter $f$ to $h$.
+For example, there are rules $f = g$ and $g = h$, the system is able to implicitly apply the rule $f = h$.
+In other words, there is no need to define a direct converter $f = h$.
 
-This behavior is enabled by a breadth-first search (BFS) over the converter
-graph.~\cite{clrs} The search locates the shortest available path between two operators
-and composes the corresponding converters. When several shortest paths exist, the system 
-selects one according to its internal traversal order; the choice among equal-length 
-paths is not user‑configurable. Writers of converters only need
-to know that \funconvert uses BFS, not anything about the internals of this mechanism.
-%%%%%%%%%%%%%%%%
+This behavior is enabled by a breadth‑first search (BFS) over the converter graph ~\cite{clrs}. The search locates the shortest available path between two operators and composes the corresponding converters. When several shortest paths exist, the system selects one according to its internal traversal order; the choice among equal‑length paths is not user‑configurable. In such cases, the final result may depend on which shortest path is chosen.
+
+Writers of converters only need to know that \funconvert uses BFS, not the internal details of its implementation.
+
 \subsection{User-level converters}
 \label{sec:register-converter}
 
-The function \ttq{register\_converter} provides a user-level method to define a new converter using just the Maxima language.  A disadvantage to this method, is that the class-key dispatch method is 
+The function \ttq{register\_converter} provides a user-level method to define a new converter using just the Maxima language.  A disadvantage to this method is that the class-key dispatch method is 
 not available. 
 
 A converter is specified by: (a) a name for the rule,  (b) the alias for the rule, and (c) a Maxima lambda expression implementing the conversion.  An optional documentation string may 
@@ -384,7 +379,7 @@ for example
 
 When writing a new converter, if a converter doesn't trigger, the problem is likely due to either
 a typographical error or some confusion between Maxima nouns and verbs. If a converter doesn't trigger 
-correctly, try tracing the Common Lisp function \ttq{lookup-converter}. From there, you 
+as expected, try tracing the Common Lisp function \ttq{lookup-converter}. From there, you 
 might be able to diagnose the problem.
 
 \section{Writing converter functions}
@@ -511,20 +506,20 @@ Maxima represents both the polygamma and the polylogarithm function as subscript
    \tfrac{1}{2} \psi_0\left(\tfrac{z+1}{2}\right)+\ln\left(2\right).
  \end{equation}
  To construct the converter, we first need to understand Maxima's internal structure for subscripted 
- functions.  Specifically, for the polygamma function, the internal structure of \(\psi_{n}(x)\)
+ functions.  For the polygamma function, internally  \(\psi_{n}(x)\)
  is \ttq{((MQAPPLY SIMP) ((\$PSI SIMP ARRAY) \$N) \$X)}. We say that \ttq{\$Psi} is the \emph{name} of the expression; the Common Lisp list \ttq{(\$N)} is its \emph{subscript}, and the Common Lisp list \ttq{(\$X)} is its \emph{argument}.
 
 The head operator of all subscripted functions is \ttq{mqapply}.  Thus,
 the target function for a converter for a subscripted function must be \ttq{mqapply}. 
-We will almost surely want to use an alias dispatch when dealing such cases.
+Thus, we will almost surely want to use an alias dispatch when dealing such cases.
 
-Second, we need to know how to use several high-level functions that provide access the name, subscripts, and augments of  of a subscripted function. For any subscripted function expression \ttq{e}, we have 
- \begin{enumerate}[label=(\alph*), itemsep=0pt, topsep=0pt, parsep=0pt]
+Second, we need to know how to use several high-level functions that provide access the name, subscripts, and augments of  of a subscripted function. For any subscripted function  \ttq{e}, we have 
+ \begin{enumerate}[label=(\alph*), itemsep=3pt, topsep=2pt, parsep=0pt]
   \item  \ttq{(subfunname e)} returns the name of the subscripted function.
     
-  \item  \ttq{(subfunsubs e)} returns a CL list of the subscripts.
+  \item  \ttq{(subfunsubs e)} returns a Common Lisp list of the subscripts.
   
-  \item \ttq{(subfunargs e)} returns a CL list of the arguments.
+  \item \ttq{(subfunargs e)} returns a Common Lisp list of the arguments.
   
   \item \ttq{(subfunmake fn subs args)} constructs a subscripted function
   with name \ttq{fn}, subscripts \ttq{subs}, and arguments \ttq{args}.
@@ -536,8 +531,7 @@ Second, we need to know how to use several high-level functions that provide acc
  (define-function-converter ((mqapply $psi_half) ($psi $psi_half)) (op x)
  "Apply the polygamma half-argument identity; see http://dlmf.nist.gov/5.5.E8"
  (let* ((e (fapply op x)) 
-        (fn (subfunname e)) 
-        (subscripts (subfunsubs e)) 
+        (fn (subfunname e))  (subscripts (subfunsubs e)) 
         (args (subfunargs e)) 
         (z (div (car args) 2)) 
         (n (car subscripts)))
@@ -662,7 +656,7 @@ batch(rtest_my_function_convert, 'test);
 \begin{itemize}
 \item bogus, unexpected (boolean values, strings, or \dots),  or invalid input,
   \item complex numbers,
-  \item nested expressions and multiple occurrences the source function,
+  \item nested expressions and multiple occurrences the source function, and
   \item  converters applied to expressions containing unknown functions.
 \end{itemize}
 
@@ -736,7 +730,7 @@ We end with a few comments about the \funconvert package that are not directly r
 
 Many systems (Maple~\cite{maple-convert}, Mathematica~\cite{mathematica-rules}, and SymPy~\cite{sympy-rewrite}) provide built‑in expansions or rewrite mechanisms, but Maxima uses an alphabet soup of 
 functions that perform semantic function‑to‑function conversions; examples include  \ttq{makefact}
-and \ttq{makegamma}. In other cases, transformations are controlled by option variables --- for example, 
+and \ttq{makegamma}. In other cases, transformations are controlled by option variables, for example, 
 \ttq{expintrep}. 
 
 These names are easy to forget and are not always easy to locate in the user documentation. 
