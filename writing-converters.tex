@@ -154,9 +154,44 @@ This use of the infix operator \ttq{=} to define a rule is similar to its use in
 
 \subsection{Algorithm and implementation}
 
-The function \ttq{function\_convert} walks an expression tree and replaces function calls according to well‑defined rules. In that sense, it is straightforward code of a kind repeated many times in Maxima. It is not a pattern matcher or a general rewrite engine.
+The function \ttq{function-convert} recursively traverses the expression tree 
+and replaces function calls according to well‑defined
+rules.  In that sense it is straightforward code of a kind repeated
+many times in Maxima.  It is not a pattern matcher or a general
+rewrite engine.
 
-The package is implemented in Common Lisp. It has been tested using Clozure Common Lisp~\cite{ccl} version 1.13 and SBCL~\cite{sbcl} version 2.4.7.
+Specifically, \ttq{function-convert} performs a \emph{preorder}
+(root--first) traversal of the expression tree: each node is visited
+before its children.  However, a converter is not applied at the
+moment the node is visited.  Instead, the converter is applied only
+\emph{after} all arguments have been recursively converted. 
+
+This yields a hybrid order: the traversal is top--down, but converter
+application is bottom--up.  For example, in the expression
+\ttq{a + b*c}, the converter is applied first to \ttq{b*c} and only
+then to the sum.
+
+We can illustrate this evaluation scheme with a converter that
+wraps every subexpression whose operator is \ttq{+}, \ttq{*}, or
+\ttq{\^{}} in a consecutively numbered box.  Two examples:
+
+\begin{maximabox}
+\begin{verbatim}
+(%i1) function_convert('algebraic = boxed, a+b*c);
+(%o1) box(box(b*c,1)+a,2)
+
+(%i2) function_convert('algebraic = boxed, a+b*(c+d));
+(%o2) box(box(b*box(d+c,3),4)+a,5)
+\end{verbatim}
+\end{maximabox}
+\noindent Maxima reorders commutative operands during canonicalization; in particular \ttq{c+d}
+prints as \ttq{d+c}. Also since \ttq{algebraic} is a Maxima option variable (default \ttq{false}),
+it is necessary to quote the source function for this converter.
+
+The package is implemented in Common Lisp.  It has been tested using
+Clozure Common Lisp~\cite{ccl} version~1.13 and
+SBCL~\cite{sbcl} version~2.4.7.
+
 
 \subsection{Naming and the alias system}
 
@@ -774,7 +809,10 @@ can be done using the \funconvert package:
 \end{maximabox}
 
 
-
+\paragraph*{Acknowledgements} The author thanks Robert Dodier, Richard Fateman, Stavros Macrakis, and Raymond Toy for their valuable guidance and constructive discussions on
+the Maxima mailing list~\cite{maxima-list}. Their insights and
+encouragement contributed significantly to the development and
+refinement of this work.
 
 
 
@@ -782,6 +820,9 @@ can be done using the \funconvert package:
 \bibliography{references}
 
 \clearpage
+
+
+
 
 \paragraph*{About the Author}
 This manual was written by Barton Willis, Professor Emeritus of Mathematics at the University of Nebraska at Kearney, a long‑time contributor to the Maxima computer algebra system, and the author of the \funconvert package. He has worked in symbolic computation, mathematical software, and technical documentation for many years.
