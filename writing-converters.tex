@@ -160,11 +160,7 @@ rules.  In that sense it is straightforward code of a kind repeated
 many times in Maxima.  It is not a pattern matcher or a general
 rewrite engine.
 
-Specifically, \ttq{function-convert} performs a \emph{preorder}
-(root--first) traversal of the expression tree: each node is visited
-before its children.  However, a converter is not applied at the
-moment the node is visited.  Instead, the converter is applied only
-\emph{after} all arguments have been recursively converted. 
+Specifically, \ttq{function-convert} performs a \emph{preorder} (root–first, left‑to‑right) traversal of the expression tree: each node is visited before its children. When the traversal reaches an atom, it returns immediately and no converter is applied. For non‑atomic expressions, the converter is not applied at the moment the node is visited. Instead, the converter is applied only \emph{after} all arguments have been recursively converted.
 
 This yields a hybrid order: the traversal is top--down, but converter
 application is bottom--up.  For example, in the expression
@@ -186,7 +182,7 @@ wraps every subexpression whose operator is \ttq{+}, \ttq{*}, or
 \end{maximabox}
 \noindent Maxima reorders commutative operands during canonicalization; in particular \ttq{c+d}
 prints as \ttq{d+c}. Also since \ttq{algebraic} is a Maxima option variable (default \ttq{false}),
-it is necessary to quote the source function for this converter.
+it is necessary to quote the source function for this converter. Notice that individual atoms are not boxed --- this is due to the policy that when the traversal reaches an atom, it returns immediately.
 
 The package is implemented in Common Lisp.  It has been tested using
 Clozure Common Lisp~\cite{ccl} version~1.13 and
@@ -716,8 +712,7 @@ the \funconvert system.
         It should not change the meaning of an expression. If a transformation is only valid under certain
         assumptions, the converter should check them explicitly or decline
         to apply the transformation. It is discouraged, but possible, to
-        write a converter that, for example, replaces every product by the
-        number~42.
+        write a converter that, for example, replaces every product by a sum.
 
   \item \textbf{Include a docstring.}
         Each converter should have a docstring so that \funconvert is
@@ -745,6 +740,8 @@ the \funconvert system.
   \item \textbf{Ensure termination.}
         Converters should not create expressions that trigger themselves
         again unless the transformation is guaranteed to converge.
+        
+\item \textbf{No side effects.} Converters should be functions with no side effects.
 
   \item \textbf{Write regression tests.}
         Each converter should have regression tests covering typical
@@ -807,7 +804,60 @@ can be done using the \funconvert package:
 (%o1) (20252*%pi*x)/sin(%pi*x) < %pi
 \end{verbatim}
 \end{maximabox}
+Finally, we mention that Maxima provides several mechanisms, such as \ttq{apply1, apply2}, and \ttq{applyb}, that give the user control over the order in which rules are applied, but the \funconvert package instead employs a fixed tree traversal.
 
+
+\section{Glossary}
+
+\begin{description}
+
+
+\item[atom]  
+Any expression for which the Maxima predicate \ttq{mapatom} returns \ttq{true}.  Maxima's
+atoms are numbers, symbols, strings, and subscripted variables (for example, \ttq{x[1]}).
+
+
+\item[operator]  
+The function symbol at the head of a non-atomic expression.  
+For example, in \ttq{x+y+z}, the operator is \ttq{+}. 
+
+\item[expression tree]  
+The canonical Maxima representation of an expression, viewed as a rooted tree whose internal nodes are operators and whose leaves are atoms.
+
+\item[preorder traversal]  
+A traversal in which each node is visited before its children (root--first, left-to-right).  
+\ttq{function-convert} uses preorder visitation but applies converters only after all children have been recursively converted.
+
+\item[converter]  
+A pure function associated with a specific operator or a set of operators.
+It receives an expression whose children have already been converted, and returns either a rewritten expression or the original expression unchanged.
+
+\item[source function]  
+The operator for which a converter is registered.  
+If the source function is a noun or option variable, it must be quoted when passed to \texttt{function-convert}.
+
+\item[target function]  
+The operator produced by a converter.  
+A converter may return an expression with the same operator or a different one.
+
+\item[registry]  
+The internal hash table mapping source operators to their associated converters.  
+Lookup is performed during traversal; if no converter is registered for an operator, the expression is returned unchanged.
+
+\item[canonicalization]  
+Maxima’s internal reordering and normalization of expressions.  
+For commutative operators, operands may be reordered (e.g., \texttt{c+d} prints as \texttt{d+c}).  
+Converters always receive expressions in canonical form.
+
+\item[pure function]  
+A function with no side effects and no dependence on external state.  
+Converters must be pure: they must not mutate their input or rely on evaluation.
+
+\item[bottom--up rewriting]  
+The discipline in which converters are applied only after all children have been recursively converted.  
+Although the traversal is preorder, rewriting is effectively postorder.
+
+\end{description}
 
 \paragraph*{Acknowledgements} The author thanks Robert Dodier, Richard Fateman, Stavros Macrakis, and Raymond Toy for their valuable guidance and constructive discussions on
 the Maxima mailing list~\cite{maxima-list}. Their insights and
