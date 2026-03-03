@@ -1184,7 +1184,4 @@ subexpression."
                  2) (ftake '%log 2)))
         (t e))))
 
-  
-(defmvar *box-counter* 0)    
-(define-function-converter ((:algebraic $boxed) ($algebraic $boxed)) (op x)
-  (ftake 'mlabox (fapply op x) (incf *box-counter* 1)))
+ 
