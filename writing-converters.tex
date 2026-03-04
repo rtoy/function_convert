@@ -32,7 +32,10 @@
 \usepackage{upgreek}
 
 %\newcommand{\ttq}[1]{\texttt{`#1'}}
-\newcommand{\ttq}[1]{\texttt{\textquoteleft#1\textquoteright}}
+\newcommand{\ttq}[1]{\texttt{'#1'}}
+%\newcommand{\ttq}[1]{\texttt{\'#1'}}
+
+%\newcommand{\ttq}[1]{\texttt{\textquoteleft#1\textquoteright}}
 \usepackage{csquotes}
 
 \usepackage{xspace}
@@ -453,22 +456,22 @@ The optional keyword argument  \ttq{:builtin} declares that this converter canno
 deleted using user-level functions. To mark a rule as built-in, the keyword \ttq{:builtin}  must be placed before the docstring. For a non-built-in rule,  omit the  \ttq{:builtin} keyword.
 The docstring is optional, but important because supplies the converter with documentation. 
 
-The mathematical part of the code, that is
+The mathematical part of the converter is
 \begin{maximabox}
 \begin{verbatim}
-  (let ((z (car x)))
-    (sub 1 (ftake '%erf z)))
+(let ((z (car x)))
+(sub 1 (ftake '%erf z)))
 \end{verbatim}
 \end{maximabox}
-\noindent implements the identity $\erfc(x) = 1 - \erf(x)$.  Notice that since \ttq{x} is a Common
-Lisp list of the argument to \ttq{\%erfc}, it is necessary to apply \ttq{\%erf} to the car of \ttq{x}, and
-not to \ttq{x} itself.  Alternatively, if you prefer, this bit of code can be changed to 
+which implements the identity .
+Because x is the list of arguments to %erfc, the converter must apply %erf to (car x) rather than to x itself.
+If you prefer, the same logic can be expressed as
 \begin{maximabox}
 \begin{verbatim}
-      (sub 1 (fapply '%erf x))
+(sub 1 (fapply '%erf x))
 \end{verbatim}
 \end{maximabox}
-
+since fapply applies the operator to the entire argument list.
 \subsection{Alias dispatch}
 
 As we discussed before, both the source and the target functions of a converter can be given an alias.  This can be useful when the actual source function is a poor mnemonic for the converter name.
