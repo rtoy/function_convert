@@ -866,12 +866,12 @@ example:
 \end{maximabox}
 This method works well, especially for single‑use function‑to‑function conversions. But there are several downsides to the \ttq{defrule} package.
 
-First, a \ttq{kill(all)} removes all rules defined by \ttq{defrule}, and that makes the rule system fragile and difficult to use for anything beyond disposable transformations. Changing Maxima to allow rules that cannot be removed by \ttq{kill(all)} is, of course, a small matter of programming \cite{nardi-small-matter}, but it would violate a long‑standing design principle: users must always be able to return the system to a clean, rule‑free state.
+First, a \ttq{kill(all)} removes all rules defined by \ttq{defrule}, and that makes the rule system fragile and difficult to use for anything beyond disposable transformations. Changing Maxima to allow rules that cannot be removed by \ttq{kill(all)} is, of course, a small matter of programming \cite{nardi-small-matter}, but it would violate a long‑standing design principle: users must always be able to return the system to a clean, rule‑free state.  In contrast, rules that are built-in to \funconvert are not removed by \ttq{kill(all)}.
 
+Second, the \ttq{defrule} package still depends on a collection of auxiliary functions, and unlike
+\funconvert, there the \ttq{defrule} package does not have a self-documentation feature.
 
-Second, the \ttq{defrule} package still depends on a collection of auxiliary functions.
-
-Third, and most importantly, it is difficult to use \ttq{defrule} to define a rule that must match two or more terms in a sum or product. The \funconvert package has several converters that do exactly this. These converters often rely internally on \texttt{ratsubst} to perform semantic substitutions --- something that is difficult for a rule defined by \ttq{defrule} to accomplish. An example is the built‑in rule that applies the identity \(\Gamma(z)\Gamma(1-z)=\uppi/\sin(\uppi z)\) . The rule must scan a product and look for a pair of gamma functions whose arguments sum to one. Doing this with \ttq{defrule} is difficult to impossible, but it can be done using \funconvert as we saw in Section~\ref{sec:alias_system}.
+Third, and most importantly, it is difficult to use \ttq{defrule} to define a rule that must match two or more terms in a sum or product. The \funconvert package has several converters that do exactly this. These converters often rely internally on \ttq{ratsubst} to perform semantic substitutions --- something that is difficult for a rule defined by \ttq{defrule} to accomplish. An example is the built‑in rule that applies the identity \(\Gamma(z)\Gamma(1-z)=\uppi/\sin(\uppi z)\) . The rule must scan a product and look for a pair of gamma functions whose arguments sum to one. Doing this with \ttq{defrule} is difficult to impossible, but it can be done using \funconvert as we saw in Section~\ref{sec:alias_system}.
 
 We end this comparison with one possible advantage of the \ttq{defrule} package over \funconvert. The \ttq{defrule} package provides several mechanisms, including \ttq{apply1}, \ttq{apply2}, and \ttq{applyb1}, that give the user control over the order in which rules are applied, whereas the \funconvert package uses a fixed scheme that is not under user control.
 
