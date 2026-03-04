@@ -36,7 +36,8 @@
 \usepackage{csquotes}
 
 
-\DeclareRobustCommand{\funconvert}{\texttt{function\kern0.21em convert}\hspace{0.2em}}
+%\DeclareRobustCommand{\funconvert}{\texttt{function\kern0.21em convert}\hspace{0.2em}}
+\newcommand{\funconvert}{\ttq{function\_convert}}
 % --- Section styling (optional, but elegant) ---
 \usepackage{titlesec}
 \titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
@@ -119,7 +120,7 @@ We begin with the basic usage of the \funconvert package and an overview of its 
 
 \section{Usage and features}
 
-The most basic example use of the package is a converter that replaces each subexpression of a Maxima expression of the form  $\erfc(X)$  by $1 - \erf(X)$, where  $\erfc$ and  $\erf$ are error functions and 
+The most basic example use of the package is a converter that replaces each subexpression of a Maxima expression of the form  $\erfc(X)$  by $1 - \erf(X)$, where  $\erfc$ and  $\erf$ are error functions (DLMF \S 7.2~\cite{DLMF}) and 
 $X$ may be any expression. This converter is built into the \funconvert package. To use it, enter:
 \begin{maximabox}
 \begin{verbatim}
@@ -153,6 +154,7 @@ This use of the infix operator \ttq{=} to define a rule is similar to its use in
 
 
 \subsection{Algorithm and implementation}
+\label{sec:algorithm}
 
 The function \ttq{function-convert} recursively traverses the expression tree 
 and replaces function calls according to well‑defined
@@ -167,9 +169,11 @@ application is bottom--up.  For example, in the expression
 \ttq{a + b*c}, the converter is applied first to \ttq{b*c} and only
 then to the sum.
 
-We can illustrate this evaluation scheme with a converter that
+We can illustrate this evaluation scheme with a converter \ttq{algebraic = boxed} that
 wraps every subexpression whose operator is \ttq{+}, \ttq{*}, or
-\ttq{\^{}} in a consecutively numbered box.  Two examples:
+\ttq{\^{}} in a consecutively numbered box.  This rule  is not built-in to the 
+\funconvert package, but it can be written in just a few lines of code; for this code, 
+see Section~\ref{sec:classkey}. Two examples:
 
 \begin{maximabox}
 \begin{verbatim}
@@ -180,9 +184,12 @@ wraps every subexpression whose operator is \ttq{+}, \ttq{*}, or
 (%o2) box(box(b*box(d+c,3),4)+a,5)
 \end{verbatim}
 \end{maximabox}
-\noindent Maxima reorders commutative operands during canonicalization; in particular \ttq{c+d}
+\noindent Two items to note: Maxima reorders commutative operands during canonicalization; in particular \ttq{c+d}
 prints as \ttq{d+c}. Also since \ttq{algebraic} is a Maxima option variable (default \ttq{false}),
-it is necessary to quote the source function for this converter. Notice that individual atoms are not boxed --- this is due to the policy that when the traversal reaches an atom, it returns immediately.
+it is necessary to quote the source function for this converter. Notice that individual atoms are not boxed --- this is due to the policy that when the traversal reaches an atom, no converter is called and
+the atom is returned immediately.
+
+
 
 The package is implemented in Common Lisp.  It has been tested using
 Clozure Common Lisp~\cite{ccl} version~1.13 and
@@ -190,7 +197,7 @@ SBCL~\cite{sbcl} version~2.4.7.
 
 
 \subsection{Naming and the alias system}
-
+\label{sec:alias_system}
 We've seen that the name of the target function is best thought of an alias for the identity being 
 applied.  The \funconvert package has an alias system allows the source function to be a
 mnemonic as well.  This feature is useful for naming a converter for an identity 
@@ -252,7 +259,7 @@ trigonometric functions into exponential functions should apply to
 all six trigonometric functions. Writing six separate converters is tedious and 
 error-prone. The \emph{class key} mechanism provides a solution.
 
-\paragraph{Purpose of Class Keys} A \emph{class key} is a symbolic tag (such as \ttq{:trig} or
+\paragraph{Purpose of class keys} A \emph{class key} is a symbolic tag (such as \ttq{:trig} or
 \ttq{:hyperbolic}) that represents a category of operators. The converter
 system uses these tags to perform \emph{class-based dispatch}: a single
 converter registered for a class key is automatically applied to every
@@ -262,7 +269,7 @@ Class keys classify operators, not expression types. For example, the class
 \ttq{:algebraic} contains the operators \ttq{mplus}, \ttq{mtimes}, and \ttq{mexpt}.
 If the head operator of an expression belongs to the class \ttq{:algebraic}, that does not imply that the expression itself is algebraic.
 
-\paragraph{The Class Table} The mapping from class keys to operators resides in the 
+\paragraph{The class table} The mapping from class keys to operators resides in the 
 global \ttq{*converter-class-table*}. This table is 
 
 \begin{maximabox}
@@ -289,7 +296,7 @@ This ensures unambiguous dispatch: when the converter system encounters an
 operator, it can determine its class uniquely and apply the appropriate
 class-level converter.
 
-\paragraph{How Class Dispatch Works} When the converter system processes an expression, it identifies the head operator of the form. It then:
+\paragraph{How class dispatch works} When the converter system processes an expression, it identifies the head operator of the form. It then:
 \begin{enumerate}[label=(\alph*), noitemsep, topsep=0pt]
   \item looks up the operator in \ttq{*converter-class-table*};
   \item determines the corresponding class key (e.g., \ttq{:trig});
@@ -297,7 +304,7 @@ class-level converter.
   \item if so, applies that converter to the entire expression.
 \end{enumerate}
 
-\paragraph{Why Class Keys Matter} Class keys provide:
+\paragraph{Why class keys matter} Class keys provide:
 \begin{itemize}
   \item \textbf{Abstraction}: one converter per conceptual family.
   \item \textbf{Extensibility}: adding a new operator to a class requires no
@@ -491,7 +498,10 @@ There are two ways to invoke this converter:
 \end{verbatim}
 \end{maximabox}
 
+
+
 \subsection{Class key converter dispatch}
+\label{sec:classkey}
 
 Class-key converters allow a single definition to handle an entire family of
 related operators, for example all trigonometric functions. The following example 
@@ -529,6 +539,16 @@ The body of the converter receives two arguments: the operator \ttq{op}
 and its argument list \ttq{x}. The converter then rewrites each
 trigonometric function into its sine-cosine form. 
 
+We conclude this section with the converter \ttq{algebraic = boxed} introduced in Section~\ref{sec:algorithm}. This example combines class‑key and alias dispatch and serves primarily to illustrate the postorder application of converters; it is not intended to have mathematical significance.
+\begin{maximabox}
+\begin{verbatim}
+(defmvar $box_counter 0)
+(define-function-converter ((:algebraic $boxed) ($algebraic $boxed)) (op x)
+   (ftake 'mlabox (fapply op x) (incf $box_counter 1))) 
+\end{verbatim}
+\end{maximabox}
+\noindent This converter increments the global variable \ttq{box\_counter} each time it is applied. In general, converters should be pure functions without side effects.
+
 \subsection{Converters for subscripted functions}
 
 Maxima represents both the polygamma and the polylogarithm function as subscripted functions. For definitions of these functions, see DLMF  §5.15 and §25.12~\cite{DLMF}. Writing a converter for these functions, and for subscripted functions in general, requires understanding the internal structure of these expressions and using several higher‑level functions that extract their components. To illustrate this, we will build a converter that applies the polygamma half‑argument identity. This identity is
@@ -538,7 +558,7 @@ Maxima represents both the polygamma and the polylogarithm function as subscript
  \end{equation}
  To construct the converter, we first need to understand Maxima's internal structure for subscripted 
  functions.  For the polygamma function, internally  \(\psi_{n}(x)\)
- is \ttq{((MQAPPLY SIMP) ((\$PSI SIMP ARRAY) \$N) \$X)}. We say that \ttq{\$Psi} is the \emph{name} of the expression; the Common Lisp list \ttq{(\$N)} is its \emph{subscript}, and the Common Lisp list \ttq{(\$X)} is its \emph{argument}.
+ is \ttq{((MQAPPLY SIMP) ((\$PSI SIMP ARRAY) \$N) \$X)}. We say that \ttq{\$psi} is the \emph{name} of the expression; the Common Lisp list \ttq{(\$n)} is its \emph{subscript}, and the Common Lisp list \ttq{(\$x)} is its \emph{argument}.
 
 The head operator of all subscripted functions is \ttq{mqapply}.  Thus,
 the target function for a converter for a subscripted function must be \ttq{mqapply}. 
@@ -654,7 +674,7 @@ literal pattern \(X  \signum(X)\), never the function
 This section describes how to write regression tests for the \ttq{function\_convert} package 
 and how to run them. 
 
-\paragraph{Test File Format} A regression test file is an ordinary Maxima batch file.  
+\paragraph{Test file format} A regression test file is an ordinary Maxima batch file.  
 Each test consists of \emph{exactly two lines}:
 \begin{maximabox}
 \begin{verbatim}
@@ -674,7 +694,7 @@ function_convert('cos = 'exp, cos(x));
 \end{verbatim}
 \end{maximabox}
 
-\paragraph{Running the Tests} If your tests are in a file \ttq{rtest\_my\_function\_convert}, to run the regression tests, enter the command:
+\paragraph{Running the tests} If your tests are in a file \ttq{rtest\_my\_function\_convert}, to run the regression tests, enter the command:
 \begin{maximabox}
 \begin{verbatim}
 batch(rtest_my_function_convert, 'test);
@@ -682,7 +702,7 @@ batch(rtest_my_function_convert, 'test);
 \end{maximabox}
 \noindent The command \ttq{batch} with an optional second argument of \ttq{test}, loads the test file, evaluates each input expression, compares the actual output with the expected output, and reports any mismatches.   A successful run prints no errors.
 
-\paragraph{What to Test} 
+\paragraph{What to test} 
 
 \begin{itemize}
 \item bogus, unexpected (boolean values, strings, or \dots),  or invalid input,
@@ -691,7 +711,7 @@ batch(rtest_my_function_convert, 'test);
   \item  converters applied to expressions containing unknown functions.
 \end{itemize}
 
-\paragraph{Writing Good Tests} A good regression test is minimal, documents the intended behavior of the converter system, and  isolates a single behavior. If a converter is based on an identity, each such converter should have an explicit test of the identity; here is an example that tests the identity 
+\paragraph{Writing good tests} A good regression test is minimal, documents the intended behavior of the converter system, and  isolates a single behavior. If a converter is based on an identity, each such converter should have an explicit test of the identity; here is an example that tests the identity 
 $\erfc(x) = 1-\erf(x)$:
 \begin{maximabox}
 \begin{verbatim}
@@ -752,7 +772,68 @@ the \funconvert system.
 \end{itemize}
 
 
+The example that follows illustrates why a converter should be based on an 
+identity.  If it is not, the results produced by the traversal are
+predictable but mathematically meaningless.  Say we attempt
+to write a converter that returns an antiderivative; our code is
+\begin{maximabox}
+\begin{verbatim}
+;; This demonstrates that converters should be based on identities.
+;; When they are not, the results are predictable but useless.
+(define-function-converter ((:algebraic $integrate)
+                            ($algebraic $integrate)) (op x)
+  (let ((e (fapply op x)))
+    ($integrate e '$x)))
+\end{verbatim}
+\end{maximabox}
 
+Applied to an expanded polynomial, the converter appears to behave
+correctly:
+
+\begin{maximabox}
+\begin{verbatim}
+(%i1) function_convert('algebraic = integrate, x^2+1);
+(%o1) x^3/3 + x
+\end{verbatim}
+\end{maximabox}
+
+This happens because the converter maps over the arguments of the sum
+and encounters only atoms.  By the traversal rules, it returns each
+atom immediately, so the converter ultimately receives the entire
+expression \ttq{x\^{}2+1}.  The call to \texttt{integrate} therefore
+produces a proper antiderivative.
+
+In contrast:
+
+\begin{maximabox}
+\begin{verbatim}
+(%i2) function_convert('algebraic = integrate, x);
+(%o2) x
+\end{verbatim}
+\end{maximabox}
+\noindent Here the return-immediately-for-an-atom rule applies at the root, so
+the converter is never invoked.  The result is simply the original
+expression, not an antiderivative.
+
+A more striking illustration comes from comparing an unexpanded product
+with its expanded form:
+\begin{maximabox}
+\begin{verbatim}
+(%i3) function_convert('algebraic = integrate, (x+1)*(x+2));
+(%o3) (6*x^5+45*x^4+80*x^3)/120
+
+(%i4) function_convert('algebraic = integrate, expand((x+1)*(x+2)));
+(%o4) (5*x^3)/6 + 2*x
+\end{verbatim}
+\end{maximabox}
+\noindent In \texttt{(\%o3)}, the converter returns an antiderivative of a 
+product of antiderivatives of the factors of the input, not an antiderivative
+of the input. Of course, both results are follow directly from the traversal rules, 
+but only the latter corresponds to a meaningful identity.
+
+This example underscores the principle that converters should express
+identities.  When they do not, the traversal produces consistent results, but 
+those results need not have any mathematical significance.
 
 \section{Miscellaneous}
 
@@ -783,54 +864,60 @@ example:
 (%o3) (x*sin(sin(x)/x))/sin(x)
 \end{verbatim}
 \end{maximabox}
-This method works well, especially for single-use function-to-function conversions.
-However, a \ttq{kill(all)} removes all rules defined by \ttq{defrule}, and the approach
-still depends on an alphabet soup of auxiliary functions. Changing Maxima to allow rules
-that cannot be removed by \ttq{kill(all)} is, of course, a small matter of
-programming~\cite{nardi-small-matter}, but it would violate a long-standing design
-principle: users must always be able to return the system to a clean, rule-free state.
+This method works well, especially for single‑use function‑to‑function conversions. But there are several downsides to the \ttq{defrule} package.
 
-Additionally, it is difficult to define rules that need to match two or more terms in a sum or 
-product.  The \funconvert package has several converters that do just that.  Often these 
-converters internally rely on \texttt{ratsubst} to do semantic substitutions --- something
-that is difficult for a rule defined by \ttq{defrule} to do. An example is the built-in rule
-that applies the identity \(\Gamma(z)\Gamma(1-z)=\uppi/\sin(\uppi z)\).  The rule
-needs to scan a product and look for a product of gamma functions whose arguments
-sum to one.  Doing this with the \ttq{defrule} package is difficult to impossible, but it
-can be done using the \funconvert package:
-\begin{maximabox}
-\begin{verbatim}
-(%i1) function_convert('gamma = 'sin, 20252*x*gamma(x)*gamma(1-x) < %pi);
-(%o1) (20252*%pi*x)/sin(%pi*x) < %pi
-\end{verbatim}
-\end{maximabox}
-Finally, we mention that Maxima provides several mechanisms, such as \ttq{apply1, apply2}, and \ttq{applyb}, that give the user control over the order in which rules are applied, but the \funconvert package instead employs a fixed tree traversal.
+First, a \ttq{kill(all)} removes all rules defined by \ttq{defrule}, and that makes the rule system fragile and difficult to use for anything beyond disposable transformations. Changing Maxima to allow rules that cannot be removed by \ttq{kill(all)} is, of course, a small matter of programming \cite{nardi-small-matter}, but it would violate a long‑standing design principle: users must always be able to return the system to a clean, rule‑free state.
+
+
+Second, the \ttq{defrule} package still depends on a collection of auxiliary functions.
+
+Third, and most importantly, it is difficult to use \ttq{defrule} to define a rule that must match two or more terms in a sum or product. The \funconvert package has several converters that do exactly this. These converters often rely internally on \texttt{ratsubst} to perform semantic substitutions --- something that is difficult for a rule defined by \ttq{defrule} to accomplish. An example is the built‑in rule that applies the identity \(\Gamma(z)\Gamma(1-z)=\uppi/\sin(\uppi z)\) . The rule must scan a product and look for a pair of gamma functions whose arguments sum to one. Doing this with \ttq{defrule} is difficult to impossible, but it can be done using \funconvert as we saw in Section~\ref{sec:alias_system}.
+
+We end this comparison with one possible advantage of the \ttq{defrule} package over \funconvert. The \ttq{defrule} package provides several mechanisms, including \ttq{apply1}, \ttq{apply2}, and \ttq{applyb1}, that give the user control over the order in which rules are applied, whereas the \funconvert package uses a fixed scheme that is not under user control.
 
 
 \section{Glossary}
 
 \begin{description}
 
-
 \item[atom]  
 Any expression for which the Maxima predicate \ttq{mapatom} returns \ttq{true}.  Maxima's
 atoms are numbers, symbols, strings, and subscripted variables (for example, \ttq{x[1]}).
 
+\item[bottom--up rewriting]  
+The discipline in which converters are applied only after all children have been recursively converted.  
+Although the traversal is preorder, rewriting is effectively postorder.
 
-\item[operator]  
-The function symbol at the head of a non-atomic expression.  
-For example, in \ttq{x+y+z}, the operator is \ttq{+}. 
+\item[canonicalization]  
+Maxima’s internal reordering and normalization of expressions.  
+For commutative operators, operands may be reordered (e.g., \texttt{c+d} prints as \texttt{d+c}).  
+Converters always receive expressions in canonical form.
+
+\item[converter]  
+A pure function associated with a specific operator or a set of operators.
+It receives an expression whose children have already been converted, and returns either a rewritten expression or the original expression unchanged.
 
 \item[expression tree]  
 The canonical Maxima representation of an expression, viewed as a rooted tree whose internal nodes are operators and whose leaves are atoms.
+
+\item[operator]  
+The function symbol at the head of a non-atomic expression.  
+For example, in \ttq{x+y+z}, the operator is \ttq{+}.
+
+\item[postorder]  
+A traversal scheme in which each node is visited after all of its children have been visited.
 
 \item[preorder traversal]  
 A traversal in which each node is visited before its children (root--first, left-to-right).  
 \ttq{function-convert} uses preorder visitation but applies converters only after all children have been recursively converted.
 
-\item[converter]  
-A pure function associated with a specific operator or a set of operators.
-It receives an expression whose children have already been converted, and returns either a rewritten expression or the original expression unchanged.
+\item[pure function]  
+A function with no side effects and no dependence on external state.  
+Converters must be pure: they must not mutate their input or rely on evaluation.
+
+\item[registry]  
+The internal hash table mapping source operators to their associated converters.  
+Lookup is performed during traversal; if no converter is registered for an operator, the expression is returned unchanged.
 
 \item[source function]  
 The operator for which a converter is registered.  
@@ -839,23 +926,6 @@ If the source function is a noun or option variable, it must be quoted when pass
 \item[target function]  
 The operator produced by a converter.  
 A converter may return an expression with the same operator or a different one.
-
-\item[registry]  
-The internal hash table mapping source operators to their associated converters.  
-Lookup is performed during traversal; if no converter is registered for an operator, the expression is returned unchanged.
-
-\item[canonicalization]  
-Maxima’s internal reordering and normalization of expressions.  
-For commutative operators, operands may be reordered (e.g., \texttt{c+d} prints as \texttt{d+c}).  
-Converters always receive expressions in canonical form.
-
-\item[pure function]  
-A function with no side effects and no dependence on external state.  
-Converters must be pure: they must not mutate their input or rely on evaluation.
-
-\item[bottom--up rewriting]  
-The discipline in which converters are applied only after all children have been recursively converted.  
-Although the traversal is preorder, rewriting is effectively postorder.
 
 \end{description}
 
@@ -874,7 +944,7 @@ refinement of this work.
 
 
 
-\paragraph*{About the Author}
+\paragraph*{About the author}
 This manual was written by Barton Willis, Professor Emeritus of Mathematics at the University of Nebraska at Kearney, a long‑time contributor to the Maxima computer algebra system, and the author of the \funconvert package. He has worked in symbolic computation, mathematical software, and technical documentation for many years.
 
 
