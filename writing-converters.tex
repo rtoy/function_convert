@@ -460,18 +460,17 @@ The mathematical part of the converter is
 \begin{maximabox}
 \begin{verbatim}
 (let ((z (car x)))
-(sub 1 (ftake '%erf z)))
+   (sub 1 (ftake '%erf z)))
 \end{verbatim}
 \end{maximabox}
-which implements the identity .
-Because x is the list of arguments to %erfc, the converter must apply %erf to (car x) rather than to x itself.
-If you prefer, the same logic can be expressed as
+\noindent This is the code that implements the identity.
+Because \ttq{x} is the list of arguments to \ttq{\%erfc}, the converter must apply \ttq{\%erf} to \ttq{(car x)} rather than to \ttq{x} itself. If you prefer, the same logic can be expressed as
 \begin{maximabox}
 \begin{verbatim}
 (sub 1 (fapply '%erf x))
 \end{verbatim}
 \end{maximabox}
-since fapply applies the operator to the entire argument list.
+since \ttq{fapply} applies the operator to the entire argument list.
 \subsection{Alias dispatch}
 
 As we discussed before, both the source and the target functions of a converter can be given an alias.  This can be useful when the actual source function is a poor mnemonic for the converter name.
