@@ -35,9 +35,8 @@
 \newcommand{\ttq}[1]{\texttt{\textquoteleft#1\textquoteright}}
 \usepackage{csquotes}
 
-
-%\DeclareRobustCommand{\funconvert}{\texttt{function\kern0.21em convert}\hspace{0.2em}}
-\newcommand{\funconvert}{\ttq{function\_convert}}
+\usepackage{xspace}
+\newcommand{\funconvert}{\ttq{function\_convert}\xspace}
 % --- Section styling (optional, but elegant) ---
 \usepackage{titlesec}
 \titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
@@ -105,12 +104,12 @@
 
 \section{Introduction and prerequisites}
 
-Maxima’s \funconvert package~\cite{willis-function-convert} performs semantic function‑to‑function conversions on Maxima~\cite{maxima} expressions. This tutorial explains how to extend the package’s mathematical capabilities by writing your own converters. To follow this tutorial, you should be comfortable with:
+Maxima’s \funconvert package~\cite{willis-function-convert} performs semantic function-to-function conversions on Maxima~\cite{maxima} expressions. This tutorial explains how to extend the package’s mathematical capabilities by writing your own converters. To follow this tutorial, you should be comfortable with:
 \begin{itemize} 
 \item using Maxima and the \funconvert package, and 
 \item programming Maxima in Common Lisp. 
 \end{itemize}
-This guide is intended for users who want to create new converters. It concentrates on the converter‑writing process and includes only the API elements relevant to authoring converters.
+This guide is intended for users who want to create new converters. It concentrates on the converter-writing process and includes only the API elements relevant to authoring converters.
 
 To install this package, place the file \ttq{function\_convert.lisp} in a directory on Maxima’s search path and load it with  \ttq{load("function\_convert");}.  Eventually, this package might be migrated to 
 Maxima's /src folder --- when this happens, loading the package will not be needed.
@@ -148,7 +147,7 @@ the identity $\erfc(x) = 1 - \erf(x)$, not as a literal function. Actually, the 
 target function could be any Maxima symbol; for example, the rule could be named 
 \ttq{erfc = erfc\_to\_erf}.
 
-This use of the infix operator \ttq{=} to define a rule is similar to its use in the Maxima function substitute, with one difference: here the operator \ttq{=}  indicates a semantic conversion rather than a literal renaming. One might argue that an arrow‑like operator such as \ttq{=>} would make this distinction clearer. Using \ttq{=}   instead of an arrow‑like symbol, however, keeps the notation consistent with substitute and preserves arrow‑like operators for other purposes.
+This use of the infix operator \ttq{=} to define a rule is similar to its use in the Maxima function substitute, with one difference: here the operator \ttq{=}  indicates a semantic conversion rather than a literal renaming. One might argue that an arrow-like operator such as \ttq{=>} would make this distinction clearer. Using \ttq{=}   instead of an arrow-like symbol, however, keeps the notation consistent with substitute and preserves arrow-like operators for other purposes.
 
 
 
@@ -157,12 +156,12 @@ This use of the infix operator \ttq{=} to define a rule is similar to its use in
 \label{sec:algorithm}
 
 The function \ttq{function-convert} recursively traverses the expression tree 
-and replaces function calls according to well‑defined
+and replaces function calls according to well-defined
 rules.  In that sense it is straightforward code of a kind repeated
 many times in Maxima.  It is not a pattern matcher or a general
 rewrite engine.
 
-Specifically, \ttq{function-convert} performs a \emph{preorder} (root–first, left‑to‑right) traversal of the expression tree: each node is visited before its children. When the traversal reaches an atom, it returns immediately and no converter is applied. For non‑atomic expressions, the converter is not applied at the moment the node is visited. Instead, the converter is applied only \emph{after} all arguments have been recursively converted.
+Specifically, \ttq{function-convert} performs a \emph{preorder} (root-first, left-to-right) traversal of the expression tree: each node is visited before its children. When the traversal reaches an atom, it returns immediately and no converter is applied. For non-atomic expressions, the converter is not applied at the moment the node is visited. Instead, the converter is applied only \emph{after} all arguments have been recursively converted.
 
 This yields a hybrid order: the traversal is top--down, but converter
 application is bottom--up.  For example, in the expression
@@ -365,7 +364,7 @@ The converter system automatically discovers multistep conversion chains.
 For example, there are rules $f = g$ and $g = h$, the system is able to implicitly apply the rule $f = h$.
 In other words, there is no need to define a direct converter $f = h$.
 
-This behavior is enabled by a breadth‑first search (BFS) over the converter graph ~\cite{clrs}. The search locates the shortest available path between two operators and composes the corresponding converters. When several shortest paths exist, the system selects one according to its internal traversal order; the choice among equal‑length paths is not user‑configurable. In such cases, the final result may depend on which shortest path is chosen.
+This behavior is enabled by a breadth-first search (BFS) over the converter graph~\cite{clrs}. The search locates the shortest available path between two operators and composes the corresponding converters. When several shortest paths exist, the system selects one according to its internal traversal order; the choice among equal-length paths is not user-configurable. In such cases, the final result may depend on which shortest path is chosen.
 
 Writers of converters only need to know that \funconvert uses BFS, not the internal details of its implementation.
 
@@ -539,7 +538,7 @@ The body of the converter receives two arguments: the operator \ttq{op}
 and its argument list \ttq{x}. The converter then rewrites each
 trigonometric function into its sine-cosine form. 
 
-We conclude this section with the converter \ttq{algebraic = boxed} introduced in Section~\ref{sec:algorithm}. This example combines class‑key and alias dispatch and serves primarily to illustrate the postorder application of converters; it is not intended to have mathematical significance.
+We conclude this section with the converter \ttq{algebraic = boxed} introduced in Section~\ref{sec:algorithm}. This example combines class-key and alias dispatch and serves primarily to illustrate the postorder application of converters; it is not intended to have mathematical significance.
 \begin{maximabox}
 \begin{verbatim}
 (defmvar $box_counter 0)
@@ -551,7 +550,7 @@ We conclude this section with the converter \ttq{algebraic = boxed} introduced i
 
 \subsection{Converters for subscripted functions}
 
-Maxima represents both the polygamma and the polylogarithm function as subscripted functions. For definitions of these functions, see DLMF  §5.15 and §25.12~\cite{DLMF}. Writing a converter for these functions, and for subscripted functions in general, requires understanding the internal structure of these expressions and using several higher‑level functions that extract their components. To illustrate this, we will build a converter that applies the polygamma half‑argument identity. This identity is
+Maxima represents both the polygamma and the polylogarithm function as subscripted functions. For definitions of these functions, see DLMF  §5.15 and §25.12~\cite{DLMF}. Writing a converter for these functions, and for subscripted functions in general, requires understanding the internal structure of these expressions and using several higher-level functions that extract their components. To illustrate this, we will build a converter that applies the polygamma half-argument identity. This identity is
  \begin{equation}
  \psi_0\left(z\right)=\tfrac{1}{2} \psi_0\left(\tfrac{z}{2}\right)+
    \tfrac{1}{2} \psi_0\left(\tfrac{z+1}{2}\right)+\ln\left(2\right).
@@ -564,7 +563,7 @@ The head operator of all subscripted functions is \ttq{mqapply}.  Thus,
 the target function for a converter for a subscripted function must be \ttq{mqapply}. 
 Thus, we will almost surely want to use an alias dispatch when dealing such cases.
 
-Second, we need to know how to use several high-level functions that provide access the name, subscripts, and augments of  of a subscripted function. For any subscripted function  \ttq{e}, we have 
+Second, we need to know how to use several high-level functions that provide access the name, subscripts, and augments of a subscripted function. For any subscripted function  \ttq{e}, we have 
  \begin{enumerate}[label=(\alph*), itemsep=3pt, topsep=2pt, parsep=0pt]
   \item  \ttq{(subfunname e)} returns the name of the subscripted function.
     
@@ -841,13 +840,13 @@ We end with a few comments about the \funconvert package that are not directly r
 
 \subsection {Motivation} 
 
-Many systems (Maple~\cite{maple-convert}, Mathematica~\cite{mathematica-rules}, and SymPy~\cite{sympy-rewrite}) provide built‑in expansions or rewrite mechanisms, but Maxima uses an alphabet soup of 
-functions that perform semantic function‑to‑function conversions; examples include  \ttq{makefact}
+Many systems (Maple~\cite{maple-convert}, Mathematica~\cite{mathematica-rules}, and SymPy~\cite{sympy-rewrite}) provide built-in expansions or rewrite mechanisms, but Maxima uses an alphabet soup of 
+functions that perform semantic function-to-function conversions; examples include  \ttq{makefact}
 and \ttq{makegamma}. In other cases, transformations are controlled by option variables, for example, 
 \ttq{expintrep}. 
 
 These names are easy to forget and are not always easy to locate in the user documentation. 
-The \funconvert package may offer a simple, uniform, and user‑extensible way to perform such conversions.
+The \funconvert package may offer a simple, uniform, and user-extensible way to perform such conversions.
 
 \subsection{Using  \ttq{defrule} as an alternative to \funconvert}
 
@@ -864,14 +863,14 @@ example:
 (%o3) (x*sin(sin(x)/x))/sin(x)
 \end{verbatim}
 \end{maximabox}
-This method works well, especially for single‑use function‑to‑function conversions. But there are several downsides to the \ttq{defrule} package.
+This method works well, especially for single-use function-to-function conversions. But there are several downsides to the \ttq{defrule} package.
 
-First, a \ttq{kill(all)} removes all rules defined by \ttq{defrule}, and that makes the rule system fragile and difficult to use for anything beyond disposable transformations. Changing Maxima to allow rules that cannot be removed by \ttq{kill(all)} is, of course, a small matter of programming \cite{nardi-small-matter}, but it would violate a long‑standing design principle: users must always be able to return the system to a clean, rule‑free state.  In contrast, rules that are built-in to \funconvert are not removed by \ttq{kill(all)}.
+First, a \ttq{kill(all)} removes all rules defined by \ttq{defrule}, and that makes the rule system fragile and difficult to use for anything beyond disposable transformations. Changing Maxima to allow rules that cannot be removed by \ttq{kill(all)} is, of course, a small matter of programming \cite{nardi-small-matter}, but it would violate a long-standing design principle: users must always be able to return the system to a clean, rule-free state.  In contrast, rules that are built-in to \funconvert are not removed by \ttq{kill(all)}.
 
 Second, the \ttq{defrule} package still depends on a collection of auxiliary functions, and unlike
 \funconvert, there the \ttq{defrule} package does not have a self-documentation feature.
 
-Third, and most importantly, it is difficult to use \ttq{defrule} to define a rule that must match two or more terms in a sum or product. The \funconvert package has several converters that do exactly this. These converters often rely internally on \ttq{ratsubst} to perform semantic substitutions --- something that is difficult for a rule defined by \ttq{defrule} to accomplish. An example is the built‑in rule that applies the identity \(\Gamma(z)\Gamma(1-z)=\uppi/\sin(\uppi z)\) . The rule must scan a product and look for a pair of gamma functions whose arguments sum to one. Doing this with \ttq{defrule} is difficult to impossible, but it can be done using \funconvert as we saw in Section~\ref{sec:alias_system}.
+Third, and most importantly, it is difficult to use \ttq{defrule} to define a rule that must match two or more terms in a sum or product. The \funconvert package has several converters that do exactly this. These converters often rely internally on \ttq{ratsubst} to perform semantic substitutions --- something that is difficult for a rule defined by \ttq{defrule} to accomplish. An example is the built-in rule that applies the identity \(\Gamma(z)\Gamma(1-z)=\uppi/\sin(\uppi z)\) . The rule must scan a product and look for a pair of gamma functions whose arguments sum to one. Doing this with \ttq{defrule} is difficult to impossible, but it can be done using \funconvert as we saw in Section~\ref{sec:alias_system}.
 
 We end this comparison with one possible advantage of the \ttq{defrule} package over \funconvert. The \ttq{defrule} package provides several mechanisms, including \ttq{apply1}, \ttq{apply2}, and \ttq{applyb1}, that give the user control over the order in which rules are applied, whereas the \funconvert package uses a fixed scheme that is not under user control.
 
@@ -945,7 +944,7 @@ refinement of this work.
 
 
 \paragraph*{About the author}
-This manual was written by Barton Willis, Professor Emeritus of Mathematics at the University of Nebraska at Kearney, a long‑time contributor to the Maxima computer algebra system, and the author of the \funconvert package. He has worked in symbolic computation, mathematical software, and technical documentation for many years.
+This manual was written by Barton Willis, Professor Emeritus of Mathematics at the University of Nebraska at Kearney, a long-time contributor to the Maxima computer algebra system, and the author of the \funconvert package. He has worked in symbolic computation, mathematical software, and technical documentation for many years.
 
 
 \paragraph*{Colophon} This manual was typeset using the \texttt{LuaLaTeX}  engine with the
@@ -976,7 +975,7 @@ Sections I might include
 
 - Error Handling and Debugging
 - Regression tests
-- Appendix: Built‑In Converters
+- Appendix: Built-In Converters
 - API of all public functions
 
 -Error Handling and Debugging:
