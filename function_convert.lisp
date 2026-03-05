@@ -584,14 +584,15 @@ The function returns the symbol $done."
     ;; Extract FROM and TO
     (let ((from (second eq))
           (to   (third eq)))
-      (delete-user-converter ($nounify from) ($nounify to))))
+
+
+      (delete-user-converter ($verbify from) ($verbify to))))
 
   '$done)
 
 (defun delete-user-converter (from to)
-  ;(setq from ($nounify from))
-  ;(setq to ($nounify to))
-;(print `(,from ,to))
+ (multiple-value-bind (from to)
+     (lookup-converter-alias from to) 
   (let ((key (cons from to)))
     (cond
       ((member key *built-in-converters* :test #'equal)
@@ -602,7 +603,7 @@ The function returns the symbol $done."
        (mtell "Deleted converter ~M ~M ~M. ~%" from (get *function-convert-infix-op* 'op) to))
 
       (t
-       (mtell "No converter ~M ~M ~M exists. ~%" from (get *function-convert-infix-op* 'op) to)))))
+       (mtell "No converter ~M ~M ~M exists. ~%" from (get *function-convert-infix-op* 'op) to))))))
 
 (defmfun $delete_all_user_converters ()
   (maphash
