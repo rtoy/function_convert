@@ -268,6 +268,29 @@ block([ans],
    ans);
 [0,0,0,0,0]$
 
+register_converter(sin = fff, lambda([s], fff(s)));
+done$
+
+function_convert(sin = fff, 28 + sin(sin(x)));
+fff(fff(x)) + 28$
+
+delete_converter(sin = fff);
+done$
+
+function_convert(sin = fff, 28 + sin(sin(x)));
+28 + sin(sin(x))$
+
+register_converter([sin = fff, ppp = qqq], lambda([s], fff(s)));
+done$
+
+function_convert(ppp = qqq, 28 + sin(sin(x)));
+fff(fff(x)) + 28$
+
+delete_converter(ppp = qqq);
+done$
+
+function_convert(ppp = qqq, 28 + sin(sin(x)));
+28 + sin(sin(x))$
 
 facts();
 []$

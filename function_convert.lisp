@@ -619,8 +619,21 @@ The function returns the symbol $done."
 (defun converter-built-in-p (from to)
   (member (converter-key from to) *built-in-converters* :test #'equal))
 
-(defmfun $register_converter (a b fn &optional doc)
-  ;; Validate the converter specs
+(defmfun $register_converter (a fn &optional doc)
+  ;; Validate the converter specs. When the argument `a' is a Maxima list, it must have exactly two members:
+  ;; the first is the converter and the second its alias; the first argument is not a Maxima list, the converter 
+  ;; and the alias are the same.
+  (let ((b))
+    (cond (($listp a)
+       (cond ((eql 2 ($length a))
+              (setq b ($second a))
+              (setq a ($first a)))
+             (t
+              (merror (intl:gettext
+                       "register_converter: When first argument is a list, it must have exactly two members")))))
+      (t
+       (setq b a)))
+     
   (check-converter a)
   (check-converter b)
 
@@ -640,13 +653,12 @@ The function returns the symbol $done."
 
       ;; Normalize FROM
       (setq from ($verbify from))
-
       (when (converter-exists-p from to)
         (if (converter-built-in-p from to)
             (merror (intl:gettext
                      "Cannot redefine built-in converter: ~M ~M ~M ~%")
                     from *function-convert-infix-op* to)
-            (merror (intl:gettext
+            (mtell (intl:gettext
                      "Redefining converter ~M ~M ~M ~%")
                     from *function-convert-infix-op* to)))
 
@@ -661,7 +673,7 @@ The function returns the symbol $done."
       (when doc
         (setf (gethash (cons from to) *function-convert-doc*) doc))
 
-      '$done)))
+      '$done))))
 
 ;;; Starter Library of Function Converters for function_convert
 ;;; ------------------------------------------------------------

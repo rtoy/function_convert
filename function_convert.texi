@@ -142,6 +142,31 @@ documentation string for this converter.
 The function returns the symbol @code{$done}.
 @end defun
 
+@defun register_converter (spec fn &optional doc)
+Register a new converter.
+
+The argument @var{spec} is either a single converter specification of the
+form @code{f = g}, or a two-element Maxima list @code{[f = g, p = q]}.
+In the first case, the converter has no alias and the specification
+@code{f = g} is used for both registration and lookup.  In the second
+case, the first element of the list is the primary converter and the
+second element is its alias; the alias is registered before the primary
+converter.
+
+Each converter specification is validated, and the @code{from} operator
+is normalized through @code{$verbify}.  If a converter from @code{f} to
+@code{g} already exists, an error is signaled: built-in converters cannot
+be redefined, and redefining a user-defined converter also signals an
+error.
+
+The argument @var{fn} must be a Maxima lambda form; otherwise an error is
+signaled.  After validation, the converter is installed in the converter
+registry.  If @var{doc} is supplied, it is stored as the documentation
+string for this converter.
+
+The function returns the symbol @code{$done}.
+@end defun
+
 
 
 
