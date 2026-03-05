@@ -171,6 +171,9 @@ Each entry has the form:
     acc))
 
 (defmfun $list_converters (&rest names)
+  (when (some #'consp names)
+     (merror (intl:gettext "list_converters: every input must be a symbol")))
+
   (let* ((normalized (mapcar #'$nounify names))
          (results nil)
          ($lispdisp nil))
