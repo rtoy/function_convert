@@ -292,6 +292,21 @@ done$
 function_convert(ppp = qqq, 28 + sin(sin(x)));
 28 + sin(sin(x))$
 
+(abs_to_signum(x) := x*signum(x),0);
+0$
+
+register_converter(abs = signum, abs_to_signum);
+done$
+
+function_convert(abs = signum, abs(x)-x);
+x*signum(x)-x$
+
+delete_converter(abs = signum);
+done$
+
+(kill(abs_to_signum),0);
+0$
+
 facts();
 []$
 

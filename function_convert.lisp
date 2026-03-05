@@ -30,6 +30,9 @@
        (consp (car e))
        (eq (caar e) 'lambda)))
 
+(defun maxima-function-p (f)
+  (and (atom f) (mget f 'mexpr)))
+
 (defun converter-key (from to)
   "Return a key for the converter registry."
   (cons from to))
@@ -640,6 +643,10 @@ The function returns the symbol $done."
      
   (check-converter a)
   (check-converter b)
+
+  (let ((gn (maxima-function-p fn)))
+     (when gn
+        (setq fn gn)))
 
   ;; Require that fn is a Maxima lambda form
   (when (not (lambda-p fn))
