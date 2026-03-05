@@ -377,15 +377,15 @@ Writers of converters only need to know that \funconvert uses BFS, not the inter
 The function \ttq{register\_converter} provides a user-level method to define a new converter using just the Maxima language.  A disadvantage to this method is that the class-key dispatch method is 
 not available. 
 
-A converter is specified by: (a) a name for the rule,  (b) the alias for the rule, and (c) a Maxima lambda expression implementing the conversion.  An optional documentation string may 
-also be supplied.
+A converter is specified by: (a) a name for the rule,  (b) an optional alias for the rule, and (c) either
+a Maxima function or a Maxima lambda expression implementing the conversion.  An optional documentation string may also be supplied.
 
 Here is an example of a rule that expands noncommuative powers, but not noncommuative products
-of sums.  We'll give the rule and its alias the same name:
+of sums. It is possible to give a user-defined rule an alias, but we'll define it without:
 \begin{maximabox}
 \begin{verbatim}
-(%i1)	register_converter("^^" = expand, "^^" = expand, 
-      lambda([a,b], expand(a^^b)), "Expand noncommutative powers.");
+(%i1)	register_converter("^^" = expand, lambda([a,b], expand(a^^b)), 
+     "Expand noncommutative powers.");
 (%o1)	done
 
 (%i2)	function_convert("^^" =  expand, a.(b+c) + (1+x)^^3);
