@@ -857,7 +857,7 @@ The function returns the symbol $done."
 
 (define-function-converter ((mtimes mabs) (%signum mabs)) (op x)
   :builtin
-  "Convert subexpressions of the form X*signum(X) into abs(X).  This converter
+  "Convert subexpressions of the form X*signum(X) into abs(X). This converter
 does not rewrite signum(X) itself, since X*signum(X) is not a subexpression
 of signum(X); only explicit products matching that pattern are transformed."
   (let* ((e  (fapply op x))
