@@ -13,7 +13,7 @@
 \setstretch{1.08}
 \usepackage[margin=0.75in]{geometry}
 % --- Fonts ---
-%\usepackage{tgtermes}        % Modern serif text font (TeX Gyre Termes)
+
 \usepackage{newtxtext}
 \usepackage{newtxmath}       % Matching math font with good coverage
 
@@ -24,22 +24,18 @@
 
 
 % --- General utilities ---
-%\usepackage{amsmath}
+
 \usepackage{mathtools}
 
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{upgreek}
 
-%\newcommand{\ttq}[1]{\texttt{`#1'}}
+
 \newcommand{\ttq}[1]{\texttt{'#1'}}
-%\newcommand{\ttq}[1]{\texttt{\'#1'}}
 
-%\newcommand{\ttq}[1]{\texttt{\textquoteleft#1\textquoteright}}
-\usepackage{csquotes}
+\newcommand{\funconvert}{\ttq{function\_convert}{ }}
 
-\usepackage{xspace}
-\newcommand{\funconvert}{\ttq{function\_convert}\xspace}
 % --- Section styling (optional, but elegant) ---
 \usepackage{titlesec}
 \titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
@@ -47,8 +43,7 @@
 
 
 \usepackage{tcolorbox}
-\tcbuselibrary{skins, breakable}
-\tcbuselibrary{listings}
+\tcbuselibrary{skins, breakable, listings}
 
 \newenvironment{maximabox}
   {\begin{tcolorbox}[
@@ -86,6 +81,7 @@
 % Optional: add the ToC to the PDF bookmarks if using hyperref
 \usepackage{hyperref}
 \hypersetup{
+unicode=true,
   colorlinks=true,
   linkcolor=black,
   urlcolor=blue,
@@ -93,7 +89,7 @@
   pdfborder={0 0 0}
 }
 
-\usepackage[nameinlink]{cleveref}
+
 % --- Metadata ---
 \title{Writing Converters for the Function Convert Package}
 \author{Barton Willis}
