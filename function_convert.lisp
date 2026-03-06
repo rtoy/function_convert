@@ -951,11 +951,9 @@ is first degree polynomial in %pi."
 ;; An example of a converter that uses the class system.
 (define-function-converter (:trig $sin_cos) (op x)
   :builtin
- ;; "Convert all six trigonometric functions to sin/cos form."
+  "Convert all six trigonometric functions to sin/cos form."
   (let ((z (first x)))
-    (case op
-      (%sin (ftake '%sin z))
-      (%cos (ftake '%cos z))
+    (case op   
       (%tan (div (ftake '%sin z) (ftake '%cos z)))
       (%sec (div 1 (ftake '%cos z)))
       (%csc (div 1 (ftake '%sin z)))
