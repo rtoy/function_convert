@@ -34,18 +34,17 @@ The package provides a simple, declarative way to convert between related functi
 ```
 ### BFS converter dispatch
 
-When a converter isn't defined, `function_convert` does a breadth-first search (BFS) 
-to attempt find a chain of defined converters. Here is an example
+Given two converter nodes `from` and `to`, the function call `make_conversion_path(from, to)` searches for a
+conversion path using a breath-first search of the full converter graph. This function does not perform 
+any conversions; it only constructs the user-level representation of the path."
+
 ```maxima
-(%i1) function_convert(sinc = gamma, sinc(z));
-                                       1
-(%o1)                    ─────────────────────────────
-                                    z          z
-                         gamma(1 - ───) gamma(─── + 1)
-                                   %pi        %pi
+(%i1) path : make_conversion_path(sin, gamma);
+(%o1) [sin = sinc,sinc = gamma]
+
+(%i2) function_convert(path, sin(x));
+(%o2) x/(gamma(1-x/%pi)*gamma(x/%pi+1))
 ```
-There is no explicit `sinc = gamma` converter, but there are built-in converters for `sinc = sin` and for
-`sin = gamma`.
 
 ### Chaining multiple conversions
 To apply two or more conversions, put the converters into a list; for example

@@ -351,10 +351,24 @@ Optional keyword:
         ;; ----------------------------------------------------------
         (t
          (error "Malformed converter spec: ~S" spec))))))
-;;;;;;;;;;;;;;;;;;;
 
-(defmfun $george (from to)
-   (find-conversion-path from to))
+(defmfun $make_conversion_path (from to)
+ "Given two converter nodes FROM and TO, this function searches for a
+  conversion path using FIND-CONVERSION-PATH and returns a Maxima list
+  of adjacent conversion steps; when there is no such path, return the
+  empty Maxima list.
+
+  This function does not perform any conversions; it only constructs
+  the user-level representation of the path."
+  (let ((path (find-conversion-path from to)))
+    (cond (path
+           (let ((acc nil)
+                 (nodes path))
+             (while (cdr nodes)
+               (push (ftake *function-convert-infix-op* (pop nodes) (car nodes)) acc))
+             (fapply 'mlist (nreverse acc))))
+          (t
+           (ftake 'mlist)))))
    
 (defun find-conversion-path (src dst)
   "Find a shortest conversion path from SRC to DST.
@@ -427,16 +441,6 @@ and whose second and third elements are valid operator names or a lambda."
 
     (t t)))
 
-(defun apply-path (expr path)
-" The second argument PATH is a list of symbols such as (f g h k), meaning f => g, g => h, h => k. Apply 
-   these converters (left to right) to the expression expr."
-  (cond
-    ((or (null path) (null (cdr path)))  expr)
-    (t
-     (apply-path
-       (function-convert expr (car path) (cadr path))
-       (cdr path)))))
-
 (defun note-no-such-converter (from to)
   "Print an informational note that no converter FROM => TO exists. Returns NIL."
   (mtell (intl:gettext "function_convert: no converter from ~M to ~M; expression unchanged.~%") from to)
@@ -477,14 +481,7 @@ Return the final transformed expression."
           (cond
             ;; direct alias hit
             ((and aa bb)
-             (setq e (function-convert e aa bb)))
-
-            ;; such path--try to find it
-            (t
-             (let ((path (find-conversion-path aa bb)))
-               (if (null path)
-                       (note-no-such-converter aa bb)
-                       (setq e (apply-path e path))))))))
+             (setq e (function-convert e aa bb))))))
       e)))
 
 (defun function-convert (e op-old op-new)
