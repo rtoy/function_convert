@@ -367,36 +367,39 @@ Returns a list of nodes starting at SRC and ending at DST, or NIL if no path is
 found."
 
   (multiple-value-bind (src dst)
-            (lookup-converter-alias src dst)
-            (format t "alias: src=~S  dst=~S~%" src dst)
-  (let ((visited (make-hash-table :test 'eq)))
-    (setf (gethash src visited) t)
-    (labels ((successor-paths (path node)
-               (let (paths)
-                 (maphash
-                  (lambda (key fn)
-                    (declare (ignore fn))
-                    (let ((from (car key))
-                          (to   (cdr key)))
-                      (when (and (eq from node)
-                                 (not (gethash to visited)))
-                        (setf (gethash to visited) t)
-                        (push (append path (list to)) paths))))
-                  *function-convert-hash*)
-                 (nreverse paths)))
+      (lookup-converter-alias src dst)
+    ;(format t "alias: src=~S  dst=~S~%" src dst)
 
-             (step (queue)
-               (when queue
-                 (let* ((path (car queue))
-                        (node (car (last path)))
-                        (rest (cdr queue)))
-                   (when (eq node dst)
-                     (return-from step path))
-                   (step
-                    (append rest
-                            (successor-paths path node)))))))
-      (step (list (list src)))))))
+    (let ((visited (make-hash-table :test 'eq)))
+      (setf (gethash src visited) t)
 
+      (labels
+          ((successor-paths (path node)
+             (let (paths)
+               (maphash
+                (lambda (key fn)
+                  (declare (ignore fn))
+                  (let ((from (car key))
+                        (to   (cdr key)))
+                    (when (and (eq from node)
+                               (not (gethash to visited)))
+                      (setf (gethash to visited) t)
+                      (push (append path (list to)) paths))))
+                *function-convert-hash*)
+               (nreverse paths)))
+
+           (bfs-step (queue)
+             (when queue
+               (let* ((path (car queue))
+                      (node (car (last path)))
+                      (rest (cdr queue)))
+                 (when (eq node dst)
+                   (return-from bfs-step path))
+                 (bfs-step
+                  (append rest
+                          (successor-paths path node)))))))
+
+        (bfs-step (list (list src)))))))
 
 
 (defun check-converter (x)
