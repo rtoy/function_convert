@@ -130,15 +130,10 @@ present in the table."
      ;; 1. exact operator
      (try operator)
 
-     ;; 2. noun/verb variants of operator
-     (try ($nounify operator))
+     ;; 2. verb variant of operator
      (try ($verbify operator))
 
-     ;; 3. legacy: op-old itself
-     (and (eq operator op-old)
-          (try op-old))
-
-     ;; 4. class-key match
+     ;; 3. class-key match
      (let ((class (converter-class-of operator)))
        (when class
          (try class))))))
@@ -441,8 +436,7 @@ and whose second and third elements are valid operator names or a lambda."
 
 (defun note-no-such-converter (from to)
   "Print an informational note that no converter FROM => TO exists. Returns NIL."
-  (format t "~&function_convert: no converter from ~A to ~A; expression unchanged.~%"
-          from to)
+  (mtell (intl:gettext "function_convert: no converter from ~M to ~M; expression unchanged.~%") from to)
   nil)
 
 ;; The user-level function. The first argument `subs` must either be a single converter 
@@ -482,7 +476,7 @@ Return the final transformed expression."
             ((and aa bb)
              (setq e (function-convert e aa bb)))
 
-            ;; no alias → compute path
+            ;; such path--try to find it
             (t
              (let ((path (find-conversion-path aa bb)))
                (if (null path)
@@ -624,7 +618,9 @@ The function returns the symbol $done."
   (format t "All user-defined converters deleted.~%"))
 
 (defun converter-exists-p (from to)
+   (print `(from = ,from to = ,to))
    (gethash (converter-key from to) *function-convert-hash*))
+
 
 (defun converter-built-in-p (from to)
   (member (converter-key from to) *built-in-converters* :test #'equal))
