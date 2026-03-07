@@ -353,6 +353,9 @@ Optional keyword:
          (error "Malformed converter spec: ~S" spec))))))
 ;;;;;;;;;;;;;;;;;;;
 
+(defmfun $george (from to)
+   (find-conversion-path from to))
+   
 (defun find-conversion-path (src dst)
   "Find a shortest conversion path from SRC to DST.
 
@@ -889,7 +892,7 @@ of signum(X); only explicit products matching that pattern are transformed."
   (let ((z (car x)))
     (div (add 1 (ftake '%signum z)) 2)))
 
-(define-function-converter (:trig $normalize_trig_argument) (op x)
+(define-function-converter ((:trig $normalize_trig_argument) ($trig  $normalize_trig_argument)) (op x)
   :builtin
  "Normalize the argument of trigonometric functions when the argument
 is first degree polynomial in %pi."
@@ -948,7 +951,7 @@ is first degree polynomial in %pi."
       ($expand e 0 0))))
 
 ;; An example of a converter that uses the class system.
-(define-function-converter (:trig $sin_cos) (op x)
+(define-function-converter ((:trig $sin_cos)($trig $sin_cos)) (op x)
   :builtin
   "Convert all six trigonometric functions to sin/cos form."
   (let ((z (first x)))
@@ -959,17 +962,17 @@ is first degree polynomial in %pi."
       (%cot (div (ftake '%cos z) (ftake '%sin z)))
       (t (ftake op z)))))
 
-(define-function-converter (:trig %exp) (op x)
+(define-function-converter ((:trig %exp) ($trig %exp)) (op x)
   :builtin
  "Convert all trigonometric functions to exponential form."
   ($exponentialize (fapply op x)))
 
-(define-function-converter (:hyperbolic %exp) (op x)
+(define-function-converter ((:hyperbolic %exp) ($hyperbolic %exp)) (op x)
   :builtin
 "Convert all hyperbolic functions to exponential form."
   ($exponentialize (fapply op x)))
 
-(define-function-converter (:inverse_trig $log) (op x)
+(define-function-converter ((:inverse_trig $log) ($inverse_trig $log)) (op x)
   :builtin
 "Convert all inverse trigonometric functions to logarithmic form."
   ($logarc (fapply op x)))
@@ -978,7 +981,7 @@ is first degree polynomial in %pi."
   :builtin
   ($demoivre (fapply op x)))
 
-(define-function-converter (:trig $trig_tan_half_angle) (op x)
+(define-function-converter ((:trig $trig_tan_half_angle) ($trig $trig_tan_half_angle)) (op x)
   :builtin
   "Rewrite trigonometric functions in terms of the tangent half–angle
 substitution t = tan(z/2).  Produces rational functions of t:
@@ -1010,7 +1013,7 @@ unchanged.
                (mul 2 q)))
     (t    (ftake op z)))))
 
-(define-function-converter (:hyperbolic $hyperbolic_tanh_half_angle) (op x)
+(define-function-converter ((:hyperbolic $hyperbolic_tanh_half_angle) ($hyperbolic $hyperbolic_tanh_half_angle)) (op x)
   :builtin
   "Rewrite hyperbolic functions in terms of the tanh half–angle substitution
 u = tanh(z/2).  Produces rational functions of u:
@@ -1041,7 +1044,7 @@ unchanged."
                   (mul 2 u)))
       (t    (ftake op z)))))
 
-(define-function-converter (:gamma_like %gamma) (op x)
+(define-function-converter ((:gamma_like %gamma) ($gamma_like %gamma)) (op x)
   :builtin
   ($makegamma (fapply op x)))
 
@@ -1131,7 +1134,7 @@ subexpression."
     ($trigreduce (resimplify x)))) ; trigreduce does sinh(x)/cosh(x) = tanh(x), for example.
           
   ;; inequations:
- (define-function-converter (:inequation $zero_lhs) (op x)
+ (define-function-converter ((:inequation $zero_lhs) ($inequation $zero_lhs)) (op x)
    :builtin
   "Normalize an inequation `a op b` to the zero LHS form `(a - b) op 0`."
   (destructuring-bind (a b) x
@@ -1153,7 +1156,7 @@ subexpression."
               (sub (mul 2 (sub n 1) (div 1 x) (ftake op (sub n 1) x)) 
                   (ftake op (sub n 2) x))))
 
-(define-function-converter ((mplus $bessel_recursion) (:bessel $bessel_recursion)) (op x)
+(define-function-converter ((mplus $bessel_recursion$bessel_recursion) (:bessel $bessel_recursion)) (op x)
  :builtin
  ;; To start `x` is a summand and `op` is addition. First we express `e` as the sum
  ;; of the members of `x`, then we map `bessel-order-downward-recurse` over all 
@@ -1181,7 +1184,7 @@ subexpression."
        (setq qq (cdr qq))
        ;; loop over each equivalence class
        (dolist (qqk qq)
-          (setq qqk ($sort ($listify qqk) #'(lambda (a b) (> (sub ($first a) ($first b))))))
+          (setq qqk ($sort ($listify qqk) #'(lambda (a b) (> (sub ($first a) ($first b)) 0))))
           (setq kmin ($first ($last qqk)))
           (setq e (three-term-recusion-reduce e #'bessel-recursion
                op ($second ($first qqk)) ($first ($first qqk)) kmin)))))
@@ -1203,5 +1206,11 @@ subexpression."
                          (subfunmake fn subscripts (list (add (div 1 2) z))))
                  2) (ftake '%log 2)))
         (t e))))
+
+;;; for debugging work only:
+(defmfun $show_rules ()
+  (maphash #'(lambda (a b) (print a)) *function-convert-hash*)
+  (mtell "~% alias---------------------------------------~%")
+  (maphash #'(lambda (a b) (print a)) *function-convert-hash-alias*))
 
  
