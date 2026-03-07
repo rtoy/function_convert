@@ -380,7 +380,6 @@ found."
 
   (multiple-value-bind (src dst)
       (lookup-converter-alias src dst)
-    ;(format t "alias: src=~S  dst=~S~%" src dst)
 
     (let ((visited (make-hash-table :test 'eq)))
       (setf (gethash src visited) t)
@@ -615,10 +614,9 @@ The function returns the symbol $done."
      (unless (member key *built-in-converters* :test #'equal)
        (remhash key *function-convert-hash*)))
    *function-convert-hash*)
-  (format t "All user-defined converters deleted.~%"))
+  (mtell (intl:gettext "All user-defined converters deleted.~%")))
 
 (defun converter-exists-p (from to)
-   (print `(from = ,from to = ,to))
    (gethash (converter-key from to) *function-convert-hash*))
 
 

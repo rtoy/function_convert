@@ -365,13 +365,20 @@ a converter doesn't need to do anything to allow chaining to work.
 
 \subsection{Implicit dispatch via breadth-first search}
 
-The converter system automatically discovers multistep conversion chains.
-For example, if there are rules $f = g$ and $g = h$, the system is able to implicitly apply the rule $f = h$.
-In other words, there is no need to define a direct converter $f = h$.
+The utility \ttq{make\_conversion\_path} uses a breadth-first search~\cite{clrs} of the full converter graph to find the shortest available path between a given source and target function. When several shortest paths exist, the system selects one according to its internal graph‑traversal order; the choice among equal‑length paths is not user‑configurable.
 
-This behavior is enabled by a breadth-first search (BFS) over the converter graph~\cite{clrs}. The search locates the shortest available path between two operators and composes the corresponding converters. When several shortest paths exist, the system selects one according to its internal traversal order; the choice among equal-length paths is not user-configurable. In such cases, the final result may depend on which shortest path is chosen.
+To perform the actual conversion, the user must manually call \ttq{function\_convert} with the (possibly) multistep path returned by \ttq{make\_conversion\_path}. The function \ttq{make\_conversion\_path} does not perform any conversions; it only constructs the user‑level representation of the path. When no such path exists, it returns an empty Maxima list. For example:
+\begin{maximabox}
+\begin{verbatim}
+(%i1) path : make_conversion_path(sin, gamma);
+(%o1) [sin = sinc,sinc = gamma]
 
-Writers of converters only need to know that \funconvert uses BFS, not the internal details of its implementation.
+(%i2) function_convert(path, sin(x));
+(%o2) x/(gamma(1-x/%pi)*gamma(x/%pi+1))
+\end{verbatim}
+\end{maximabox}
+\noindent Writers of converters only need to know that \funconvert uses BFS; its internal implementation details are irrelevant.
+\noindent 
 
 \subsection{User-level converters}
 \label{sec:register-converter}
