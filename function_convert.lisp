@@ -163,7 +163,7 @@ Each entry has the form:
      (lambda (key fn)
        (push (list key
                    fn
-                   (documentation fn 'function))
+                   (gethash key *function-convert-doc*))
              acc))
      *function-convert-hash*)
     acc))
@@ -230,6 +230,7 @@ Each entry has the form:
     ;; Return results in sorted order
     ($sort (fapply 'mlist (nreverse results)))))
 
+#| Keep this a bit longer ....
 (defmacro define-function-converter (spec lambda-list &body body)
   "Define a converter FROM => TO, optionally with an alias FROM-ALT => TO-ALT.
 
@@ -343,6 +344,136 @@ Optional keyword:
                 ;; Record built-in status
                 ,(when builtin?
                    `(push (cons ',from ',to) *built-in-converters*))
+
+                ',fname))))
+
+        ;; ----------------------------------------------------------
+        ;; Malformed spec
+        ;; ----------------------------------------------------------
+        (t
+         (error "Malformed converter spec: ~S" spec))))))
+|#
+
+;;;;-----------------------------
+(defmacro define-function-converter (spec lambda-list &body body)
+  "Define a converter FROM => TO, optionally with an alias FROM-ALT => TO-ALT.
+
+A warning is issued if a converter for (FROM . TO) is already defined,
+or if an alias (FROM-ALT . TO-ALT) is already present in
+*function-convert-hash-alias*.
+
+Optional keyword:
+  :builtin   — mark this converter as built-in (protected from deletion)."
+
+  ;; ------------------------------------------------------------
+  ;; 1. Extract :builtin, docstring, declarations, and real body
+  ;; ------------------------------------------------------------
+  (let ((builtin? nil)
+        (docstring nil)
+        (decls '())
+        (real-body '()))
+
+    ;; Extract :builtin
+    (when (and body (eq (first body) :builtin))
+      (setf builtin? t
+            body (rest body)))
+
+    ;; Extract docstring
+    (when (and body (stringp (first body)))
+      (setf docstring (first body)
+            body (rest body)))
+
+    ;; Partition declarations vs real body
+    (dolist (form body)
+      (if (and (consp form)
+               (eq (car form) 'declare))
+          (push form decls)
+          (push form real-body)))
+
+    (setf decls (nreverse decls)
+          real-body (nreverse real-body))
+
+    ;; ------------------------------------------------------------
+    ;; 2. Warning helpers
+    ;; ------------------------------------------------------------
+    (macrolet
+        ((warn-if-existing-primary (from to)
+           `(when (gethash (cons ,from ,to) *function-convert-hash*)
+              (warn (format nil "Converter for ~A ~A ~A is already defined."
+                            (stripdollar (string-downcase (symbol-name ,from)))
+                            (get *function-convert-infix-op* 'op)
+                            (stripdollar (string-downcase (symbol-name ,to)))))))
+
+         (warn-if-existing-alias (from-alt to-alt)
+           `(when (gethash (cons ,from-alt ,to-alt)
+                           *function-convert-hash-alias*)
+              (warn (format nil "Alias converter for ~A ~A ~A is already defined."
+                            (stripdollar (string-downcase (symbol-name ,from-alt)))
+                            (get *function-convert-infix-op* 'op)
+                            (stripdollar (string-downcase (symbol-name ,to-alt))))))))
+
+      ;; ------------------------------------------------------------
+      ;; 3. Main macro logic
+      ;; ------------------------------------------------------------
+      (cond
+
+        ;; ----------------------------------------------------------
+        ;; Alias form: ((from to) (from-alt to-alt))
+        ;; ----------------------------------------------------------
+        ((and (consp spec)
+              (consp (first spec))
+              (consp (second spec)))
+         (destructuring-bind ((from to) (from-alt to-alt)) spec
+           (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
+                                        from to)
+                                :maxima)))
+             `(progn
+                ,(warn-if-existing-primary from to)
+                ,(warn-if-existing-alias from-alt to-alt)
+
+                (defun ,fname ,lambda-list
+                  ,@(when docstring (list docstring))
+                  ,@decls
+                  ,@real-body)
+
+                (register-converter ',from ',to #',fname)
+                (register-converter-alias ',from-alt ',to-alt ',from ',to)
+
+                ;; Store docstring
+                (setf (gethash (cons ',from ',to) *function-convert-doc*)
+                      ,docstring)
+
+                ;; Built-in flag
+                ,(when builtin? `(push (cons ',from ',to) *built-in-converters*))
+
+                ',fname))))
+
+        ;; ----------------------------------------------------------
+        ;; Simple form: (from to)
+        ;; ----------------------------------------------------------
+        ((and (consp spec)
+              (symbolp (first spec))
+              (symbolp (second spec)))
+         (destructuring-bind (from to) spec
+           (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
+                                        from to)
+                                :maxima)))
+             `(progn
+                ,(warn-if-existing-primary from to)
+
+                (defun ,fname ,lambda-list
+                  ,@(when docstring (list docstring))
+                  ,@decls
+                  ,@real-body)
+
+                (register-converter ',from ',to #',fname)
+
+                ;; Store docstring
+                (setf (gethash (cons ',from ',to) *function-convert-doc*)
+                      ,docstring)
+
+                ;; Built-in flag
+                ,(when builtin? `(push (cons ',from ',to) *built-in-converters*))
 
                 ',fname))))
 
