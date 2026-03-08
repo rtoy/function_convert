@@ -118,12 +118,10 @@ present in the table."
    *function-convert-hash-alias*))
 
 ;; This code doesn't look up aliases. The alias lookup happens before this code is called.
-(defun lookup-converter (operator op-old op-new)
+(defun lookup-converter (operator op-new)
   "Return a converter op-old => op-new function for expression whose operator is OPERATOR. Tries exact match, 
    noun/verb, and class-key match. Generally, operator = op-old (or op-old either noun or verbified) but 
    for a class-key match."
-
-   (mtell "operator = ~M ; op-old = ~M op-new = ~M ~%" operator op-old op-new)
 
   (flet
       ;; Try to find a converter for FROM => OP-NEW
@@ -133,13 +131,10 @@ present in the table."
      ;; 1. exact operator
      (try operator)
 
-     ;; 2. operator = op-old itself
-     (and (eq operator op-old) (try op-old))
-
-     ;; 3. verb variant of operator
+     ;; 2. verb variant of operator
      (try ($verbify operator))
 
-     ;; 4. class-key match
+     ;; 3. class-key match
      (let ((class (converter-class-of operator)))
        (when class
          (try class))))))
@@ -622,7 +617,7 @@ Return the final transformed expression."
 
 (defun function-convert (e op-old op-new)
    (let ((fn (if (and (consp e) (symbolp op-new) (symbolp op-old))
-                 (lookup-converter (caar e) op-old op-new)
+                 (lookup-converter (caar e) op-new)
                  nil)))
    (cond 
        ;; Case 0: e is a mapatom--return e
