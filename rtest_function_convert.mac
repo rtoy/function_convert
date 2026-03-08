@@ -295,8 +295,8 @@ function_convert(ppp = qqq, 28 + sin(sin(x)));
 (abs_to_signum(x) := x*signum(x),0);
 0$
 
-register_converter(abs = signum, abs_to_signum);
-done$
+errcatch(register_converter(abs = signum, abs_to_signum));
+[]$
 
 function_convert(abs = signum, abs(x)-x);
 x*signum(x)-x$

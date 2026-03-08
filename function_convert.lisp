@@ -721,9 +721,10 @@ The function returns the symbol $done."
     (let ((from (second eq))
           (to   (third eq)))
 
-
-      (delete-user-converter ($verbify from) ($verbify to))))
-
+      (multiple-value-bind (aa bb)
+          (lookup-converter-alias from to)
+      (delete-user-converter aa bb))))
+  
   '$done)
 
 (defun delete-user-converter (from to)
@@ -748,7 +749,8 @@ The function returns the symbol $done."
      (unless (member key *built-in-converters* :test #'equal)
        (remhash key *function-convert-hash*)))
    *function-convert-hash*)
-  (mtell (intl:gettext "All user-defined converters deleted.~%")))
+  (mtell (intl:gettext "All user-defined converters deleted.~%"))
+  '$done)
 
 (defun converter-exists-p (from to)
    (gethash (converter-key from to) *function-convert-hash*))
@@ -786,7 +788,7 @@ The function returns the symbol $done."
   ;; Require that fn is a Maxima lambda form
   (when (not (lambda-p fn))
     (merror (intl:gettext
-             "The third arument to `register_converter` nust be a Maxima lambda form; found ~M")
+             "The third arument to `register_converter` must be a Maxima lambda form; found ~M")
             fn))
 
   ;; Extract (FROM TO) from A
@@ -798,7 +800,7 @@ The function returns the symbol $done."
         (cdr b)
 
       ;; Normalize FROM
-      (setq from ($verbify from))
+      ;(setq from ($verbify from))
       (when (converter-exists-p from to)
         (if (converter-built-in-p from to)
             (merror (intl:gettext

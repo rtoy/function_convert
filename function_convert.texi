@@ -4,43 +4,47 @@
 @end ifnotinfo
 
 @deffn Function function_convert (@var{converters}, @var{expr})
+
 Apply one or more function-conversion rules to the expression @var{expr}.
 The argument @var{converters} is either a single conversion rule
-@code{f => g} or a list of such rules.
+@code{f = g} or a Maxima list of such rules.
 
-A conversion rule has the form @code{f => g}, where @code{f} is the
-source function and @code{g} is either a target function name or a
-lambda expression. 
+A conversion rule has the form @code{f = g}, where @code{f} is the
+source function and @code{g} is either the name of the target function,
+a Maxima lambda expression, or the name of a user-defined Maxima
+function.
 
-The operator @code{=>} indicates a @emph{semantic} conversion, not a
-literal renaming. For example, the rule @code{sinc => sin} does not
+The operator @code{=} indicates a @emph{semantic} conversion, not a
+literal renaming.  For example, the rule @code{sinc = sin} does not
 replace the symbol @code{sinc} by @code{sin}.  Instead, it applies the
- @code{sinc(x) = sin(x)/x}; specifically
+identity @code{sinc(x) = sin(x)/x}.  Specifically:
+
 @example
-(%i1) function_convert('sinc => 'sin, sinc(x) + 1);
+(%i1) function_convert('sinc = 'sin, sinc(x) + 1);
                                   sin(x)
-(%o1)                             ────── + 1
+(%o1)                             ------ + 1
                                     x
 @end example
 
 Users may also supply an explicit conversion by giving a lambda
-expression on the right-hand side. For example:
+expression on the right-hand side.  For example:
 
 @example
-(%i2) function_convert('erfc => lambda([q], 1-erf(q)), erfc(x)^2);
+(%i2) function_convert('erfc = lambda([q], 1 - erf(q)), erfc(x)^2);
                                              2
 (%o2)                            (1 - erf(x))
 @end example
 
-Multiple conversions may be given in a Maxima list; they are applied from left to right.
+Multiple conversions may be given in a Maxima list; they are applied
+from left to right.
 
 @strong{Example}
 
 @example
-(%i3) function_convert(['sinc => 'sin,'sin => 'exp], sinc(x));
+(%i3) function_convert(['sinc = 'sin, 'sin = 'exp], sinc(x));
                                 %i x     - %i x
                              (%e     - %e      ) %i
-(%o3)                      - ──────────────────────
+(%o3)                      - ----------------------- 
                                       2 x
 @end example
 
@@ -49,7 +53,7 @@ Multiple conversions may be given in a Maxima list; they are applied from left t
 @deffn Function list_converters [name_1, name_2, ...]
 
 Return a list of all registered function converters known to @code{function_convert}.  In addition to 
-returning this list, each converter is printed as a pair @code{FROM => TO} followed by a short description 
+returning this list, each converter is printed as a pair @code{FROM = TO} followed by a short description 
 taken from the converter's docstring.
 
 When called with no arguments, @code{list_converters} returns the full
@@ -58,18 +62,14 @@ converters whose source function matches one of the given names are
 returned.
 
 @example
-(%i1) list_converters();
-sinc => sin : Convert sinc(x) into sin(x)/x.
-csc  => sin : Convert csc(x) into 1/sin(x).
-cos  => exp : Convert cos(x) to exponential form.
-tan  => sin : Convert tan(x) into sin(x)/cos(x).
-sin  => exp : Convert sin(x) to exponential form.
-(%o1) [sinc => sin, csc => sin, cos => exp, tan => sin, sin => exp]
+(%i2) list_converters();
+psi = psi_half :  Apply the polygamma half-argument identity; see DLMF
+     http://dlmf.nist.gov/5.5.E8
+bessel = bessel_recursion :
+inequation = zero_lhs :  Normalize an inequation `a op b` to the zero LHS form
+     `(a - b) op 0`.
 
-(%i2) list_converters(sinc, tan);
-sinc => sin : Convert sinc(x) into sin(x)/x.
-tan  => sin : Convert tan(x) into sin(x)/cos(x).
-(%o2) [sinc => sin, tan => sin]
+...
 @end example
 
 The list of converters is maintained internally and entries appear in an unspecified order.  
@@ -83,7 +83,7 @@ The list of converters is maintained internally and entries appear in an unspeci
 @defun describe_converter (eq)
 Describe the converter specified by @var{eq}.
 
-@var{eq} must be a single converter equation of the form @code{f => g}.
+@var{eq} must be a single converter equation of the form @code{f = g}.
 The operators @code{f} and @code{g} are validated and normalized through
 the converter alias system.  If a converter from @code{f} to @code{g}
 is defined, information about it is printed: the converter itself,
@@ -101,8 +101,7 @@ Delete one or more user-defined converters.
 The argument @var{eqs} may be either a single converter equation of the
 form @code{f = g} or a list of such equations.  Each equation is checked
 for proper structure, and for every pair @code{f}, @code{g} the
-corresponding user-defined converter is removed.  Converter names are
-normalized through @code{$nounify} before deletion.
+corresponding user-defined converter is removed. 
 
 If a listed converter does not exist as a user-defined converter, no
 error is signaled; the converter is simply not present and therefore
@@ -115,12 +114,11 @@ The function returns the symbol @code{$done}.
 Delete all user-defined converters.
 
 This function removes every converter that is not marked as built-in.
-All entries in the converter hash table are examined, and any converter
-whose key does not appear in @code{*built-in-converters*} is deleted.
 Built-in converters are preserved.
 
 A message is printed indicating that all user-defined converters have
-been removed.  The function does not return a value.
+been removed.  The function returns @code{done}.
+
 @end defun
 
 @defun register_converter (spec fn &optional doc)
@@ -133,7 +131,7 @@ case, the first element of the list is the primary converter and the
 second element is its alias.
 
 If either the primary or alias converter has the incorrect form, an error
-is signaled; and if a converter from @code{f}  to @code{g} already exists, 
+is signaled; and if a converter from @code{f} to @code{g} already exists, 
 an error is signaled: built-in converters cannot be redefined, and redefining 
 a user-defined converter also signals an error.
 
