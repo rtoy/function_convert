@@ -1341,9 +1341,11 @@ subexpression."
         (t e))))
 
 ;;; for debugging work only:
-(defmfun $show_rules ()
-  (maphash #'(lambda (a b) (declare (ignore b)) (print a)) *function-convert-hash*)
-  (mtell "~% alias---------------------------------------~%")
-  (maphash #'(lambda (a b) (declare (ignore b)) (print a)) *function-convert-hash-alias*))
+(defun show-rules ()
+  (format t "~%Converters:~%")
+  (maphash (lambda (a b) (declare (ignore b)) (print a)) *function-convert-hash*)
+  (format t "~%Aliases:~%")
+  (maphash (lambda (a b) (declare (ignore b)) (print a)) *function-convert-hash-alias*))
+
 
  

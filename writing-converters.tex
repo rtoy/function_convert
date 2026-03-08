@@ -39,8 +39,19 @@
 
 % --- Section styling (optional, but elegant) ---
 \usepackage{titlesec}
-\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
-\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+%\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+%\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+
+
+\titleformat{\section}{\large\bfseries}{\thesection}{0.8em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.8em}{}
+
+\titleformat{\paragraph}[runin]
+  {\small\bfseries}
+  {\theparagraph}
+  {0.8em}
+  {}
+
 
 
 \usepackage{tcolorbox}
@@ -50,24 +61,24 @@
   {\begin{tcolorbox}[
       breakable,
       enhanced,
-      colback=black!2,
-      colframe=black!50,
-      boxrule=0.4pt,
-      arc=2pt,
-      left=6pt,
-      right=6pt,
-      top=6pt,
-      bottom=6pt,
-      before skip=10pt,
-      after skip=10pt
+      colback=white,
+      colframe=black!8,
+      boxrule=0pt,
+      borderline west={2.2pt}{0pt}{black!25},
+      arc=1pt,
+      left=11pt,
+      right=7pt,
+      top=9pt,
+      bottom=9pt,
+      before skip=14pt,
+      after skip=14pt
     ]}
   {\end{tcolorbox}}
 
-% reduce vertical space for display math
-\setlength{\abovedisplayskip}{6pt}
-\setlength{\belowdisplayskip}{6pt}
-\setlength{\abovedisplayshortskip}{4pt}
-\setlength{\belowdisplayshortskip}{4pt}
+\setlength{\abovedisplayskip}{0.5\baselineskip plus 1pt}
+\setlength{\belowdisplayskip}{0.5\baselineskip plus 1pt}
+\setlength{\abovedisplayshortskip}{0.3\baselineskip}
+\setlength{\belowdisplayshortskip}{0.3\baselineskip}
 
 \DeclareMathOperator{\erf}{erf}
 \DeclareMathOperator{\erfc}{erfc}
@@ -89,7 +100,8 @@ unicode=true,
   linkcolor=black,
   urlcolor=blue,
   citecolor=black,
-  pdfborder={0 0 0}
+  pdfborder={0 0 0},
+  bookmarksopen=true
 }
 
 
@@ -565,13 +577,12 @@ Maxima represents both the polygamma and the polylogarithm function as subscript
  \psi_0\left(z\right)=\tfrac{1}{2} \psi_0\left(\tfrac{z}{2}\right)+
    \tfrac{1}{2} \psi_0\left(\tfrac{z+1}{2}\right)+\ln\left(2\right).
  \end{equation}
- To construct the converter, we first need to understand Maxima's internal structure for subscripted 
- functions.  For the polygamma function, internally  \(\psi_{n}(x)\)
- is \ttq{((MQAPPLY SIMP) ((\$PSI SIMP ARRAY) \$N) \$X)}. We say that \ttq{\$psi} is the \emph{name} of the function; the Common Lisp list \ttq{(\$n)} is its \emph{subscript}, and the Common Lisp list \ttq{(\$x)} is its \emph{argument}.
+ To construct a converter for subscripted functions, we first need to understand how Maxima represents them internally. For example, the polygamma function \(\psi _n(x)\) is represented internally as
+\ttq{((MQAPPLY SIMP) ((\$PSI SIMP ARRAY) \$N) \$X)}. We say that \ttq{\$psi} is the \emph{name} of the function; the Common Lisp list \ttq{(\$n)} is its \emph{subscript}, and the Common Lisp list \ttq{(\$x)} is its \emph{argument}.
 
-The head operator of all subscripted functions is \ttq{mqapply}.  Thus,
-the target function for a converter for a subscripted function must be \ttq{mqapply}. 
-Thus, we will almost surely want to use an alias dispatch when dealing such cases.
+All subscripted functions have \ttq{mqapply} as their head operator.
+Consequently, the target function for a converter for a subscripted function must be \ttq{mqapply},
+and this means using an alias dispatch for these cases.
 
 Second, we need to know how to use several high-level functions that provide access the name, subscripts, and augments of a subscripted function. For any subscripted function  \ttq{e}, we have 
  \begin{enumerate}[label=(\alph*), itemsep=3pt, topsep=2pt, parsep=0pt]
