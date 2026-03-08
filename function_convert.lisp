@@ -775,6 +775,10 @@ The function returns the symbol $done."
   (check-converter a)
   (check-converter b)
 
+  ;; require that the docstring be a string
+  (when (and doc (not (stringp doc)))
+        (merror (intl:gettext "Documentation for a converter must be a string; found ~M") doc))
+
   (let ((gn (maxima-function-p fn)))
      (when gn
         (setq fn gn)))
