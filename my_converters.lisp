@@ -11,3 +11,9 @@
 (define-function-converter ((:algebraic $integrate) ($algebraic $integrate)) (op x)
   (let ((e (fapply op x)))
     ($integrate e '$x)))
+
+(define-function-converter (($f $g) ($ff $gg)) (op x)
+  (fapply '$g x))
+
+(define-function-converter (($g $h) ($gg $hh)) (op x)
+  (fapply '$h x))
