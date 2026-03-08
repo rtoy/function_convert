@@ -119,8 +119,11 @@ present in the table."
 
 ;; This code doesn't look up aliases. The alias lookup happens before this code is called.
 (defun lookup-converter (operator op-old op-new)
-  "Return a converter op-old => op-new function for expression whose operator is OPERATOR. Tries exact match, noun/verb, and class-key match.
-   Generally, operator = op-old (or op-old either noun or verbified) but not for a class-key match."
+  "Return a converter op-old => op-new function for expression whose operator is OPERATOR. Tries exact match, 
+   noun/verb, and class-key match. Generally, operator = op-old (or op-old either noun or verbified) but 
+   for a class-key match."
+
+   (mtell "operator = ~M ; op-old = ~M op-new = ~M ~%" operator op-old op-new)
 
   (flet
       ;; Try to find a converter for FROM => OP-NEW
@@ -130,10 +133,13 @@ present in the table."
      ;; 1. exact operator
      (try operator)
 
-     ;; 2. verb variant of operator
+     ;; 2. operator = op-old itself
+     (and (eq operator op-old) (try op-old))
+
+     ;; 3. verb variant of operator
      (try ($verbify operator))
 
-     ;; 3. class-key match
+     ;; 4. class-key match
      (let ((class (converter-class-of operator)))
        (when class
          (try class))))))
@@ -692,10 +698,7 @@ The function returns the symbol $done."
        (mtell (intl:gettext "Type: ~M~%")
               (if builtin? "built-in" "user-defined"))
 
-       (let ((doc (or                  
-                     (gethash (converter-key from to) *function-convert-doc*)
-                     (gethash (converter-key norm-from norm-to) *function-convert-doc*)
-                     (documentation fn 'function))))
+       (let ((doc (gethash (converter-key norm-from norm-to) *function-convert-doc*)))
          (when doc
            (mtell (intl:gettext "Docstring: ~M ~%") doc)))))
     '$done))
@@ -1335,8 +1338,8 @@ subexpression."
 
 ;;; for debugging work only:
 (defmfun $show_rules ()
-  (maphash #'(lambda (a b) (print a)) *function-convert-hash*)
+  (maphash #'(lambda (a b) (declare (ignore b)) (print a)) *function-convert-hash*)
   (mtell "~% alias---------------------------------------~%")
-  (maphash #'(lambda (a b) (print a)) *function-convert-hash-alias*))
+  (maphash #'(lambda (a b) (declare (ignore b)) (print a)) *function-convert-hash-alias*))
 
  
