@@ -17,7 +17,6 @@
 *.wx32fsl
 *.err
 *.log
-*.html
 # LaTeX auxiliary files
 *.aux
 *.log

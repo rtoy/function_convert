@@ -1,0 +1,623 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!-- Created by GNU Texinfo 6.8, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Function Convert Manual</title>
+
+<meta name="description" content="Function Convert Manual">
+<meta name="keywords" content="Function Convert Manual">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="#function_005fconvert_005foverview" rel="start" title="function_convert_overview">
+<style type="text/css">
+<!--
+/* ------------------------------------------------------------
+   Modern Texinfo CSS
+   Clean serif body text, balanced spacing, calm color palette
+   ------------------------------------------------------------ */
+
+
+a.copiable-anchor {visibility: hidden; text-decoration: none; line-height: 0em}
+a.summary-letter {text-decoration: none}
+blockquote.indentedblock {margin-right: 0em}
+div.display {margin-left: 3.2em}
+div.example {margin-left: 3.2em}
+kbd {font-style: oblique}
+pre.display {font-family: inherit}
+pre.format {font-family: inherit}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+span.nolinebreak {white-space: nowrap}
+span.roman {font-family: initial; font-weight: normal}
+span.sansserif {font-family: sans-serif; font-weight: normal}
+span:hover a.copiable-anchor {visibility: visible}
+ul.no-bullet {list-style: none}
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: "TeX Gyre Termes", "Times New Roman", serif;
+    font-size: 17px;
+    line-height: 1.55;
+    color: #222;
+    background: #fafafa;
+}
+
+/* Centered, readable text block */
+body {
+    max-width: 60em;
+    margin: 2.5em auto;
+    padding: 0 1.5em;
+}
+
+/* Headings --------------------------------------------------- */
+
+h1, h2, h3, h4 {
+    font-family: "TeX Gyre Termes", "Times New Roman", serif;
+    font-weight: 600;
+    color: #111;
+    margin-top: 2.2em;
+    margin-bottom: 0.6em;
+}
+
+h1 {
+    font-size: 2.0em;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 0.3em;
+}
+
+h2 {
+    font-size: 1.55em;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.2em;
+}
+
+h3 {
+    font-size: 1.25em;
+}
+
+h4 {
+    font-size: 1.1em;
+}
+
+/* Paragraphs ------------------------------------------------- */
+
+p {
+    margin: 0.9em 0;
+}
+
+/* Code and verbatim ------------------------------------------ */
+
+code, pre, tt {
+    font-family: "JetBrains Mono", "Fira Code", "DejaVu Sans Mono", monospace;
+    font-size: 0.95em;
+}
+
+pre {
+    background: #f0f0f0;
+    padding: 0.9em 1.1em;
+    border-radius: 6px;
+    overflow-x: auto;
+    border: 1px solid #e0e0e0;
+    margin: 1.2em 0;
+}
+
+/* Inline code */
+code {
+    background: #f2f2f2;
+    padding: 0.15em 0.35em;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+}
+
+/* Lists ------------------------------------------------------ */
+
+ul, ol {
+    margin: 1em 0 1em 2em;
+}
+
+li {
+    margin: 0.4em 0;
+}
+
+/* Links ------------------------------------------------------ */
+
+a {
+    color: #0645ad;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Tables ----------------------------------------------------- */
+
+table {
+    border-collapse: collapse;
+    margin: 1.5em 0;
+}
+
+th, td {
+    padding: 0.5em 0.8em;
+    border: 1px solid #ddd;
+}
+
+th {
+    background: #f2f2f2;
+    font-weight: 600;
+}
+
+/* Navigation headers/footers (Texinfo HTML) ------------------ */
+
+.nav-panel, .header, .footer {
+    font-size: 0.9em;
+    color: #555;
+    margin-top: 2em;
+    padding-top: 1em;
+    border-top: 1px solid #ddd;
+}
+
+.nav-panel a {
+    margin-right: 1em;
+}
+
+/* Definition lists (for @deffn, @defvr, etc.) ---------------- */
+
+dl {
+    margin: 1.4em 0;
+}
+
+dt {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 600;
+    margin-top: 1em;
+}
+
+dd {
+    margin: 0.4em 0 1em 1.5em;
+}
+
+/* Blockquotes ------------------------------------------------ */
+
+blockquote {
+    margin: 1.2em 1.5em;
+    padding-left: 1em;
+    border-left: 3px solid #ddd;
+    color: #444;
+}
+
+/* Misc ------------------------------------------------------- */
+
+hr {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 2em 0;
+}
+-->
+</style>
+
+
+</head>
+
+<body lang="en">
+<h1 class="settitle" align="center">Function Convert Manual</h1>
+
+<div class="chapter" id="function_005fconvert_005foverview">
+<div class="header">
+<p>
+ &nbsp; </p>
+</div>
+<span id="Function-Convert"></span><h2 class="chapter">1 Function Convert</h2>
+
+<ul class="section-toc">
+<li><a href="#Overview" accesskey="1">Overview</a></li>
+<li><a href="#User_002dLevel-Functions" accesskey="2">User-Level Functions</a></li>
+<li><a href="#function_005fconvert" accesskey="3">function_convert</a></li>
+<li><a href="#list_005fconverters" accesskey="4">list_converters</a></li>
+<li><a href="#describe_005fconverter" accesskey="5">describe_converter</a></li>
+<li><a href="#delete_005fconverter" accesskey="6">delete_converter</a></li>
+<li><a href="#delete_005fall_005fuser_005fconverters" accesskey="7">delete_all_user_converters</a></li>
+<li><a href="#make_005fconversion_005fpath" accesskey="8">make_conversion_path</a></li>
+<li><a href="#register_005fconverter" accesskey="9">register_converter</a></li>
+</ul>
+<div class="section" id="Overview">
+<h3 class="section">1.1 Overview</h3>
+
+<p>The <code>function_convert</code> package lets users rewrite one function in terms of another. A <em>converter</em> 
+is a rule <code>f = g</code> that specifies how calls to <code>f</code> should be expressed using the function <code>g</code>. 
+Converters may express identities, special-function relations, or any user-defined transformation that can 
+be written as a Maxima function.
+</p>
+<p>Unlike literal renaming, a converter expresses a <em>semantic</em> relationship. For example, the 
+converter <code>sinc = sin</code> does not literally replace the symbol <code>sinc</code> by <code>sin</code>; instead it applies 
+the identity <code>sinc(x) = sin(x)/x</code>, replacing the left-hand side with the right-hand side in a given 
+Maxima expression. Converters may be chained, and the system maintains an internal directed graph of all 
+available conversions.
+</p>
+<p>Specifically, a rule has the form <code>f = g</code>, where <code>f</code> is the <em>source function</em> and 
+the <em>target function</em> <code>g</code> is either:
+</p>
+<ul class="no-bullet">
+<li>- the name of a target function,
+</li><li>- a Maxima lambda expression, or
+</li><li>- the name of a  Maxima function, possibly user-defined.
+</li></ul>
+
+<p>Multiple converters may be applied in sequence.  When the user supplies a list of converters, they are applied 
+from left to right.  When the system searches for a path automatically (via <code>make_conversion_path</code>), 
+it uses a breadth-first search of the converter graph to find a shortest path.
+</p>
+<p>The converter system does not modify Maxima’s simplifier; all conversions occur only when explicitly requested 
+by the user.
+</p>
+<p>The user-level interface consists of functions for applying converters, inspecting the converter graph, 
+constructing conversion paths, and registering or deleting user-defined converters.
+</p>
+</div>
+<div class="section" id="User_002dLevel-Functions">
+<h3 class="section">1.2 User-Level Functions</h3>
+
+<p>The following functions make up the user-level interface to the converter system:
+</p>
+<ul>
+<li> <code>function_convert(converters, expr)</code>  
+Apply one or more conversion rules to an expression.  
+See <a href="#function_005fconvert">function_convert</a>.
+
+</li><li> <code>list_converters([name_1, name_2, ...])</code>  
+List all registered converters, optionally filtered by source function.  
+See <a href="#list_005fconverters">list_converters</a>.
+
+</li><li> <code>describe_converter(f = g)</code>  
+Display detailed information about a specific converter.  
+See <a href="#describe_005fconverter">describe_converter</a>.
+
+</li><li> <code>delete_converter(eqs)</code>  
+Delete one or more user-defined converters.  
+See <a href="#delete_005fconverter">delete_converter</a>.
+
+</li><li> <code>delete_all_user_converters()</code>  
+Remove all user-defined converters at once.  
+See <a href="#delete_005fall_005fuser_005fconverters">delete_all_user_converters</a>.
+
+</li><li> <code>make_conversion_path(from, to)</code>  
+Construct a list of adjacent conversion steps forming a path from
+<code>from</code> to <code>to</code>.  
+See <a href="#make_005fconversion_005fpath">make_conversion_path</a>.
+
+</li><li> <code>register_converter(spec, fn, doc)</code>  
+Register a new converter, optionally with an alias and documentation.  
+See <a href="#register_005fconverter">register_converter</a>.
+</li></ul>
+
+
+
+<hr>
+</div>
+<div class="section" id="function_005fconvert">
+<div class="header">
+<p>
+Next: <a href="#list_005fconverters" accesskey="n" rel="next">list_converters</a>, Up: <a href="#function_005fconvert_005foverview" accesskey="u" rel="up">Function Convert</a> &nbsp; </p>
+</div>
+<span id="function_005fconvert-1"></span><h3 class="section">1.3 function_convert</h3>
+<dl class="def">
+<dt id="index-function_005fconvert"><span class="category">Function: </span><span><strong>function_convert</strong> <em>(<var>converters</var>, <var>expr</var>)</em><a href='#index-function_005fconvert' class='copiable-anchor'> &para;</a></span></dt>
+<dd>
+<p>Apply one or more function-conversion rules to the expression <var>expr</var>.
+The argument <var>converters</var> is either a single conversion rule
+<code>f = g</code> or a Maxima list of such rules.
+</p>
+<p>A conversion rule has the form <code>f = g</code>, where <code>f</code> is the
+source function and <code>g</code> is either the name of the target function,
+a Maxima lambda expression, or the name of a user-defined Maxima
+function.
+</p>
+<p>The operator <code>=</code> indicates a <em>semantic</em> conversion, not a
+literal renaming.  For example, the rule <code>sinc = sin</code> does not
+replace the symbol <code>sinc</code> by <code>sin</code>.  Instead, it applies the
+identity <code>sinc(x) = sin(x)/x</code>.  Specifically:
+</p>
+<div class="example">
+<pre class="example">(%i1) function_convert('sinc = 'sin, sinc(x) + 1);
+                                  sin(x)
+(%o1)                             ------ + 1
+                                    x
+</pre></div>
+
+<p>Users may also supply an explicit conversion by giving a lambda
+expression on the right-hand side.  For example:
+</p>
+<div class="example">
+<pre class="example">(%i2) function_convert('erfc = lambda([q], 1 - erf(q)), erfc(x)^2);
+                                             2
+(%o2)                            (1 - erf(x))
+</pre></div>
+
+<p>Multiple conversions may be given in a Maxima list; they are applied
+from left to right.
+</p>
+<p><strong>Example</strong>
+</p>
+<div class="example">
+<pre class="example">(%i3) function_convert(['sinc = 'sin, 'sin = 'exp], sinc(x));
+                                %i x     - %i x
+                             (%e     - %e      ) %i
+(%o3)                      - ----------------------- 
+                                      2 x
+</pre></div>
+
+</dd></dl>
+
+<hr>
+</div>
+<div class="section" id="list_005fconverters">
+<div class="header">
+<p>
+Next: <a href="#describe_005fconverter" accesskey="n" rel="next">describe_converter</a>, Previous: <a href="#function_005fconvert" accesskey="p" rel="prev">function_convert</a>, Up: <a href="#function_005fconvert_005foverview" accesskey="u" rel="up">Function Convert</a> &nbsp; </p>
+</div>
+<span id="list_005fconverters-1"></span><h3 class="section">1.4 list_converters</h3>
+<dl class="def">
+<dt id="index-list_005fconverters"><span class="category">Function: </span><span><strong>list_converters</strong> <em>[name_1, name_2, ...]</em><a href='#index-list_005fconverters' class='copiable-anchor'> &para;</a></span></dt>
+<dd>
+<p>Return a list of all registered function converters known to <code>function_convert</code>.  In addition to 
+returning this list, each converter is printed as a pair <code>FROM = TO</code> followed by a short description 
+of the converter.
+</p>
+<p>When called with no arguments, <code>list_converters</code> returns the full
+set of converters.  When one or more names are supplied, only those
+converters whose source function matches one of the given names are
+returned.
+</p>
+<div class="example">
+<pre class="example">(%i2) list_converters();
+psi = psi_half :  Apply the polygamma half-argument identity; see DLMF
+     http://dlmf.nist.gov/5.5.E8
+
+inequation = zero_lhs :  Normalize an inequation `a op b` to the zero LHS form
+     `(a - b) op 0`.
+
+...
+</pre></div>
+
+<p>The list of converters is maintained internally and entries appear in an unspecified order.  
+</p>
+</dd></dl>
+
+
+<hr>
+</div>
+<div class="section" id="describe_005fconverter">
+<div class="header">
+<p>
+Next: <a href="#delete_005fconverter" accesskey="n" rel="next">delete_converter</a>, Previous: <a href="#list_005fconverters" accesskey="p" rel="prev">list_converters</a>, Up: <a href="#function_005fconvert_005foverview" accesskey="u" rel="up">Function Convert</a> &nbsp; </p>
+</div>
+<span id="describe_005fconverter-1"></span><h3 class="section">1.5 describe_converter</h3>
+<dl class="def">
+<dt id="index-describe_005fconverter"><span class="category">Function: </span><span><strong>describe_converter</strong> <em>(rule)</em><a href='#index-describe_005fconverter' class='copiable-anchor'> &para;</a></span></dt>
+<dd><p>Describe the converter specified by <var>rule</var>, which must be a single
+converter of the form <code>f = g</code>.  If a converter from
+<code>f</code> to <code>g</code> is defined, <code>describe_converter</code> prints the
+converter, indicates whether it is built-in or user-defined, and
+displays a short description if one is available.  The function returns
+the symbol <code>done</code>.
+</p>
+<p>If no such converter exists, a message stating this is printed.  If the
+input is not a valid converter equation, an error is signaled.
+</p>
+<div class="example">
+<pre class="example">(%i1) describe_converter(sinc = sin);
+Converter: sinc = sin
+Type: built-in
+Docstring: Convert sinc(x) into sin(x)/x.
+(%o1)                                done
+
+(%i2) describe_converter(a = b);
+No converter defined for a = b
+(%o2)                                done
+
+(%i3) describe_converter(a &lt; b);
+Bad transformation (missing =): a &lt; b
+</pre></div>
+
+</dd></dl>
+
+<hr>
+</div>
+<div class="section" id="delete_005fconverter">
+<div class="header">
+<p>
+Next: <a href="#delete_005fall_005fuser_005fconverters" accesskey="n" rel="next">delete_all_user_converters</a>, Previous: <a href="#describe_005fconverter" accesskey="p" rel="prev">describe_converter</a>, Up: <a href="#function_005fconvert_005foverview" accesskey="u" rel="up">Function Convert</a> &nbsp; </p>
+</div>
+<span id="delete_005fconverter-1"></span><h3 class="section">1.6 delete_converter</h3>
+<dl class="def">
+<dt id="index-delete_005fconverter"><span class="category">Function: </span><span><strong>delete_converter</strong> <em>(rules)</em><a href='#index-delete_005fconverter' class='copiable-anchor'> &para;</a></span></dt>
+<dd>
+<p>Delete one or more user-defined converters.  The argument <var>rules</var>
+may be either a single converter rule of the form <code>f = g</code> or a
+list of such rules.  The function returns the symbol <code>done</code>.
+</p>
+<p>If a listed converter is built-in, an informational message is printed
+and the converter is not deleted; for example:
+</p>
+<div class="example">
+<pre class="example">(%i1) delete_converter(sinc = sin);
+Cannot delete built-in converter sinc = sin.
+(%o1)                                done
+</pre></div>
+
+<p>If a listed converter does not exist as a user-defined converter, a
+message is printed and nothing is removed:
+</p>
+<div class="example">
+<pre class="example">(%i1) delete_converter(a = b);
+No converter a = b exists.
+(%o1)                                done
+</pre></div>
+
+<p>The following example illustrates deletion of a user-defined rule.  The
+rule applies <code>radcan</code> to every subexpression of the form
+<code>a^b</code>, but does not apply <code>radcan</code> to the entire input.
+After deleting the rule, applying it returns the input unchanged:
+</p>
+<div class="example">
+<pre class="example">(%i1) register_converter(&quot;^&quot; = radcan, lambda([a,b], radcan(a^b)));
+(%o1)                                done
+
+(%i2) function_convert(&quot;^&quot; = radcan, (1+x)^2 + a*(b+1));
+                            2
+(%o2)                      x  + 2 x + a (b + 1) + 1
+
+(%i3) delete_converter(&quot;^&quot; = radcan);
+Deleted converter ^ = radcan.
+(%o3)                                done
+
+(%i4) function_convert(&quot;^&quot; = radcan, (1+x)^2 + a*(b+1));
+                                    2
+(%o4)                        (x + 1)  + a (b + 1)
+</pre></div>
+
+</dd></dl>
+
+<hr>
+</div>
+<div class="section" id="delete_005fall_005fuser_005fconverters">
+<div class="header">
+<p>
+Next: <a href="#make_005fconversion_005fpath" accesskey="n" rel="next">make_conversion_path</a>, Previous: <a href="#delete_005fconverter" accesskey="p" rel="prev">delete_converter</a>, Up: <a href="#function_005fconvert_005foverview" accesskey="u" rel="up">Function Convert</a> &nbsp; </p>
+</div>
+<span id="delete_005fall_005fuser_005fconverters-1"></span><h3 class="section">1.7 delete_all_user_converters</h3>
+<dl class="def">
+<dt id="index-delete_005fall_005fuser_005fconverters"><span class="category">Function: </span><span><strong>delete_all_user_converters</strong> <em>()</em><a href='#index-delete_005fall_005fuser_005fconverters' class='copiable-anchor'> &para;</a></span></dt>
+<dd><p>Delete all user-defined converters.  All built-in converters are
+preserved.  A message is printed indicating that the user-defined
+converters have been removed.  The function returns <code>done</code>.
+</p>
+<div class="example">
+<pre class="example">(%i1) register_converter(&quot;^&quot; = radcan, lambda([a,b], radcan(a^b)));
+(%o1)
+
+(%i2) delete_all_user_converters();
+All user-defined converters deleted.
+(%o2)                                done
+</pre></div>
+
+</dd></dl>
+
+
+<hr>
+</div>
+<div class="section" id="make_005fconversion_005fpath">
+<div class="header">
+<p>
+Next: <a href="#register_005fconverter" accesskey="n" rel="next">register_converter</a>, Previous: <a href="#delete_005fall_005fuser_005fconverters" accesskey="p" rel="prev">delete_all_user_converters</a>, Up: <a href="#function_005fconvert_005foverview" accesskey="u" rel="up">Function Convert</a> &nbsp; </p>
+</div>
+<span id="make_005fconversion_005fpath-1"></span><h3 class="section">1.8 make_conversion_path</h3>
+<dl class="def">
+<dt id="index-make_005fconversion_005fpath"><span class="category">Function: </span><span><strong>make_conversion_path</strong> <em>(<var>from</var>, <var>to</var>)</em><a href='#index-make_005fconversion_005fpath' class='copiable-anchor'> &para;</a></span></dt>
+<dd>
+
+<p>Find a shortest conversion path from <var>from</var> to <var>to</var>.  The
+function performs a breadth-first search of the full converter graph
+and returns one such path, represented as a Maxima list of converter
+rules <code>f = g</code>.  If several shortest paths exist, one is chosen
+according to the system&rsquo;s internal graph-traversal order; the choice
+among equal-length paths is not user-configurable.  All properly
+registered user-level converters may appear as links in a path.
+</p>
+<p>The function <code>make_conversion_path</code> does not perform any
+conversions.  To apply the path, call <code>function_convert</code> with the
+list returned by <code>make_conversion_path</code>.  If no path exists, the
+empty list <code>[]</code> is returned.
+</p>
+<div class="example">
+<pre class="example">(%i1) path : make_conversion_path(sin, gamma);
+(%o1) [sin = sinc, sinc = gamma]
+
+(%i2) function_convert(path, sin(x));
+(%o2) x/(gamma(1 - x/%pi) * gamma(x/%pi + 1))
+</pre></div>
+
+</dd></dl>
+
+<hr>
+</div>
+<div class="section" id="register_005fconverter">
+<div class="header">
+<p>
+Previous: <a href="#make_005fconversion_005fpath" accesskey="p" rel="prev">make_conversion_path</a>, Up: <a href="#function_005fconvert_005foverview" accesskey="u" rel="up">Function Convert</a> &nbsp; </p>
+</div>
+<span id="register_005fconverter-1"></span><h3 class="section">1.9 register_converter</h3>
+<dl class="def">
+<dt id="index-register_005fconverter"><span class="category">Function: </span><span><strong>register_converter</strong> <em>(spec fn &amp;optional doc)</em><a href='#index-register_005fconverter' class='copiable-anchor'> &para;</a></span></dt>
+<dd><p>Register a new converter.
+</p>
+<p>The argument <var>spec</var> is either a single converter rule of the form
+<code>f = g</code>, or a two-element Maxima list <code>[f = g, p = q]</code>.  In
+the first case, the converter has no alias.  In the second case, the
+first element of the list is the primary converter rule and the second
+element is its alias.
+</p>
+<p>If either the primary rule or the alias rule is not of the correct
+form, an error is signaled.  If a converter from <code>f</code> to <code>g</code>
+already exists, an error is also signaled: built-in converters cannot
+be redefined, and redefining a user-defined converter is likewise an
+error.
+</p>
+<p>The argument <code>fn</code> must be either a Maxima function or a Maxima
+lambda form; otherwise an error is signaled.  If a string <var>doc</var> is
+supplied, it is stored as the documentation for this converter, and is
+displayed by <code>describe_converter</code>.
+</p>
+<p>The function returns the symbol <code>done</code>.
+</p>
+<p>Here we define a converter that applies <code>radcan</code> to all subexpressions of
+the form <code>a^b</code>. Since the source function <code>&quot;^&quot;</code> is a function of
+two variables, the associated function <em>must</em> be a function of two variables. 
+Notice that in <code>(%i2)</code>, the term <code>a*(b+1)</code> is <em>not</em> touched by <code>radcan</code>.
+</p>
+<div class="example">
+<pre class="example">(%i1) register_converter(&quot;^&quot; = radcan, lambda([a,b], radcan(a^b)));
+(%o1)                                done
+
+(%i2) function_convert(&quot;^&quot; = radcan, (1+x)^2 + a*(b+1));
+                            2
+(%o2)                      x  + 2 x + a (b + 1) + 1
+</pre></div>
+<p>Instead of using a Maxima lambda form for the function, we can use the name of a Maxima function; for example
+</p><div class="example">
+<pre class="example">(%i1) fff(a,b) := radcan(a^b)$
+
+(%i2) register_converter(&quot;^&quot; = radcan, fff);
+(%o2)                                done
+(%i3) function_convert(&quot;^&quot; = radcan, (1+x)^2 + a*(b+1));
+                            2
+(%o3)                      x  + 2 x + a (b + 1) + 1
+</pre></div>
+
+<p>An example of including an alias: (OK, I see the alias system has a bug...I will fix that)
+</p><div class="example">
+<pre class="example">(%i3) register_converter([&quot;^^&quot; = expand, ppp = qqq], lambda([a,b], expand(a^^b)));
+(%o3)                                done
+
+(%i4) function_convert(&quot;^^&quot; = expand, (x+1)^^2);
+                                 &lt;2&gt;
+(%o4)                           x    + 2 x + 1
+
+(%i5) function_convert(ppp = qqq, (x+1)^^2);
+                                         &lt;2&gt;
+(%o5)                             (x + 1)
+</pre></div>
+</dd></dl>
+
+
+</div>
+</div>
+
+
+
+</body>
+</html>
