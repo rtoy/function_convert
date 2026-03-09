@@ -377,9 +377,15 @@ a converter doesn't need to do anything to allow chaining to work.
 
 \subsection{Implicit dispatch via breadth-first search}
 
-The utility \ttq{make\_conversion\_path} uses a breadth-first search~\cite{clrs} of the full converter graph to find the shortest available path between a given source and target function. When several shortest paths exist, the system selects one according to its internal graph‑traversal order; the choice among equal‑length paths is not user‑configurable.
+The utility \ttq{make\_conversion\_path} uses a breadth-first search~\cite{clrs} of the full converter graph to 
+find the shortest available path between a given source and target function. When several shortest paths exist, 
+the system selects one according to its internal graph‑traversal order; the choice among equal‑length paths 
+is not user‑configurable.
 
-To perform the actual conversion, the user must manually call \ttq{function\_convert} with the (possibly) multistep path returned by \ttq{make\_conversion\_path}. The function \ttq{make\_conversion\_path} does not perform any conversions; it only constructs the user‑level representation of the path. When no such path exists, it returns an empty Maxima list. For example:
+To perform the actual conversion, the user must manually call \ttq{function\_convert} with the (possibly) 
+multistep path returned by \ttq{make\_conversion\_path}. The function \ttq{make\_conversion\_path} does 
+not perform any conversions; it only constructs the user‑level representation of the path.
+When no such path exists, it returns an empty Maxima list. For example:
 \begin{maximabox}
 \begin{verbatim}
 (%i1) path : make_conversion_path(sin, gamma);
@@ -389,7 +395,8 @@ To perform the actual conversion, the user must manually call \ttq{function\_con
 (%o2) x/(gamma(1-x/%pi)*gamma(x/%pi+1))
 \end{verbatim}
 \end{maximabox}
-\noindent Writers of converters only need to know that \funconvert uses BFS; its internal implementation details are irrelevant.
+\noindent Writers of converters only need to know that \funconvert uses BFS; its internal implementation
+details are irrelevant.
 \noindent 
 
 \subsection{User-level converters}
@@ -978,7 +985,8 @@ developers who wish to extend the mathematical capabilities of the
 \begin{flushleft}
 \textcopyright 2026 Barton Willis\\
 Version 1.0\\
-Portions adapted from the GitHub project README~\cite{willis-function-convert} with permission.\\[1ex]
+Portions adapted from the GitHub project README~\cite{willis-function-convert} and from the package
+user documentation with permission.\\[1ex]
 Permission is granted to copy and distribute this document, in print or electronically, for any purpose, provided that the content is not
  modified, and this notice is preserved.
 \end{flushleft}
