@@ -598,7 +598,7 @@ Notice that in <code>(%i2)</code>, the term <code>a*(b+1)</code> is <em>not</em>
 (%o3)                      x  + 2 x + a (b + 1) + 1
 </pre></div>
 
-<p>An example of including an alias: (OK, I see the alias system has a bug...I will fix that)
+<p>An example of including an alias: 
 </p><div class="example">
 <pre class="example">(%i3) register_converter([&quot;^^&quot; = expand, ppp = qqq], lambda([a,b], expand(a^^b)));
 (%o3)                                done
@@ -608,8 +608,8 @@ Notice that in <code>(%i2)</code>, the term <code>a*(b+1)</code> is <em>not</em>
 (%o4)                           x    + 2 x + 1
 
 (%i5) function_convert(ppp = qqq, (x+1)^^2);
-                                         &lt;2&gt;
-(%o5)                             (x + 1)
+                                 &lt;2&gt;
+(%o5)                           x    + 2 x + 1
 </pre></div>
 </dd></dl>
 

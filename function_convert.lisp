@@ -797,7 +797,9 @@ The function returns the symbol $done."
         (cdr b)
 
       ;; Normalize FROM
-      ;(setq from ($verbify from))
+       (when (stringp from)
+        (setq from ($verbify from)))
+
       (when (converter-exists-p from to)
         (if (converter-built-in-p from to)
             (merror (intl:gettext
@@ -812,8 +814,6 @@ The function returns the symbol $done."
         (register-converter-alias from-alias to-alias from to))
 
       ;; Register the actual converter
-      (when (stringp from)
-        (setq from ($verbify from)))
       (register-converter from to fn)
 
       ;; Optional documentation

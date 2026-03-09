@@ -327,7 +327,7 @@ Instead of using a Maxima lambda form for the function, we can use the name of a
 (%o3)                      x  + 2 x + a (b + 1) + 1
 @end example
 
-An example of including an alias: (OK, I see the alias system has a bug...I will fix that)
+An example of including an alias: 
 @example
 (%i3) register_converter(["^^" = expand, ppp = qqq], lambda([a,b], expand(a^^b)));
 (%o3)                                done
@@ -337,8 +337,8 @@ An example of including an alias: (OK, I see the alias system has a bug...I will
 (%o4)                           x    + 2 x + 1
 
 (%i5) function_convert(ppp = qqq, (x+1)^^2);
-                                         <2>
-(%o5)                             (x + 1)
+                                 <2>
+(%o5)                           x    + 2 x + 1
 @end example
 @end defun
 
