@@ -1,0 +1,166 @@
+/* ------------------------------------------------------------
+   Modern Texinfo CSS
+   Clean serif body text, balanced spacing, calm color palette
+   ------------------------------------------------------------ */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: "TeX Gyre Termes", "Times New Roman", serif;
+    font-size: 17px;
+    line-height: 1.55;
+    color: #222;
+    background: #fafafa;
+}
+
+/* Centered, readable text block */
+body {
+    max-width: 60em;
+    margin: 2.5em auto;
+    padding: 0 1.5em;
+}
+
+/* Headings --------------------------------------------------- */
+
+h1, h2, h3, h4 {
+    font-family: "TeX Gyre Termes", "Times New Roman", serif;
+    font-weight: 600;
+    color: #111;
+    margin-top: 2.2em;
+    margin-bottom: 0.6em;
+}
+
+h1 {
+    font-size: 2.0em;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 0.3em;
+}
+
+h2 {
+    font-size: 1.55em;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.2em;
+}
+
+h3 {
+    font-size: 1.25em;
+}
+
+h4 {
+    font-size: 1.1em;
+}
+
+/* Paragraphs ------------------------------------------------- */
+
+p {
+    margin: 0.9em 0;
+}
+
+/* Code and verbatim ------------------------------------------ */
+
+code, pre, tt {
+    font-family: "JetBrains Mono", "Fira Code", "DejaVu Sans Mono", monospace;
+    font-size: 0.95em;
+}
+
+pre {
+    background: #f0f0f0;
+    padding: 0.9em 1.1em;
+    border-radius: 6px;
+    overflow-x: auto;
+    border: 1px solid #e0e0e0;
+    margin: 1.2em 0;
+}
+
+/* Inline code */
+code {
+    background: #f2f2f2;
+    padding: 0.15em 0.35em;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+}
+
+/* Lists ------------------------------------------------------ */
+
+ul, ol {
+    margin: 1em 0 1em 2em;
+}
+
+li {
+    margin: 0.4em 0;
+}
+
+/* Links ------------------------------------------------------ */
+
+a {
+    color: #0645ad;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Tables ----------------------------------------------------- */
+
+table {
+    border-collapse: collapse;
+    margin: 1.5em 0;
+}
+
+th, td {
+    padding: 0.5em 0.8em;
+    border: 1px solid #ddd;
+}
+
+th {
+    background: #f2f2f2;
+    font-weight: 600;
+}
+
+/* Navigation headers/footers (Texinfo HTML) ------------------ */
+
+.nav-panel, .header, .footer {
+    font-size: 0.9em;
+    color: #555;
+    margin-top: 2em;
+    padding-top: 1em;
+    border-top: 1px solid #ddd;
+}
+
+.nav-panel a {
+    margin-right: 1em;
+}
+
+/* Definition lists (for @deffn, @defvr, etc.) ---------------- */
+
+dl {
+    margin: 1.4em 0;
+}
+
+dt {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 600;
+    margin-top: 1em;
+}
+
+dd {
+    margin: 0.4em 0 1em 1.5em;
+}
+
+/* Blockquotes ------------------------------------------------ */
+
+blockquote {
+    margin: 1.2em 1.5em;
+    padding-left: 1em;
+    border-left: 3px solid #ddd;
+    color: #444;
+}
+
+/* Misc ------------------------------------------------------- */
+
+hr {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 2em 0;
+}

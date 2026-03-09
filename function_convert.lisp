@@ -119,9 +119,8 @@ present in the table."
 
 ;; This code doesn't look up aliases. The alias lookup happens before this code is called.
 (defun lookup-converter (operator op-new)
-  "Return a converter op-old => op-new function for expression whose operator is OPERATOR. Tries exact match, 
-   noun/verb, and class-key match. Generally, operator = op-old (or op-old either noun or verbified) but 
-   for a class-key match."
+  "Return a converter operator => op-new function for expression whose operator is OPERATOR. Tries exact match, 
+   noun/verb, and class-key match."
 
   (flet
       ;; Try to find a converter for FROM => OP-NEW
@@ -716,6 +715,9 @@ The function returns the symbol $done."
     (let ((from (second eq))
           (to   (third eq)))
 
+      (when (stringp from)
+        (setq from ($verbify from)))
+
       (multiple-value-bind (aa bb)
           (lookup-converter-alias from to)
       (delete-user-converter aa bb))))
@@ -810,6 +812,8 @@ The function returns the symbol $done."
         (register-converter-alias from-alias to-alias from to))
 
       ;; Register the actual converter
+      (when (stringp from)
+        (setq from ($verbify from)))
       (register-converter from to fn)
 
       ;; Optional documentation

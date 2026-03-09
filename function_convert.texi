@@ -1,8 +1,80 @@
-@ifnotinfo
-@settitle Function Convert
-@top Function Convert
-@end ifnotinfo
+@setfilename function_convert.info
+@settitle Function Convert Manual
 
+@node function_convert_overview
+@chapter Function Convert
+
+@section Overview
+
+The @code{function_convert} package lets users rewrite one function in terms of another. A @dfn{converter} 
+is a rule @code{f = g} that specifies how calls to @code{f} should be expressed using the function @code{g}. 
+Converters may express identities, special-function relations, or any user-defined transformation that can 
+be written as a Maxima function.
+
+Unlike literal renaming, a converter expresses a @emph{semantic} relationship. For example, the 
+converter @code{sinc = sin} does not literally replace the symbol @code{sinc} by @code{sin}; instead it applies 
+the identity @code{sinc(x) = sin(x)/x}, replacing the left-hand side with the right-hand side in a given 
+Maxima expression. Converters may be chained, and the system maintains an internal directed graph of all 
+available conversions.
+
+Specifically, a rule has the form @code{f = g}, where @code{f} is the @emph{source function} and 
+the @emph{target function} @code{g} is either:
+
+@itemize @minus
+@item the name of a target function,
+@item a Maxima lambda expression, or
+@item the name of a  Maxima function, possibly user-defined.
+@end itemize
+
+Multiple converters may be applied in sequence.  When the user supplies a list of converters, they are applied 
+from left to right.  When the system searches for a path automatically (via @code{make_conversion_path}), 
+it uses a breadth-first search of the converter graph to find a shortest path.
+
+The converter system does not modify Maxima’s simplifier; all conversions occur only when explicitly requested 
+by the user.
+
+The user-level interface consists of functions for applying converters, inspecting the converter graph, 
+constructing conversion paths, and registering or deleting user-defined converters.
+
+@section User-Level Functions
+
+The following functions make up the user-level interface to the converter system:
+
+@itemize @bullet
+@item @code{function_convert(converters, expr)}  
+Apply one or more conversion rules to an expression.  
+See @ref{function_convert}.
+
+@item @code{list_converters([name_1, name_2, ...])}  
+List all registered converters, optionally filtered by source function.  
+See @ref{list_converters}.
+
+@item @code{describe_converter(f = g)}  
+Display detailed information about a specific converter.  
+See @ref{describe_converter}.
+
+@item @code{delete_converter(eqs)}  
+Delete one or more user-defined converters.  
+See @ref{delete_converter}.
+
+@item @code{delete_all_user_converters()}  
+Remove all user-defined converters at once.  
+See @ref{delete_all_user_converters}.
+
+@item @code{make_conversion_path(from, to)}  
+Construct a list of adjacent conversion steps forming a path from
+@code{from} to @code{to}.  
+See @ref{make_conversion_path}.
+
+@item @code{register_converter(spec, fn, doc)}  
+Register a new converter, optionally with an alias and documentation.  
+See @ref{register_converter}.
+@end itemize
+
+
+
+@node function_convert
+@section function_convert
 @deffn Function function_convert (@var{converters}, @var{expr})
 
 Apply one or more function-conversion rules to the expression @var{expr}.
@@ -50,11 +122,13 @@ from left to right.
 
 @end deffn
 
+@node list_converters
+@section list_converters
 @deffn Function list_converters [name_1, name_2, ...]
 
 Return a list of all registered function converters known to @code{function_convert}.  In addition to 
 returning this list, each converter is printed as a pair @code{FROM = TO} followed by a short description 
-taken from the converter's docstring.
+of the converter.
 
 When called with no arguments, @code{list_converters} returns the full
 set of converters.  When one or more names are supplied, only those
@@ -65,7 +139,7 @@ returned.
 (%i2) list_converters();
 psi = psi_half :  Apply the polygamma half-argument identity; see DLMF
      http://dlmf.nist.gov/5.5.E8
-bessel = bessel_recursion :
+
 inequation = zero_lhs :  Normalize an inequation `a op b` to the zero LHS form
      `(a - b) op 0`.
 
@@ -74,74 +148,198 @@ inequation = zero_lhs :  Normalize an inequation `a op b` to the zero LHS form
 
 The list of converters is maintained internally and entries appear in an unspecified order.  
 
-@code{function_convert}.  
-
-
 @seealso{function_convert}
 @end deffn
 
-@defun describe_converter (eq)
-Describe the converter specified by @var{eq}.
 
-@var{eq} must be a single converter equation of the form @code{f = g}.
-The operators @code{f} and @code{g} are validated and normalized through
-the converter alias system.  If a converter from @code{f} to @code{g}
-is defined, information about it is printed: the converter itself,
-whether it is built-in or user-defined, and the function's docstring
-if one is present.
+@node describe_converter
+@section describe_converter
+@defun describe_converter (rule)
+Describe the converter specified by @var{rule}, which must be a single
+converter of the form @code{f = g}.  If a converter from
+@code{f} to @code{g} is defined, @code{describe_converter} prints the
+converter, indicates whether it is built-in or user-defined, and
+displays a short description if one is available.  The function returns
+the symbol @code{done}.
 
-If no such converter exists, a message stating this is printed.
+If no such converter exists, a message stating this is printed.  If the
+input is not a valid converter equation, an error is signaled.
 
-The function returns the symbol @code{$done}.
+@example
+(%i1) describe_converter(sinc = sin);
+Converter: sinc = sin
+Type: built-in
+Docstring: Convert sinc(x) into sin(x)/x.
+(%o1)                                done
+
+(%i2) describe_converter(a = b);
+No converter defined for a = b
+(%o2)                                done
+
+(%i3) describe_converter(a < b);
+Bad transformation (missing =): a < b
+@end example
+
 @end defun
 
-@defun delete_converter (eqs)
-Delete one or more user-defined converters.
+@node delete_converter
+@section delete_converter
+@defun delete_converter (rules)
 
-The argument @var{eqs} may be either a single converter equation of the
-form @code{f = g} or a list of such equations.  Each equation is checked
-for proper structure, and for every pair @code{f}, @code{g} the
-corresponding user-defined converter is removed. 
+Delete one or more user-defined converters.  The argument @var{rules}
+may be either a single converter rule of the form @code{f = g} or a
+list of such rules.  The function returns the symbol @code{done}.
 
-If a listed converter does not exist as a user-defined converter, no
-error is signaled; the converter is simply not present and therefore
-nothing is removed.
+If a listed converter is built-in, an informational message is printed
+and the converter is not deleted; for example:
 
-The function returns the symbol @code{$done}.
+@example
+(%i1) delete_converter(sinc = sin);
+Cannot delete built-in converter sinc = sin.
+(%o1)                                done
+@end example
+
+If a listed converter does not exist as a user-defined converter, a
+message is printed and nothing is removed:
+
+@example
+(%i1) delete_converter(a = b);
+No converter a = b exists.
+(%o1)                                done
+@end example
+
+The following example illustrates deletion of a user-defined rule.  The
+rule applies @code{radcan} to every subexpression of the form
+@code{a^b}, but does not apply @code{radcan} to the entire input.
+After deleting the rule, applying it returns the input unchanged:
+
+@example
+(%i1) register_converter("^" = radcan, lambda([a,b], radcan(a^b)));
+(%o1)                                done
+
+(%i2) function_convert("^" = radcan, (1+x)^2 + a*(b+1));
+                            2
+(%o2)                      x  + 2 x + a (b + 1) + 1
+
+(%i3) delete_converter("^" = radcan);
+Deleted converter ^ = radcan.
+(%o3)                                done
+
+(%i4) function_convert("^" = radcan, (1+x)^2 + a*(b+1));
+                                    2
+(%o4)                        (x + 1)  + a (b + 1)
+@end example
+
 @end defun
 
+@node delete_all_user_converters
+@section delete_all_user_converters
 @defun delete_all_user_converters ()
-Delete all user-defined converters.
+Delete all user-defined converters.  All built-in converters are
+preserved.  A message is printed indicating that the user-defined
+converters have been removed.  The function returns @code{done}.
 
-This function removes every converter that is not marked as built-in.
-Built-in converters are preserved.
+@example
+(%i1) register_converter("^" = radcan, lambda([a,b], radcan(a^b)));
+(%o1)
 
-A message is printed indicating that all user-defined converters have
-been removed.  The function returns @code{done}.
+(%i2) delete_all_user_converters();
+All user-defined converters deleted.
+(%o2)                                done
+@end example
 
 @end defun
 
+
+@node make_conversion_path
+@section make_conversion_path
+@deffn {Function} make_conversion_path (@var{from}, @var{to})
+
+
+Find a shortest conversion path from @var{from} to @var{to}.  The
+function performs a breadth-first search of the full converter graph
+and returns one such path, represented as a Maxima list of converter
+rules @code{f = g}.  If several shortest paths exist, one is chosen
+according to the system's internal graph-traversal order; the choice
+among equal-length paths is not user-configurable.  All properly
+registered user-level converters may appear as links in a path.
+
+The function @code{make_conversion_path} does not perform any
+conversions.  To apply the path, call @code{function_convert} with the
+list returned by @code{make_conversion_path}.  If no path exists, the
+empty list @code{[]} is returned.
+
+@example
+(%i1) path : make_conversion_path(sin, gamma);
+(%o1) [sin = sinc, sinc = gamma]
+
+(%i2) function_convert(path, sin(x));
+(%o2) x/(gamma(1 - x/%pi) * gamma(x/%pi + 1))
+@end example
+
+@end deffn
+
+@node register_converter
+@section register_converter
 @defun register_converter (spec fn &optional doc)
 Register a new converter.
 
-The argument @var{spec} is either a single converter specification of the
-form @code{f = g}, or a two-element Maxima list @code{[f = g, p = q]}.
-In the first case, the converter has no alias. In the second
-case, the first element of the list is the primary converter and the
-second element is its alias.
+The argument @var{spec} is either a single converter rule of the form
+@code{f = g}, or a two-element Maxima list @code{[f = g, p = q]}.  In
+the first case, the converter has no alias.  In the second case, the
+first element of the list is the primary converter rule and the second
+element is its alias.
 
-If either the primary or alias converter has the incorrect form, an error
-is signaled; and if a converter from @code{f} to @code{g} already exists, 
-an error is signaled: built-in converters cannot be redefined, and redefining 
-a user-defined converter also signals an error.
+If either the primary rule or the alias rule is not of the correct
+form, an error is signaled.  If a converter from @code{f} to @code{g}
+already exists, an error is also signaled: built-in converters cannot
+be redefined, and redefining a user-defined converter is likewise an
+error.
 
-The argument @var{fn} must be a either a Maxima function or a Maxima lambda form; 
-otherwise an error is signaled.If @var{doc} is supplied, it is stored as the documentation
-string for this converter.
+The argument @code{fn} must be either a Maxima function or a Maxima
+lambda form; otherwise an error is signaled.  If a string @var{doc} is
+supplied, it is stored as the documentation for this converter, and is
+displayed by @code{describe_converter}.
 
-The function returns the symbol @code{$done}.
+The function returns the symbol @code{done}.
+
+Here we define a converter that applies @code{radcan} to all subexpressions of
+the form @code{a^b}. Since the source function @code{"^"} is a function of
+two variables, the associated function @emph{must} be a function of two variables. 
+Notice that in @code{(%i2)}, the term @code{a*(b+1)} is @emph{not} touched by @code{radcan}.
+
+@example 
+(%i1) register_converter("^" = radcan, lambda([a,b], radcan(a^b)));
+(%o1)                                done
+
+(%i2) function_convert("^" = radcan, (1+x)^2 + a*(b+1));
+                            2
+(%o2)                      x  + 2 x + a (b + 1) + 1
+@end example
+Instead of using a Maxima lambda form for the function, we can use the name of a Maxima function; for example
+@example 
+(%i1) fff(a,b) := radcan(a^b)$
+
+(%i2) register_converter("^" = radcan, fff);
+(%o2)                                done
+(%i3) function_convert("^" = radcan, (1+x)^2 + a*(b+1));
+                            2
+(%o3)                      x  + 2 x + a (b + 1) + 1
+@end example
+
+An example of including an alias: (OK, I see the alias system has a bug...I will fix that)
+@example
+(%i3) register_converter(["^^" = expand, ppp = qqq], lambda([a,b], expand(a^^b)));
+(%o3)                                done
+
+(%i4) function_convert("^^" = expand, (x+1)^^2);
+                                 <2>
+(%o4)                           x    + 2 x + 1
+
+(%i5) function_convert(ppp = qqq, (x+1)^^2);
+                                         <2>
+(%o5)                             (x + 1)
+@end example
 @end defun
-
-
 
 
