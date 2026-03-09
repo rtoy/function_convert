@@ -1,4 +1,4 @@
-@setfilename function_convert.info
+@setfilename function-convert.info
 @settitle Function Convert Manual
 
 @node function_convert_overview
@@ -6,10 +6,10 @@
 
 @section Overview
 
-The @code{function_convert} package lets users rewrite one function in terms of another. A @dfn{converter} 
-is a rule @code{f = g} that specifies how calls to @code{f} should be expressed using the function @code{g}. 
-Converters may express identities, special-function relations, or any user-defined transformation that can 
-be written as a Maxima function.
+The @code{function_convert} package rewrites all occurrences of one function in terms of another within a 
+Maxima expression. Specifically, a @dfn{converter} is a rule @code{f = g} that specifies how calls to @code{f} should 
+ expressed using the function @code{g}. Converters may express identities, special-function relations, 
+ or any user-defined transformation that can be written as a Maxima function.
 
 Unlike literal renaming, a converter expresses a @emph{semantic} relationship. For example, the 
 converter @code{sinc = sin} does not literally replace the symbol @code{sinc} by @code{sin}; instead it applies 
