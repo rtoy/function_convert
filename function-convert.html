@@ -276,7 +276,7 @@ See <a href="#list_005fconverters">list_converters</a>.
 Display detailed information about a specific converter.  
 See <a href="#describe_005fconverter">describe_converter</a>.
 
-</li><li> <code>delete_converter(eqs)</code>  
+</li><li> <code>delete_converter(rules)</code>  
 Delete one or more user-defined converters.  
 See <a href="#delete_005fconverter">delete_converter</a>.
 
@@ -305,10 +305,10 @@ Next: <a href="#list_005fconverters" accesskey="n" rel="next">list_converters</a
 </div>
 <span id="function_005fconvert-1"></span><h3 class="section">1.3 function_convert</h3>
 <dl class="def">
-<dt id="index-function_005fconvert"><span class="category">Function: </span><span><strong>function_convert</strong> <em>(<var>converters</var>, <var>expr</var>)</em><a href='#index-function_005fconvert' class='copiable-anchor'> &para;</a></span></dt>
+<dt id="index-function_005fconvert"><span class="category">Function: </span><span><strong>function_convert</strong> <em>(<var>rules</var>, <var>expr</var>)</em><a href='#index-function_005fconvert' class='copiable-anchor'> &para;</a></span></dt>
 <dd>
 <p>Apply one or more function-conversion rules to the expression <var>expr</var>.
-The argument <var>converters</var> is either a single conversion rule
+The argument <var>rules</var> is either a single conversion rule
 <code>f = g</code> or a Maxima list of such rules.
 </p>
 <p>A conversion rule has the form <code>f = g</code>, where <code>f</code> is the
@@ -361,7 +361,7 @@ Next: <a href="#describe_005fconverter" accesskey="n" rel="next">describe_conver
 </div>
 <span id="list_005fconverters-1"></span><h3 class="section">1.4 list_converters</h3>
 <dl class="def">
-<dt id="index-list_005fconverters"><span class="category">Function: </span><span><strong>list_converters</strong> <em>[name_1, name_2, ...]</em><a href='#index-list_005fconverters' class='copiable-anchor'> &para;</a></span></dt>
+<dt id="index-list_005fconverters"><span class="category">Function: </span><span><strong>list_converters</strong> <em>([name_1, name_2, ...])</em><a href='#index-list_005fconverters' class='copiable-anchor'> &para;</a></span></dt>
 <dd>
 <p>Return a list of all registered function converters known to <code>function_convert</code>.  In addition to 
 returning this list, each converter is printed as a pair <code>FROM = TO</code> followed by a short description 
@@ -552,20 +552,20 @@ Previous: <a href="#make_005fconversion_005fpath" accesskey="p" rel="prev">make_
 </div>
 <span id="register_005fconverter-1"></span><h3 class="section">1.9 register_converter</h3>
 <dl class="def">
-<dt id="index-register_005fconverter"><span class="category">Function: </span><span><strong>register_converter</strong> <em>(spec fn &amp;optional doc)</em><a href='#index-register_005fconverter' class='copiable-anchor'> &para;</a></span></dt>
+<dt id="index-register_005fconverter"><span class="category">Function: </span><span><strong>register_converter</strong> <em>(rule, fn, &amp;optional doc)</em><a href='#index-register_005fconverter' class='copiable-anchor'> &para;</a></span></dt>
 <dd><p>Register a new converter.
 </p>
-<p>The argument <var>spec</var> is either a single converter rule of the form
+<p>The argument <var>rule</var> is either a single converter rule of the form
 <code>f = g</code>, or a two-element Maxima list <code>[f = g, p = q]</code>.  In
-the first case, the converter has no alias.  In the second case, the
-first element of the list is the primary converter rule and the second
-element is its alias.
+the first case, the primary converter is <code>f = g</code> and it
+has no alias. In the second case, the first element of the list is 
+ primary converter rule and the second element is its alias.
 </p>
 <p>If either the primary rule or the alias rule is not of the correct
-form, an error is signaled.  If a converter from <code>f</code> to <code>g</code>
+form, an error is signaled. If a converter from <code>f</code> to <code>g</code>
 already exists, an error is also signaled: built-in converters cannot
-be redefined, and redefining a user-defined converter is likewise an
-error.
+be redefined, and redefining a user-defined converter is allowed, but
+a informational message is printed.
 </p>
 <p>The argument <code>fn</code> must be either a Maxima function or a Maxima
 lambda form; otherwise an error is signaled.  If a string <var>doc</var> is
@@ -610,6 +610,25 @@ Notice that in <code>(%i2)</code>, the term <code>a*(b+1)</code> is <em>not</em>
 (%i5) function_convert(ppp = qqq, (x+1)^^2);
                                  &lt;2&gt;
 (%o5)                           x    + 2 x + 1
+</pre></div>
+
+<p>Redefining a built-in converter signals an error:
+</p><div class="example">
+<pre class="example">(%i1) sinc_to_sin(x) := sin(x)/x$
+
+(%i2) register_converter(sinc = sin, sinc_to_sin);
+Cannot redefine built-in converter: sinc = sin
+</pre></div>
+
+<p>But redefining a non-built-in converter is allowed:
+</p><div class="example">
+<pre class="example">(%i3) register_converter(sinc = fff, sinc_to_sin);
+(%o3)                                done
+
+(%i4) register_converter(sinc = fff, sinc_to_sin);
+Redefining converter sinc = fff
+(%o4)                                done
+
 </pre></div>
 </dd></dl>
 

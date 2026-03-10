@@ -53,7 +53,7 @@ See @ref{list_converters}.
 Display detailed information about a specific converter.  
 See @ref{describe_converter}.
 
-@item @code{delete_converter(eqs)}  
+@item @code{delete_converter(rules)}  
 Delete one or more user-defined converters.  
 See @ref{delete_converter}.
 
@@ -75,10 +75,10 @@ See @ref{register_converter}.
 
 @node function_convert
 @section function_convert
-@deffn Function function_convert (@var{converters}, @var{expr})
+@deffn Function function_convert (@var{rules}, @var{expr})
 
 Apply one or more function-conversion rules to the expression @var{expr}.
-The argument @var{converters} is either a single conversion rule
+The argument @var{rules} is either a single conversion rule
 @code{f = g} or a Maxima list of such rules.
 
 A conversion rule has the form @code{f = g}, where @code{f} is the
@@ -124,7 +124,7 @@ from left to right.
 
 @node list_converters
 @section list_converters
-@deffn Function list_converters [name_1, name_2, ...]
+@deffn Function list_converters ([name_1, name_2, ...])
 
 Return a list of all registered function converters known to @code{function_convert}.  In addition to 
 returning this list, each converter is printed as a pair @code{FROM = TO} followed by a short description 
@@ -281,20 +281,20 @@ empty list @code{[]} is returned.
 
 @node register_converter
 @section register_converter
-@defun register_converter (spec fn &optional doc)
+@defun register_converter (rule, fn, &optional doc)
 Register a new converter.
 
-The argument @var{spec} is either a single converter rule of the form
+The argument @var{rule} is either a single converter rule of the form
 @code{f = g}, or a two-element Maxima list @code{[f = g, p = q]}.  In
-the first case, the converter has no alias.  In the second case, the
-first element of the list is the primary converter rule and the second
-element is its alias.
+the first case, the primary converter is @code{f = g} and it
+has no alias. In the second case, the first element of the list is 
+ primary converter rule and the second element is its alias.
 
 If either the primary rule or the alias rule is not of the correct
-form, an error is signaled.  If a converter from @code{f} to @code{g}
+form, an error is signaled. If a converter from @code{f} to @code{g}
 already exists, an error is also signaled: built-in converters cannot
-be redefined, and redefining a user-defined converter is likewise an
-error.
+be redefined, and redefining a user-defined converter is allowed, but
+a informational message is printed.
 
 The argument @code{fn} must be either a Maxima function or a Maxima
 lambda form; otherwise an error is signaled.  If a string @var{doc} is
@@ -339,6 +339,25 @@ An example of including an alias:
 (%i5) function_convert(ppp = qqq, (x+1)^^2);
                                  <2>
 (%o5)                           x    + 2 x + 1
+@end example
+
+Redefining a built-in converter signals an error:
+@example 
+(%i1) sinc_to_sin(x) := sin(x)/x$
+
+(%i2) register_converter(sinc = sin, sinc_to_sin);
+Cannot redefine built-in converter: sinc = sin
+@end example
+
+But redefining a non-built-in converter is allowed:
+@example 
+(%i3) register_converter(sinc = fff, sinc_to_sin);
+(%o3)                                done
+
+(%i4) register_converter(sinc = fff, sinc_to_sin);
+Redefining converter sinc = fff
+(%o4)                                done
+
 @end example
 @end defun
 
