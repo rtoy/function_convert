@@ -362,24 +362,22 @@ Redefining converter sinc = fff
 @end defun
 
 
-@subsection Built-in Converters
+@section Built-in Converters
 
-The following converters are predefined by @code{function_convert}.  They
-may be listed at run time with @code{list_converters()}, and are always
-available unless shadowed by a user-defined converter of the same
-@code{from = to} form.
+The function @code{list_converters()} displays all registered converters, including user-defined ones, 
+together with a short description when available. The built-in converters are:
 
 @table @code
 
 @item psi = psi_half
-Apply the polygamma half‑argument identity.  See DLMF
+Apply the polygamma half-argument identity.  See DLMF
 @url{http://dlmf.nist.gov/5.5.E8}.
 
 @item bessel = bessel_recursion
 Rewrite Bessel functions using standard recursion identities.
 
 @item inequation = zero_lhs
-Normalize an inequation @code{a op b} to the zero‑LHS form
+Normalize an inequation @code{a op b} to the zero-LHS form
 @code{(a - b) op 0}.
 
 @item exp = hyperbolic
@@ -389,7 +387,7 @@ Rewrite exponential functions in terms of hyperbolic functions.
 Rewrite products of gamma functions into a binomial coefficient when
 possible.  This converter looks for subexpressions of the form
 @code{gamma(a+1)/(gamma(b+1)*gamma(a+1-b))} and replaces them with
-@code{binomial(a,b)}.  Only explicit occurrences of this three‑factor
+@code{binomial(a,b)}.  Only explicit occurrences of this three-factor
 pattern are transformed; the converter does not rewrite @code{gamma(a)}
 or @code{gamma(b)} individually, nor does it attempt to derive a
 binomial coefficient from expressions where the pattern is not present
@@ -399,43 +397,39 @@ as an actual subexpression.
 Rewrite products of gamma functions into beta functions when possible.
 This converter looks for subexpressions of the form
 @code{gamma(a)*gamma(b)/gamma(a+b)} and replaces them with
-@code{beta(a,b)}.  Only explicit occurrences of this three‑factor
+@code{beta(a,b)}. Only explicit occurrences of this three-factor
 pattern are transformed; the converter does not rewrite @code{gamma(a)}
 or @code{gamma(b)} individually, nor does it attempt to derive
 @code{beta(a,b)} from expressions where the pattern is not present as an
 actual subexpression.
 
 @item gamma_like = gamma
-Normalize gamma‑like functions to @code{gamma}.
+Normalize gamma-like functions to @code{gamma}.
 
 @item hyperbolic = hyperbolic_tanh_half_angle
-Rewrite hyperbolic functions in terms of the tanh half‑angle substitution
+Rewrite hyperbolic functions in terms of the tanh half-angle substitution
 @code{u = tanh(z/2)}, producing rational functions of @code{u}:
 @display
-sinh(z) → 2 u / (1 - u^2)
-cosh(z) → (1 + u^2) / (1 - u^2)
-tanh(z) → 2 u / (1 + u^2)
-sech(z) → (1 - u^2) / (1 + u^2)
-csch(z) → (1 - u^2) / (2 u)
-coth(z) → (1 + u^2) / (2 u)
+sinh(z) = 2 u / (1 - u^2)
+cosh(z) = (1 + u^2) / (1 - u^2)
+tanh(z) = 2 u / (1 + u^2)
+sech(z) = (1 - u^2) / (1 + u^2)
+csch(z) = (1 - u^2) / (2 u)
+coth(z) = (1 + u^2) / (2 u)
 @end display
-If @code{OP} is not one of the standard hyperbolic operators, return
-@code{OP(z)} unchanged.
 
 @item trig = trig_tan_half_angle
-Rewrite trigonometric functions in terms of the tangent half‑angle
+Rewrite trigonometric functions in terms of the tangent half-angle
 substitution @code{t = tan(z/2)}, producing rational functions of
 @code{t}:
 @display
-sin(z) → 2 t / (1 + t^2)
-cos(z) → (1 - t^2) / (1 + t^2)
-tan(z) → 2 t / (1 - t^2)
-sec(z) → (1 + t^2) / (1 - t^2)
-csc(z) → (1 + t^2) / (2 t)
-cot(z) → (1 - t^2) / (2 t)
+sin(z) = 2 t / (1 + t^2)
+cos(z) = (1 - t^2) / (1 + t^2)
+tan(z) = 2 t / (1 - t^2)
+sec(z) = (1 + t^2) / (1 - t^2)
+csc(z) = (1 + t^2) / (2 t)
+cot(z) = (1 - t^2) / (2 t)
 @end display
-If @code{OP} is not one of the standard trigonometric operators, return
-@code{OP(z)} unchanged.
 
 @item exp = trig
 Rewrite exponential functions in terms of trigonometric functions.
@@ -457,7 +451,7 @@ Apply the identity @code{gamma(x)*gamma(1-x) = %pi/sin(%pi*x)}.
 
 @item trig = normalize_trig_argument
 Normalize the argument of trigonometric functions when the argument is a
-first‑degree polynomial in @code{%pi}.
+first-degree polynomial in @code{%pi}.
 
 @item hstep = signum
 Convert @code{hstep(x)} into @code{(1 + signum(x))/2}.

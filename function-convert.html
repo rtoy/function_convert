@@ -223,6 +223,7 @@ hr {
 <li><a href="#delete_005fall_005fuser_005fconverters" accesskey="7">delete_all_user_converters</a></li>
 <li><a href="#make_005fconversion_005fpath" accesskey="8">make_conversion_path</a></li>
 <li><a href="#register_005fconverter" accesskey="9">register_converter</a></li>
+<li><a href="#Built_002din-Converters">Built-in Converters</a></li>
 </ul>
 <div class="section" id="Overview">
 <h3 class="section">1.1 Overview</h3>
@@ -633,20 +634,16 @@ Redefining converter sinc = fff
 </dd></dl>
 
 
-<ul class="section-toc">
-<li><a href="#Built_002din-Converters" accesskey="1">Built-in Converters</a></li>
-</ul>
-<div class="subsection" id="Built_002din-Converters">
-<h4 class="subsection">1.9.1 Built-in Converters</h4>
+</div>
+<div class="section" id="Built_002din-Converters">
+<h3 class="section">1.10 Built-in Converters</h3>
 
-<p>The following converters are predefined by <code>function_convert</code>.  They
-may be listed at run time with <code>list_converters()</code>, and are always
-available unless shadowed by a user-defined converter of the same
-<code>from = to</code> form.
+<p>The function <code>list_converters()</code> displays all registered converters, including user-defined ones, 
+together with a short description when available. The built-in converters are:
 </p>
 <dl compact="compact">
 <dt><span><code>psi = psi_half</code></span></dt>
-<dd><p>Apply the polygamma half‑argument identity.  See DLMF
+<dd><p>Apply the polygamma half-argument identity.  See DLMF
 <a href="http://dlmf.nist.gov/5.5.E8">http://dlmf.nist.gov/5.5.E8</a>.
 </p>
 </dd>
@@ -655,7 +652,7 @@ available unless shadowed by a user-defined converter of the same
 </p>
 </dd>
 <dt><span><code>inequation = zero_lhs</code></span></dt>
-<dd><p>Normalize an inequation <code>a op b</code> to the zero‑LHS form
+<dd><p>Normalize an inequation <code>a op b</code> to the zero-LHS form
 <code>(a - b) op 0</code>.
 </p>
 </dd>
@@ -667,7 +664,7 @@ available unless shadowed by a user-defined converter of the same
 <dd><p>Rewrite products of gamma functions into a binomial coefficient when
 possible.  This converter looks for subexpressions of the form
 <code>gamma(a+1)/(gamma(b+1)*gamma(a+1-b))</code> and replaces them with
-<code>binomial(a,b)</code>.  Only explicit occurrences of this three‑factor
+<code>binomial(a,b)</code>.  Only explicit occurrences of this three-factor
 pattern are transformed; the converter does not rewrite <code>gamma(a)</code>
 or <code>gamma(b)</code> individually, nor does it attempt to derive a
 binomial coefficient from expressions where the pattern is not present
@@ -678,7 +675,7 @@ as an actual subexpression.
 <dd><p>Rewrite products of gamma functions into beta functions when possible.
 This converter looks for subexpressions of the form
 <code>gamma(a)*gamma(b)/gamma(a+b)</code> and replaces them with
-<code>beta(a,b)</code>.  Only explicit occurrences of this three‑factor
+<code>beta(a,b)</code>. Only explicit occurrences of this three-factor
 pattern are transformed; the converter does not rewrite <code>gamma(a)</code>
 or <code>gamma(b)</code> individually, nor does it attempt to derive
 <code>beta(a,b)</code> from expressions where the pattern is not present as an
@@ -686,39 +683,35 @@ actual subexpression.
 </p>
 </dd>
 <dt><span><code>gamma_like = gamma</code></span></dt>
-<dd><p>Normalize gamma‑like functions to <code>gamma</code>.
+<dd><p>Normalize gamma-like functions to <code>gamma</code>.
 </p>
 </dd>
 <dt><span><code>hyperbolic = hyperbolic_tanh_half_angle</code></span></dt>
-<dd><p>Rewrite hyperbolic functions in terms of the tanh half‑angle substitution
+<dd><p>Rewrite hyperbolic functions in terms of the tanh half-angle substitution
 <code>u = tanh(z/2)</code>, producing rational functions of <code>u</code>:
 </p><div class="display">
-<pre class="display">sinh(z) → 2 u / (1 - u^2)
-cosh(z) → (1 + u^2) / (1 - u^2)
-tanh(z) → 2 u / (1 + u^2)
-sech(z) → (1 - u^2) / (1 + u^2)
-csch(z) → (1 - u^2) / (2 u)
-coth(z) → (1 + u^2) / (2 u)
+<pre class="display">sinh(z) = 2 u / (1 - u^2)
+cosh(z) = (1 + u^2) / (1 - u^2)
+tanh(z) = 2 u / (1 + u^2)
+sech(z) = (1 - u^2) / (1 + u^2)
+csch(z) = (1 - u^2) / (2 u)
+coth(z) = (1 + u^2) / (2 u)
 </pre></div>
-<p>If <code>OP</code> is not one of the standard hyperbolic operators, return
-<code>OP(z)</code> unchanged.
-</p>
+
 </dd>
 <dt><span><code>trig = trig_tan_half_angle</code></span></dt>
-<dd><p>Rewrite trigonometric functions in terms of the tangent half‑angle
+<dd><p>Rewrite trigonometric functions in terms of the tangent half-angle
 substitution <code>t = tan(z/2)</code>, producing rational functions of
 <code>t</code>:
 </p><div class="display">
-<pre class="display">sin(z) → 2 t / (1 + t^2)
-cos(z) → (1 - t^2) / (1 + t^2)
-tan(z) → 2 t / (1 - t^2)
-sec(z) → (1 + t^2) / (1 - t^2)
-csc(z) → (1 + t^2) / (2 t)
-cot(z) → (1 - t^2) / (2 t)
+<pre class="display">sin(z) = 2 t / (1 + t^2)
+cos(z) = (1 - t^2) / (1 + t^2)
+tan(z) = 2 t / (1 - t^2)
+sec(z) = (1 + t^2) / (1 - t^2)
+csc(z) = (1 + t^2) / (2 t)
+cot(z) = (1 - t^2) / (2 t)
 </pre></div>
-<p>If <code>OP</code> is not one of the standard trigonometric operators, return
-<code>OP(z)</code> unchanged.
-</p>
+
 </dd>
 <dt><span><code>exp = trig</code></span></dt>
 <dd><p>Rewrite exponential functions in terms of trigonometric functions.
@@ -746,7 +739,7 @@ cot(z) → (1 - t^2) / (2 t)
 </dd>
 <dt><span><code>trig = normalize_trig_argument</code></span></dt>
 <dd><p>Normalize the argument of trigonometric functions when the argument is a
-first‑degree polynomial in <code>%pi</code>.
+first-degree polynomial in <code>%pi</code>.
 </p>
 </dd>
 <dt><span><code>hstep = signum</code></span></dt>
@@ -851,7 +844,6 @@ This converter does not rewrite <code>signum(X)</code> itself, since
 </p>
 </dd>
 </dl>
-</div>
 </div>
 </div>
 
