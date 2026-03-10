@@ -633,6 +633,225 @@ Redefining converter sinc = fff
 </dd></dl>
 
 
+<ul class="section-toc">
+<li><a href="#Built_002din-Converters" accesskey="1">Built-in Converters</a></li>
+</ul>
+<div class="subsection" id="Built_002din-Converters">
+<h4 class="subsection">1.9.1 Built-in Converters</h4>
+
+<p>The following converters are predefined by <code>function_convert</code>.  They
+may be listed at run time with <code>list_converters()</code>, and are always
+available unless shadowed by a user-defined converter of the same
+<code>from = to</code> form.
+</p>
+<dl compact="compact">
+<dt><span><code>psi = psi_half</code></span></dt>
+<dd><p>Apply the polygamma half‑argument identity.  See DLMF
+<a href="http://dlmf.nist.gov/5.5.E8">http://dlmf.nist.gov/5.5.E8</a>.
+</p>
+</dd>
+<dt><span><code>bessel = bessel_recursion</code></span></dt>
+<dd><p>Rewrite Bessel functions using standard recursion identities.
+</p>
+</dd>
+<dt><span><code>inequation = zero_lhs</code></span></dt>
+<dd><p>Normalize an inequation <code>a op b</code> to the zero‑LHS form
+<code>(a - b) op 0</code>.
+</p>
+</dd>
+<dt><span><code>exp = hyperbolic</code></span></dt>
+<dd><p>Rewrite exponential functions in terms of hyperbolic functions.
+</p>
+</dd>
+<dt><span><code>gamma = binomial</code></span></dt>
+<dd><p>Rewrite products of gamma functions into a binomial coefficient when
+possible.  This converter looks for subexpressions of the form
+<code>gamma(a+1)/(gamma(b+1)*gamma(a+1-b))</code> and replaces them with
+<code>binomial(a,b)</code>.  Only explicit occurrences of this three‑factor
+pattern are transformed; the converter does not rewrite <code>gamma(a)</code>
+or <code>gamma(b)</code> individually, nor does it attempt to derive a
+binomial coefficient from expressions where the pattern is not present
+as an actual subexpression.
+</p>
+</dd>
+<dt><span><code>gamma = beta</code></span></dt>
+<dd><p>Rewrite products of gamma functions into beta functions when possible.
+This converter looks for subexpressions of the form
+<code>gamma(a)*gamma(b)/gamma(a+b)</code> and replaces them with
+<code>beta(a,b)</code>.  Only explicit occurrences of this three‑factor
+pattern are transformed; the converter does not rewrite <code>gamma(a)</code>
+or <code>gamma(b)</code> individually, nor does it attempt to derive
+<code>beta(a,b)</code> from expressions where the pattern is not present as an
+actual subexpression.
+</p>
+</dd>
+<dt><span><code>gamma_like = gamma</code></span></dt>
+<dd><p>Normalize gamma‑like functions to <code>gamma</code>.
+</p>
+</dd>
+<dt><span><code>hyperbolic = hyperbolic_tanh_half_angle</code></span></dt>
+<dd><p>Rewrite hyperbolic functions in terms of the tanh half‑angle substitution
+<code>u = tanh(z/2)</code>, producing rational functions of <code>u</code>:
+</p><div class="display">
+<pre class="display">sinh(z) → 2 u / (1 - u^2)
+cosh(z) → (1 + u^2) / (1 - u^2)
+tanh(z) → 2 u / (1 + u^2)
+sech(z) → (1 - u^2) / (1 + u^2)
+csch(z) → (1 - u^2) / (2 u)
+coth(z) → (1 + u^2) / (2 u)
+</pre></div>
+<p>If <code>OP</code> is not one of the standard hyperbolic operators, return
+<code>OP(z)</code> unchanged.
+</p>
+</dd>
+<dt><span><code>trig = trig_tan_half_angle</code></span></dt>
+<dd><p>Rewrite trigonometric functions in terms of the tangent half‑angle
+substitution <code>t = tan(z/2)</code>, producing rational functions of
+<code>t</code>:
+</p><div class="display">
+<pre class="display">sin(z) → 2 t / (1 + t^2)
+cos(z) → (1 - t^2) / (1 + t^2)
+tan(z) → 2 t / (1 - t^2)
+sec(z) → (1 + t^2) / (1 - t^2)
+csc(z) → (1 + t^2) / (2 t)
+cot(z) → (1 - t^2) / (2 t)
+</pre></div>
+<p>If <code>OP</code> is not one of the standard trigonometric operators, return
+<code>OP(z)</code> unchanged.
+</p>
+</dd>
+<dt><span><code>exp = trig</code></span></dt>
+<dd><p>Rewrite exponential functions in terms of trigonometric functions.
+</p>
+</dd>
+<dt><span><code>inverse_trig = log</code></span></dt>
+<dd><p>Convert inverse trigonometric functions to logarithmic form.
+</p>
+</dd>
+<dt><span><code>hyperbolic = exp</code></span></dt>
+<dd><p>Convert hyperbolic functions to exponential form.
+</p>
+</dd>
+<dt><span><code>trig = exp</code></span></dt>
+<dd><p>Convert trigonometric functions to exponential form.
+</p>
+</dd>
+<dt><span><code>trig = sin_cos</code></span></dt>
+<dd><p>Convert all six trigonometric functions to <code>sin</code>/<code>cos</code> form.
+</p>
+</dd>
+<dt><span><code>gamma = sin</code></span></dt>
+<dd><p>Apply the identity <code>gamma(x)*gamma(1-x) = %pi/sin(%pi*x)</code>.
+</p>
+</dd>
+<dt><span><code>trig = normalize_trig_argument</code></span></dt>
+<dd><p>Normalize the argument of trigonometric functions when the argument is a
+first‑degree polynomial in <code>%pi</code>.
+</p>
+</dd>
+<dt><span><code>hstep = signum</code></span></dt>
+<dd><p>Convert <code>hstep(x)</code> into <code>(1 + signum(x))/2</code>.
+</p>
+</dd>
+<dt><span><code>signum = hstep</code></span></dt>
+<dd><p>Convert <code>signum(x)</code> into <code>2*hstep(x) - 1</code>.
+</p>
+</dd>
+<dt><span><code>abs = sqrt</code></span></dt>
+<dd><p>Convert <code>abs(x)</code> into <code>sqrt(x^2)</code>.  When <code>radexpand</code> is
+true, this is simplified back to <code>abs(x)</code>.
+</p>
+</dd>
+<dt><span><code>signum = abs</code></span></dt>
+<dd><p>Convert subexpressions of the form <code>X*signum(X)</code> into <code>abs(X)</code>.
+This converter does not rewrite <code>signum(X)</code> itself, since
+<code>X*signum(X)</code> is not a subexpression of <code>signum(X)</code>.
+</p>
+</dd>
+<dt><span><code>abs = signum</code></span></dt>
+<dd><p>Convert <code>abs(x)</code> into <code>conjugate(x)*signum(x)</code>.
+</p>
+</dd>
+<dt><span><code>erf = hypergeometric</code></span></dt>
+<dd><p>Convert <code>erf(x)</code> into
+<code>(2*x/sqrt(%pi))*hypergeometric([1/2],[3/2],-x^2)</code>.
+</p>
+</dd>
+<dt><span><code>erf = integral</code></span></dt>
+<dd><p>Convert <code>erf(x)</code> into an integral representation.
+</p>
+</dd>
+<dt><span><code>erfc = erf</code></span></dt>
+<dd><p>Convert <code>erfc(x)</code> into <code>1 - erf(x)</code>.
+</p>
+</dd>
+<dt><span><code>erf = erfc</code></span></dt>
+<dd><p>Convert <code>erf(x)</code> into <code>1 - erfc(x)</code>.
+</p>
+</dd>
+<dt><span><code>erf = erfi</code></span></dt>
+<dd><p>Convert <code>erf(x)</code> into <code>i*erfi(-i*x)</code>.
+</p>
+</dd>
+<dt><span><code>erfi = erf</code></span></dt>
+<dd><p>Convert <code>erfi(x)</code> into <code>-i*erf(i*x)</code>.
+</p>
+</dd>
+<dt><span><code>^ = trigreduce</code></span></dt>
+<dd><p>Convert integer powers of trigonometric functions to a Fourier sum.
+</p>
+</dd>
+<dt><span><code>gamma_incomplete = expand</code></span></dt>
+<dd><p>Expand incomplete gamma functions.
+</p>
+</dd>
+<dt><span><code>atan = log</code></span></dt>
+<dd><p>Convert <code>atan(x)</code> to logarithmic form.
+</p>
+</dd>
+<dt><span><code>factorial = product</code></span></dt>
+<dd><p>Convert <code>n!</code> to <code>product(g,g,1,n)</code>.
+</p>
+</dd>
+<dt><span><code>binomial = factorial</code></span></dt>
+<dd><p>Convert <code>binomial(n,k)</code> to factorial form.
+</p>
+</dd>
+<dt><span><code>log10 = log</code></span></dt>
+<dd><p>Convert <code>log10(x)</code> into <code>log(x)/log(10)</code>.
+</p>
+</dd>
+<dt><span><code>genfact = pochhammer</code></span></dt>
+<dd><p>Convert <code>genfact</code> to <code>pochhammer</code> form.
+</p>
+</dd>
+<dt><span><code>tanh = sinh</code></span></dt>
+<dd><p>Convert <code>tanh(x)</code> into <code>sinh(x)/cosh(x)</code>.
+</p>
+</dd>
+<dt><span><code>tan = sin</code></span></dt>
+<dd><p>Convert <code>tan(x)</code> into <code>sin(x)/cos(x)</code>.
+</p>
+</dd>
+<dt><span><code>csc = sin</code></span></dt>
+<dd><p>Convert <code>csc(x)</code> into <code>1/sin(x)</code>.
+</p>
+</dd>
+<dt><span><code>sin = sinc</code></span></dt>
+<dd><p>Convert <code>sin(x)</code> into <code>x*sinc(x)</code>.
+</p>
+</dd>
+<dt><span><code>sinc = gamma</code></span></dt>
+<dd><p>Convert <code>sinc(x)</code> into
+<code>1/(gamma(1+x/%pi)*gamma(1-x/%pi))</code>.
+</p>
+</dd>
+<dt><span><code>sinc = sin</code></span></dt>
+<dd><p>Convert <code>sinc(x)</code> into <code>sin(x)/x</code>.
+</p>
+</dd>
+</dl>
+</div>
 </div>
 </div>
 

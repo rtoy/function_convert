@@ -362,3 +362,178 @@ Redefining converter sinc = fff
 @end defun
 
 
+@subsection Built-in Converters
+
+The following converters are predefined by @code{function_convert}.  They
+may be listed at run time with @code{list_converters()}, and are always
+available unless shadowed by a user-defined converter of the same
+@code{from = to} form.
+
+@table @code
+
+@item psi = psi_half
+Apply the polygamma half‑argument identity.  See DLMF
+@url{http://dlmf.nist.gov/5.5.E8}.
+
+@item bessel = bessel_recursion
+Rewrite Bessel functions using standard recursion identities.
+
+@item inequation = zero_lhs
+Normalize an inequation @code{a op b} to the zero‑LHS form
+@code{(a - b) op 0}.
+
+@item exp = hyperbolic
+Rewrite exponential functions in terms of hyperbolic functions.
+
+@item gamma = binomial
+Rewrite products of gamma functions into a binomial coefficient when
+possible.  This converter looks for subexpressions of the form
+@code{gamma(a+1)/(gamma(b+1)*gamma(a+1-b))} and replaces them with
+@code{binomial(a,b)}.  Only explicit occurrences of this three‑factor
+pattern are transformed; the converter does not rewrite @code{gamma(a)}
+or @code{gamma(b)} individually, nor does it attempt to derive a
+binomial coefficient from expressions where the pattern is not present
+as an actual subexpression.
+
+@item gamma = beta
+Rewrite products of gamma functions into beta functions when possible.
+This converter looks for subexpressions of the form
+@code{gamma(a)*gamma(b)/gamma(a+b)} and replaces them with
+@code{beta(a,b)}.  Only explicit occurrences of this three‑factor
+pattern are transformed; the converter does not rewrite @code{gamma(a)}
+or @code{gamma(b)} individually, nor does it attempt to derive
+@code{beta(a,b)} from expressions where the pattern is not present as an
+actual subexpression.
+
+@item gamma_like = gamma
+Normalize gamma‑like functions to @code{gamma}.
+
+@item hyperbolic = hyperbolic_tanh_half_angle
+Rewrite hyperbolic functions in terms of the tanh half‑angle substitution
+@code{u = tanh(z/2)}, producing rational functions of @code{u}:
+@display
+sinh(z) → 2 u / (1 - u^2)
+cosh(z) → (1 + u^2) / (1 - u^2)
+tanh(z) → 2 u / (1 + u^2)
+sech(z) → (1 - u^2) / (1 + u^2)
+csch(z) → (1 - u^2) / (2 u)
+coth(z) → (1 + u^2) / (2 u)
+@end display
+If @code{OP} is not one of the standard hyperbolic operators, return
+@code{OP(z)} unchanged.
+
+@item trig = trig_tan_half_angle
+Rewrite trigonometric functions in terms of the tangent half‑angle
+substitution @code{t = tan(z/2)}, producing rational functions of
+@code{t}:
+@display
+sin(z) → 2 t / (1 + t^2)
+cos(z) → (1 - t^2) / (1 + t^2)
+tan(z) → 2 t / (1 - t^2)
+sec(z) → (1 + t^2) / (1 - t^2)
+csc(z) → (1 + t^2) / (2 t)
+cot(z) → (1 - t^2) / (2 t)
+@end display
+If @code{OP} is not one of the standard trigonometric operators, return
+@code{OP(z)} unchanged.
+
+@item exp = trig
+Rewrite exponential functions in terms of trigonometric functions.
+
+@item inverse_trig = log
+Convert inverse trigonometric functions to logarithmic form.
+
+@item hyperbolic = exp
+Convert hyperbolic functions to exponential form.
+
+@item trig = exp
+Convert trigonometric functions to exponential form.
+
+@item trig = sin_cos
+Convert all six trigonometric functions to @code{sin}/@code{cos} form.
+
+@item gamma = sin
+Apply the identity @code{gamma(x)*gamma(1-x) = %pi/sin(%pi*x)}.
+
+@item trig = normalize_trig_argument
+Normalize the argument of trigonometric functions when the argument is a
+first‑degree polynomial in @code{%pi}.
+
+@item hstep = signum
+Convert @code{hstep(x)} into @code{(1 + signum(x))/2}.
+
+@item signum = hstep
+Convert @code{signum(x)} into @code{2*hstep(x) - 1}.
+
+@item abs = sqrt
+Convert @code{abs(x)} into @code{sqrt(x^2)}.  When @code{radexpand} is
+true, this is simplified back to @code{abs(x)}.
+
+@item signum = abs
+Convert subexpressions of the form @code{X*signum(X)} into @code{abs(X)}.
+This converter does not rewrite @code{signum(X)} itself, since
+@code{X*signum(X)} is not a subexpression of @code{signum(X)}.
+
+@item abs = signum
+Convert @code{abs(x)} into @code{conjugate(x)*signum(x)}.
+
+@item erf = hypergeometric
+Convert @code{erf(x)} into
+@code{(2*x/sqrt(%pi))*hypergeometric([1/2],[3/2],-x^2)}.
+
+@item erf = integral
+Convert @code{erf(x)} into an integral representation.
+
+@item erfc = erf
+Convert @code{erfc(x)} into @code{1 - erf(x)}.
+
+@item erf = erfc
+Convert @code{erf(x)} into @code{1 - erfc(x)}.
+
+@item erf = erfi
+Convert @code{erf(x)} into @code{i*erfi(-i*x)}.
+
+@item erfi = erf
+Convert @code{erfi(x)} into @code{-i*erf(i*x)}.
+
+@item ^ = trigreduce
+Convert integer powers of trigonometric functions to a Fourier sum.
+
+@item gamma_incomplete = expand
+Expand incomplete gamma functions.
+
+@item atan = log
+Convert @code{atan(x)} to logarithmic form.
+
+@item factorial = product
+Convert @code{n!} to @code{product(g,g,1,n)}.
+
+@item binomial = factorial
+Convert @code{binomial(n,k)} to factorial form.
+
+@item log10 = log
+Convert @code{log10(x)} into @code{log(x)/log(10)}.
+
+@item genfact = pochhammer
+Convert @code{genfact} to @code{pochhammer} form.
+
+@item tanh = sinh
+Convert @code{tanh(x)} into @code{sinh(x)/cosh(x)}.
+
+@item tan = sin
+Convert @code{tan(x)} into @code{sin(x)/cos(x)}.
+
+@item csc = sin
+Convert @code{csc(x)} into @code{1/sin(x)}.
+
+@item sin = sinc
+Convert @code{sin(x)} into @code{x*sinc(x)}.
+
+@item sinc = gamma
+Convert @code{sinc(x)} into
+@code{1/(gamma(1+x/%pi)*gamma(1-x/%pi))}.
+
+@item sinc = sin
+Convert @code{sinc(x)} into @code{sin(x)/x}.
+
+@end table
