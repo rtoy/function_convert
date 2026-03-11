@@ -1,5 +1,5 @@
 /* make sure function_convert works after reset */
-(reset(),0);
+(reset(), kill(values), 0);
 0$
 
 /* bad arguments */
