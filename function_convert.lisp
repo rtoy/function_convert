@@ -12,7 +12,7 @@
 ;; helps distinguish the source and target functions. Anyone wishing to rename the semantic conversion operator 
 ;; may redefine *function-convert-infix-op*. Example:
 ;;    ($infix "=>" 80 80)
-;;    (defmvar *function-convert-infix-op* '$=>)
+;;    (defvar *function-convert-infix-op* '$=>)
 
 ;; Here “=” indicates a semantic conversion, not a literal renaming. For example, “sinc = sin” does not 
 ;; mean “replace the name sinc with sin”. Instead, it applies the built‑in identity sinc(x) = sin(x)/x.
@@ -39,18 +39,18 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
 ;; Each converter is stored in the hashtable *function-convert-hash*.
-(defmvar *function-convert-hash*
+(defvar *function-convert-hash*
   (make-hash-table :test 'equal)
   "Hash table mapping (FROM . TO) operator pairs to converter functions.")
 
 ;; We allow a converter to have an alias. Each alias is stored in the hashtable 
 ;; *function-convert-hash-alias*. Sometimes the code needs to lookup the reverse
 ;; alias--we store these in the hashtable *function-convert-hash-reverse-alias*
-(defmvar *function-convert-hash-alias*
+(defvar *function-convert-hash-alias*
   (make-hash-table :test 'equal)
   "Hash table mapping (FROM . TO) operator pairs to converter functions.")
 
-(defmvar *function-convert-hash-reverse-alias*
+(defvar *function-convert-hash-reverse-alias*
   (make-hash-table :test 'equal)
   "Hash table mapping (FROM . TO) operator pairs to converter functions.")
 
