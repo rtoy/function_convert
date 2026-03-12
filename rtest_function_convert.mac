@@ -18,6 +18,9 @@ errcatch(function_convert(a,b,c));
 errcatch(function_convert(a+b,c));
 []$
 
+errcatch(delete_converter(a+b > b));
+[]$
+
 /* User supplied lambda forms  */
 function_convert(sin = lambda([s], fff(s)), 29+sin(x)+2^sin(sin(x)));
 fff(x)+2^fff(fff(x))+29$
@@ -86,7 +89,7 @@ sin(a+b)^2$
 function_convert('csc = 'sin, (1+x)^23);
 (1+x)^23$
 
-/* erf to integral; the integration variable is a gentemp, so we have to do a trick to tests this. */
+/* erf to integral; the integration variable is a gentemp, so we have to do a trick to test this. */
 block([listconstvars : false,
        ans : function_convert(erf = integral, erf(x)),
        var],
@@ -263,6 +266,30 @@ block([ans : function_convert(sinc = gamma, sinc(x))],
   taylor(ans/sinc(x),x,0,9));
 1$
 
+(register_converter(f = g, lambda([x],x^2)),
+ register_converter(g = h, lambda([x],x^3)),
+ register_converter(h = i, lambda([x],x^4)),
+ register_converter(i = j, lambda([x],x^5)),0);
+0$
+
+make_conversion_path(f,j);
+[f = g, g = h, h = i, i = j]$
+
+register_converter(f = h, lambda([x], x^6));
+done$
+
+ make_conversion_path(f,j);
+[f = h, h = i, i = j]$
+
+delete_converter([f=g,g=h, h=i,i=j, f=h]);
+done$
+
+make_conversion_path(f,j);
+[]$
+
+make_conversion_path(f,j);
+[]$
+ 
 /* abs => signum */
 function_convert('abs = 'signum, abs(x));
 x*signum(x)$
@@ -312,6 +339,45 @@ done$
 
 (kill(abs_to_signum),0);
 0$
+
+/* psi = psi_half */
+
+function_convert(psi = psi_half, psi[0](x));
+(psi[0](x/2)+psi[0](x/2+1/2))/2+log(2)$
+
+/* is it really an identity? */
+block([numer : true],is(abs(subst(x = 2.3, function_convert(psi = psi_half, psi[0](x)) - psi[0](x))) < 1/2^51));
+true$
+
+function_convert(psi = psi_half, psi[42](x));
+psi[42](x)$
+
+function_convert(psi = psi_half, psi[0](x) + li[2](zzz));
+li[2](zzz)+(psi[0](x/2)+psi[0](x/2+1/2))/2+log(2)$
+
+/* downward Bessel recursion */
+(xxx : diff(bessel_j(98,x),x,5),0);
+0$
+
+(yyy  : (function_convert(bessel = bessel_recursion, xxx)), collectterms(expand(yyy),bessel_j(88, x),bessel_j(89, x)));
+bessel_j(88,x)*(844/x-115603410/x^3+5182631430480/x^5
+                            -109338351497625600/x^7+1201341480412243968000/x^9
+                            -6681575160837758877696000/x^11
+                            +14909802304754640857333760000/x^13)
+ +bessel_j(89,x)*(-(454455/x^2)+38960511240/x^4-1383212751530400/x^6
+                               +25155945552839270400/x^8
+                               -248430189015395831808000/x^10
+                               +1272152613655535751659520000/x^12
+                               -2653944810246326072605409280000/x^14+1)$
+
+is(abs(subst(x=107.0, xxx - yyy)) < max(subst(x=107.0, max(abs(xxx), abs(yyy))))/2^48);
+true$
+
+(remvalue(xxx,yyy),0);
+0$
+
+values;
+[]$
 
 facts();
 []$

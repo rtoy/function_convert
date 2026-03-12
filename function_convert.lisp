@@ -1163,7 +1163,7 @@ subexpression."
               (sub (mul 2 (sub n 1) (div 1 x) (ftake op (sub n 1) x)) 
                   (ftake op (sub n 2) x))))
 
-(define-function-converter ((mplus $bessel_recursion$bessel_recursion) (:bessel $bessel_recursion)) (op x)
+(define-function-converter ((mplus $bessel_recursion) (:bessel $bessel_recursion)) (op x)
  :builtin
  ;; To start `x` is a summand and `op` is addition. First we express `e` as the sum
  ;; of the members of `x`, then we map `bessel-order-downward-recurse` over all 
@@ -1171,6 +1171,7 @@ subexpression."
  (let* ((e (fapply op x)) (fn (class-table-members :bessel)))
   (dolist (fk fn)
     (setq e (bessel-order-downward-recurse e fk)))
+  ;; let's combine like bessel terms
   e))
    
 (defun bessel-order-downward-recurse (e op)
