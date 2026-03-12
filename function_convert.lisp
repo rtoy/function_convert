@@ -113,7 +113,7 @@ present in the table."
    (lambda (alias-key primary-key)
      (destructuring-bind (from-alt . to-alt) alias-key
        (destructuring-bind (from . to) primary-key
-         (format t "~A → ~A   aliases   ~A → ~A~%"
+         (format t "~A => ~A   aliases   ~A => ~A~%"
                  from-alt to-alt from to))))
    *function-convert-hash-alias*))
 
@@ -230,131 +230,6 @@ Each entry has the form:
     ;; Return results in sorted order
     ($sort (fapply 'mlist (nreverse results)))))
 
-#| Keep this a bit longer ....
-(defmacro define-function-converter (spec lambda-list &body body)
-  "Define a converter FROM => TO, optionally with an alias FROM-ALT => TO-ALT.
-
-A warning is issued if a converter for (FROM . TO) is already defined,
-or if an alias (FROM-ALT . TO-ALT) is already present in
-*function-convert-hash-alias*.
-
-Optional keyword:
-  :builtin   — mark this converter as built-in (protected from deletion)."
-
-  ;; ------------------------------------------------------------
-  ;; 1. Extract :builtin, docstring, declarations, and real body
-  ;; ------------------------------------------------------------
-  (let ((builtin? nil)
-        (docstring nil)
-        (decls '())
-        (real-body '()))
-
-    ;; Extract :builtin
-    (when (and body (eq (first body) :builtin))
-      (setf builtin? t
-            body (rest body)))
-
-    ;; Extract docstring
-    (when (and body (stringp (first body)))
-      (setf docstring (first body)
-            body (rest body)))
-
-    ;; Partition declarations vs real body
-    (dolist (form body)
-      (if (and (consp form)
-               (eq (car form) 'declare))
-          (push form decls)
-          (push form real-body)))
-
-    (setf decls (nreverse decls)
-          real-body (nreverse real-body))
-
-    ;; ------------------------------------------------------------
-    ;; 2. Warning helpers
-    ;; ------------------------------------------------------------
-    (macrolet
-        ((warn-if-existing-primary (from to)
-           `(when (gethash (cons ,from ,to) *function-convert-hash*)
-              (warn (format nil "Converter for ~A ~A ~A is already defined."
-                            (stripdollar (string-downcase (symbol-name ,from)))
-                            (get *function-convert-infix-op* 'op)
-                            (stripdollar (string-downcase (symbol-name ,to)))))))
-
-         (warn-if-existing-alias (from-alt to-alt)
-           `(when (gethash (cons ,from-alt ,to-alt)
-                           *function-convert-hash-alias*)
-              (warn (format nil "Alias converter for ~A ~A ~A is already defined."
-                            (stripdollar (string-downcase (symbol-name ,from-alt)))
-                            (get *function-convert-infix-op* 'op)
-                            (stripdollar (string-downcase (symbol-name ,to-alt))))))))
-
-      ;; ------------------------------------------------------------
-      ;; 3. Main macro logic
-      ;; ------------------------------------------------------------
-      (cond
-
-        ;; ----------------------------------------------------------
-        ;; Alias form: ((from to) (from-alt to-alt))
-        ;; ----------------------------------------------------------
-        ((and (consp spec)
-              (consp (first spec))
-              (consp (second spec)))
-         (destructuring-bind ((from to) (from-alt to-alt)) spec
-           (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
-                                        from to)
-                                :maxima)))
-             `(progn
-                ,(warn-if-existing-primary from to)
-                ,(warn-if-existing-alias from-alt to-alt)
-
-                (defun ,fname ,lambda-list
-                  ,@(when docstring (list docstring))
-                  ,@decls
-                  ,@real-body)
-
-                (register-converter ',from ',to #',fname)
-                (register-converter-alias ',from-alt ',to-alt ',from ',to)
-
-                ;; Record built-in status
-                ,(when builtin?
-                   `(push (cons ',from ',to) *built-in-converters*))
-
-                ',fname))))
-
-        ;; ----------------------------------------------------------
-        ;; Simple form: (from to)
-        ;; ----------------------------------------------------------
-        ((and (consp spec)
-              (symbolp (first spec))
-              (symbolp (second spec)))
-         (destructuring-bind (from to) spec
-           (let ((fname (intern (format nil "FUNCTION-CONVERTER-~A-~A"
-                                        from to)
-                                :maxima)))
-             `(progn
-                ,(warn-if-existing-primary from to)
-
-                (defun ,fname ,lambda-list
-                  ,@(when docstring (list docstring))
-                  ,@decls
-                  ,@real-body)
-
-                (register-converter ',from ',to #',fname)
-
-                ;; Record built-in status
-                ,(when builtin?
-                   `(push (cons ',from ',to) *built-in-converters*))
-
-                ',fname))))
-
-        ;; ----------------------------------------------------------
-        ;; Malformed spec
-        ;; ----------------------------------------------------------
-        (t
-         (error "Malformed converter spec: ~S" spec))))))
-|#
-
-;;;;-----------------------------
 (defmacro define-function-converter (spec lambda-list &body body)
   "Define a converter FROM => TO, optionally with an alias FROM-ALT => TO-ALT.
 
@@ -682,7 +557,7 @@ The function returns the symbol $done."
                            :test #'equal)))
 
     (cond ((null fn)
-       (mtell "No converter defined for ~M ~M ~M ~%"
+       (mtell (intl:gettext "No converter defined for ~M ~M ~M ~%")
               from (get *function-convert-infix-op* 'op) to))
 
       (t
@@ -730,14 +605,14 @@ The function returns the symbol $done."
   (let ((key (cons from to)))
     (cond
       ((member key *built-in-converters* :test #'equal)
-       (mtell "Cannot delete built-in converter ~M ~M ~M. ~%" from (get *function-convert-infix-op* 'op) to))
+       (mtell (intl:gettext "Cannot delete built-in converter ~M ~M ~M. ~%") from (get *function-convert-infix-op* 'op) to))
 
       ((gethash key *function-convert-hash*)
        (remhash key *function-convert-hash*)
-       (mtell "Deleted converter ~M ~M ~M. ~%" from (get *function-convert-infix-op* 'op) to))
+       (mtell (intl:gettext "Deleted converter ~M ~M ~M. ~%") from (get *function-convert-infix-op* 'op) to))
 
       (t
-       (mtell "No converter ~M ~M ~M exists. ~%" from (get *function-convert-infix-op* 'op) to))))))
+       (mtell (intl:gettext "No converter ~M ~M ~M exists. ~%") from (get *function-convert-infix-op* 'op) to))))))
 
 (defmfun $delete_all_user_converters ()
   (maphash
@@ -856,7 +731,7 @@ The function returns the symbol $done."
    (declare (ignore op))
    (let ((z (car x))) (div 1 (ftake '%sin z))))
 
-;; tan → sin/cos
+;; tan => sin/cos
 (define-function-converter (%tan %sin) (op x)
   :builtin
 "Convert tan(x) into sin(x)/cos(x)."
@@ -865,7 +740,7 @@ The function returns the symbol $done."
     (div (ftake '%sin z)
          (ftake '%cos z))))
 
-;; tanh → sinh/cosh
+;; tanh => sinh/cosh
 (define-function-converter (%tanh %sinh) (op x)
   :builtin
 "Convert tanh(x) to sinh(x)/cosh(x)."
@@ -880,7 +755,7 @@ The function returns the symbol $done."
   (let ((a (car x)) (b (cadr x)) (c (caddr x)))
     (div (ftake 'mexpt c (ftake '$floor b)) (ftake '$pochhammer (add 1 (div a c)) (ftake '$ceiling (neg b))))))
 
-;; log10(x) → log(x)/log(10)
+;; log10(x) => log(x)/log(10)
 (define-function-converter ($log10 %log) (op x)
   :builtin
   "Convert log10(x) into log(x)/log(10)."
@@ -1120,12 +995,12 @@ is first degree polynomial in %pi."
   "Rewrite trigonometric functions in terms of the tangent half–angle
 substitution t = tan(z/2).  Produces rational functions of t:
 
-    sin(z) → 2 t / (1 + t^2)
-    cos(z) → (1 - t^2) / (1 + t^2)
-    tan(z) → 2 t / (1 - t^2)
-    sec(z) → (1 + t^2) / (1 - t^2)
-    csc(z) → (1 + t^2) / (2 t)
-    cot(z) → (1 - t^2) / (2 t)
+    sin(z) => 2 t / (1 + t^2)
+    cos(z) => (1 - t^2) / (1 + t^2)
+    tan(z) => 2 t / (1 - t^2)
+    sec(z) => (1 + t^2) / (1 - t^2)
+    csc(z) => (1 + t^2) / (2 t)
+    cot(z) => (1 - t^2) / (2 t)
 
 If OP is not one of the standard trigonometric operators, return OP(z)
 unchanged.
@@ -1152,12 +1027,12 @@ unchanged.
   "Rewrite hyperbolic functions in terms of the tanh half–angle substitution
 u = tanh(z/2).  Produces rational functions of u:
 
-    sinh(z) → 2 u / (1 - u^2)
-    cosh(z) → (1 + u^2) / (1 - u^2)
-    tanh(z) → 2 u / (1 + u^2)
-    sech(z) → (1 - u^2) / (1 + u^2)
-    csch(z) → (1 - u^2) / (2 u)
-    coth(z) → (1 + u^2) / (2 u)
+    sinh(z) => 2 u / (1 - u^2)
+    cosh(z) => (1 + u^2) / (1 - u^2)
+    tanh(z) => 2 u / (1 + u^2)
+    sech(z) => (1 - u^2) / (1 + u^2)
+    csch(z) => (1 - u^2) / (2 u)
+    coth(z) => (1 + u^2) / (2 u)
 
 If OP is not one of the standard hyperbolic operators, return OP(z)
 unchanged."
@@ -1274,9 +1149,7 @@ subexpression."
   (destructuring-bind (a b) x
     (ftake op (resimplify ($factor (sub a b))) 0)))
 
-;; experimental code...
 (defun three-term-recusion-reduce (e fn op x n kmin)
-  (mtell "e = ~M ; op = ~M ~%" e op)
   (let ((k (sub n kmin)))
     (while (>= k 1)
        (setq e ($substitute (funcall fn op n x) e))
