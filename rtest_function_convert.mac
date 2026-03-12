@@ -86,11 +86,13 @@ sin(a+b)^2$
 function_convert('csc = 'sin, (1+x)^23);
 (1+x)^23$
 
-/* erf to integral; Not sure how to tests this one...the integration variable is a gentemp. We'll trust that
-the result of function_convert is a integral nounform. */
-
-diff(function_convert(erf = integral, erf(x)),x);
-(2*%e^-x^2)/sqrt(%pi)$
+/* erf to integral; the integration variable is a gentemp, so we have to do a trick to tests this. */
+block([listconstvars : false,
+       ans : function_convert(erf = integral, erf(x)),
+       var],
+    var : first(delete(x, listofvars(ans))),
+    subst(var = z, ans));
+ (2*integrate(%e^-z^2,z,0,x))/sqrt(%pi)$
 
 block([ans],
   assume(x > 0),
