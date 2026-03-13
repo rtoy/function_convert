@@ -725,30 +725,6 @@ The function returns the symbol $done."
   (let ((z (car x)))
     (mul z (ftake '%sinc z))))
 
-(define-function-converter (%csc %sin) (op x)
-  :builtin
-  "Convert csc(x) into 1/sin(x)."
-   (declare (ignore op))
-   (let ((z (car x))) (div 1 (ftake '%sin z))))
-
-;; tan => sin/cos
-(define-function-converter (%tan %sin) (op x)
-  :builtin
-"Convert tan(x) into sin(x)/cos(x)."
-  (declare (ignore op))
-  (let ((z (car x)))
-    (div (ftake '%sin z)
-         (ftake '%cos z))))
-
-;; tanh => sinh/cosh
-(define-function-converter (%tanh %sinh) (op x)
-  :builtin
-"Convert tanh(x) to sinh(x)/cosh(x)."
-  (declare (ignore op))
-  (let ((z (car x)))
-    (div (ftake '%sinh z)
-         (ftake '%cosh z))))
-
 (define-function-converter (%genfact $pochhammer) (op x)
   :builtin
   (declare (ignore op))
@@ -969,6 +945,17 @@ is first degree polynomial in %pi."
       (%sec (div 1 (ftake '%cos z)))
       (%csc (div 1 (ftake '%sin z)))
       (%cot (div (ftake '%cos z) (ftake '%sin z)))
+      (t (ftake op z)))))
+
+(define-function-converter ((:hyperbolic $sinh_cosh) (:hyperbolic $sinh_cosh)) (op x)
+  :builtin
+  "Convert all six hyperbolic functions to sinh/cosh form."
+  (let ((z (first x)))
+    (case op   
+      (%tanh (div (ftake '%sinh z) (ftake '%cosh z)))
+      (%sech (div 1 (ftake '%cosh z)))
+      (%csch (div 1 (ftake '%sinh z)))
+      (%coth (div (ftake '%cosh z) (ftake '%sinh z)))
       (t (ftake op z)))))
 
 (define-function-converter ((:trig %exp) ($trig %exp)) (op x)

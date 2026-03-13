@@ -80,13 +80,13 @@ is(function_convert(cosh = exp, cosh(x)) = exponentialize(cosh(x)));
 true$
 
 /* csc to sin */
-function_convert('csc = 'sin, 1/csc(a+b));
+function_convert('csc = 'sin_cos, 1/csc(a+b));
 sin(a+b)$
 
-function_convert('csc = 'sin, sin(a+b)/csc(a+b));
+function_convert('csc = 'sin_cos, sin(a+b)/csc(a+b));
 sin(a+b)^2$
 
-function_convert('csc = 'sin, (1+x)^23);
+function_convert('csc = 'sin_cos, (1+x)^23);
 (1+x)^23$
 
 /* erf to integral; the integration variable is a gentemp, so we have to do a trick to test this. */
@@ -271,6 +271,23 @@ x*sinc(x)$
 
 taylor(sin(x) - function_convert(sin = sinc, sin(x)),x,0,42);
 0$
+
+/* csc = sin */
+function_convert(csc = sin_cos, csc(1996*x));
+1/sin(1996*x)$
+
+function_convert(csc = sin_cos, csc(1996));
+1/sin(1996)$
+
+/* tan = sin */
+function_convert(tan = sin_cos, tan(1/x));
+sin(1/x)/cos(1/x)$
+
+/*  tanh = sinh */
+function_convert(tanh = sinh_cosh, tanh(x));
+sinh(x)/cosh(x)$
+
+/* genfact = pochhammer */
 
 block([ans : function_convert(sinc = gamma, sinc(x))], 
   taylor(ans/sinc(x),x,0,9));
