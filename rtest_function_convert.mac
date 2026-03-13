@@ -356,19 +356,24 @@ function_convert(psi = psi_half, psi[0](x) + li[2](zzz));
 li[2](zzz)+(psi[0](x/2)+psi[0](x/2+1/2))/2+log(2)$
 
 /* downward Bessel recursion */
-(xxx : diff(bessel_j(98,x),x,5),0);
+(xxx : diff(bessel_j(19,x),x,5),0);
 0$
 
-(yyy  : (function_convert(bessel = bessel_recursion, xxx)), collectterms(expand(yyy),bessel_j(88, x),bessel_j(89, x)));
-bessel_j(88,x)*(844/x-115603410/x^3+5182631430480/x^5
-                            -109338351497625600/x^7+1201341480412243968000/x^9
-                            -6681575160837758877696000/x^11
-                            +14909802304754640857333760000/x^13)
- +bessel_j(89,x)*(-(454455/x^2)+38960511240/x^4-1383212751530400/x^6
-                               +25155945552839270400/x^8
-                               -248430189015395831808000/x^10
-                               +1272152613655535751659520000/x^12
-                               -2653944810246326072605409280000/x^14+1)$
+yyy  : expand(function_convert(bessel = bessel_recursion, xxx));
+(133*bessel_j(9,x))/x-(10949*bessel_j(10,x))/x^2
+                             -(494643*bessel_j(9,x))/x^3
+                             +(25032600*bessel_j(10,x))/x^4
+                             +(652889160*bessel_j(9,x))/x^5
+                             -(25265469600*bessel_j(10,x))/x^6
+                             -(425630822400*bessel_j(9,x))/x^7
+                             +(13538591539200*bessel_j(10,x))/x^8
+                             +(147984960614400*bessel_j(9,x))/x^9
+                             -(3990474193305600*bessel_j(10,x))/x^10
+                             -(26131169717452800*bessel_j(9,x))/x^11
+                             +(605522277590630400*bessel_j(10,x))/x^12
+                             +(1823775431314636800*bessel_j(9,x))/x^13
+                             -(36475508626292736000*bessel_j(10,x))/x^14
+                             +bessel_j(10,x)$
 
 is(abs(subst(x=107.0, xxx - yyy)) < max(subst(x=107.0, max(abs(xxx), abs(yyy))))/2^48);
 true$
