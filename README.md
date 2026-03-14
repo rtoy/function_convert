@@ -124,7 +124,7 @@ A rule can be defined using `register_converter`. An example:
 ```maxima
 (%i1) register_converter ("^" = expand, lambda([a,b], expand(a^b)),"Expand powers, but not products.")$
 ```
-The last argument to `register_converter` is optional --- it must be a string and is the documentation for the rule. The first argument is the name of the converter. To give this rule an alias, the first arugument should be a two member list; for example
+The last argument to `register_converter` is optional --- it must be a string and is the documentation for the rule. The first argument is the name of the converter. To give this rule an alias, the first arugument should be a two member list of rules; for example
 ```maxima
 (%i1) register_converter (["^" = expand, ppp = qqq], lambda([a,b], expand(a^b)),"Expand powers, but not products.")$
 ```
