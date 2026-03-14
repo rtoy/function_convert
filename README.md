@@ -120,14 +120,25 @@ temporary and are not available to the BFS chaining mechanism.
 
 ### Register_converter utility
 
-A rule be defined using `register_converter`. An example:
+A rule can be defined using `register_converter`. An example:
 ```maxima
-(%i1) register_converter ("^" = expand, ppp = qqq, lambda([a,b], expand(a^b)),"Expand powers, but not products.")$
+(%i1) register_converter ("^" = expand, lambda([a,b], expand(a^b)),"Expand powers, but not products.")$
 ```
-The first and second arguments are the rule and its alias; the third argument is a Maxima lambda form.
-In this case, since the source function is "^" (a function of two arguments), the lambda form must be
-a function with two arguments as well. The final argument is optional, and it is the documentation for the
-rule.
+The last argument to `register_converter` is optional --- it must be a string and is the documentation for the rule. The first argument is the name of the converter. To give this rule an alias, the first arugument should be a two member list; for example
+```maxima
+(%i1) register_converter (["^" = expand, ppp = qqq], lambda([a,b], expand(a^b)),"Expand powers, but not products.")$
+```
+
+This converter can be called in two ways:
+```maxima
+(%i2) function_convert("^" = expand, a*(b+c) + (x+1)^2);
+                            2
+(%o2)                      x  + 2 x + a (c + b) + 1
+(%i3) function_convert(ppp = qqq, a*(b+c) + (x+1)^2);
+                            2
+(%o3)                      x  + 2 x + a (c + b) + 1
+```
+
 
 Rules define this way are fully integrated into the converter system. For example, the function `describe_converter` will print information about them:
 ```maxima
