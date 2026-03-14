@@ -973,7 +973,7 @@ is first degree polynomial in %pi."
 "Convert all inverse trigonometric functions to logarithmic form."
   ($logarc (fapply op x)))
 
-(define-function-converter (:exp :trig) (op x)
+(define-function-converter (:exp $trig) (op x)
   :builtin
   ($demoivre (fapply op x)))
 

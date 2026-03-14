@@ -134,6 +134,10 @@ ratdisrep(taylor(function_convert([erf = hypergeometric], erf(x)) - erf(x),x,0,1
 ratdisrep(taylor(function_convert([erf = hypergeometric], erf(x/7)) - erf(x/7),x,0,14));
 0$
 
+/* exp = trig */
+function_convert(exp = trig, exp(%i*x));
+%i*sin(x)+cos(x)$
+
 /* erfc to erf */
 function_convert(erfc = erf, erf(x/5) + erfc(x/5));
 1$
