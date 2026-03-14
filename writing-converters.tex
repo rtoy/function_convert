@@ -377,18 +377,18 @@ a converter doesn't need to do anything to allow chaining to work.
 
 \subsection{Implicit dispatch via breadth-first search}
 
-The utility \ttq{make\_conversion\_path} uses a breadth-first search~\cite{clrs} of the full converter graph to 
+The utility \ttq{find\_conversion\_path} uses a breadth-first search~\cite{clrs} of the full converter graph to 
 find the shortest available path between a given source and target function. When several shortest paths exist, 
 the system selects one according to its internal graph‑traversal order; the choice among equal‑length paths 
 is not user‑configurable.
 
 To perform the actual conversion, the user must manually call \ttq{function\_convert} with the (possibly) 
-multistep path returned by \ttq{make\_conversion\_path}. The function \ttq{make\_conversion\_path} does 
+multistep path returned by \ttq{find\_conversion\_path}. The function \ttq{find\_conversion\_path} does 
 not perform any conversions; it only constructs the user‑level representation of the path.
 When no such path exists, it returns an empty Maxima list. For example:
 \begin{maximabox}
 \begin{verbatim}
-(%i1) path : make_conversion_path(sin, gamma);
+(%i1) path : find_conversion_path(sin, gamma);
 (%o1) [sin = sinc,sinc = gamma]
 
 (%i2) function_convert(path, sin(x));

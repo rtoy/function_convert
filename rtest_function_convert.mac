@@ -299,22 +299,22 @@ block([ans : function_convert(sinc = gamma, sinc(x))],
  register_converter(i = j, lambda([x],x^5)),0);
 0$
 
-make_conversion_path(f,j);
+find_conversion_path(f,j);
 [f = g, g = h, h = i, i = j]$
 
 register_converter(f = h, lambda([x], x^6));
 done$
 
- make_conversion_path(f,j);
+find_conversion_path(f,j);
 [f = h, h = i, i = j]$
 
 delete_converter([f=g,g=h, h=i,i=j, f=h]);
 done$
 
-make_conversion_path(f,j);
+find_conversion_path(f,j);
 []$
 
-make_conversion_path(f,j);
+find_conversion_path(f,j);
 []$
  
 /* abs => signum */

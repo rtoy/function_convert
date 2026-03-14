@@ -34,12 +34,12 @@ The package provides a simple, declarative way to convert between related functi
 ```
 ### BFS converter dispatch
 
-Given two converter nodes `from` and `to`, the function call `make_conversion_path(from, to)` searches for a
+Given two converter nodes `from` and `to`, the function call `find_conversion_path(from, to)` searches for a
 conversion path using a breath-first search of the full converter graph. This function does not perform 
 any conversions; it only constructs the user-level representation of the path."
 
 ```maxima
-(%i1) path : make_conversion_path(sin, gamma);
+(%i1) path : find_conversion_path(sin, gamma);
 (%o1) [sin = sinc,sinc = gamma]
 
 (%i2) function_convert(path, sin(x));

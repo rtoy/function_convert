@@ -358,7 +358,7 @@ Optional keyword:
         (t
          (error "Malformed converter spec: ~S" spec))))))
 
-(defmfun $make_conversion_path (from to)
+(defmfun $find_conversion_path (from to)
  "Given two converter nodes FROM and TO, this function searches for a
   conversion path using FIND-CONVERSION-PATH and returns a Maxima list
   of adjacent conversion steps; when there is no such path, return the
