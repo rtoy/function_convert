@@ -548,11 +548,11 @@ The function returns the symbol $done."
          (norm-to   (second values))
 
          ;; Look up converter function
-         (fn (gethash (cons norm-from norm-to)
+         (fn (gethash (converter-key norm-from norm-to)
                       *function-convert-hash*))
 
          ;; Built-in?
-         (builtin? (member (cons norm-from norm-to)
+         (builtin? (member (converter-key norm-from norm-to)
                            *built-in-converters*
                            :test #'equal)))
 
@@ -602,7 +602,7 @@ The function returns the symbol $done."
 (defun delete-user-converter (from to)
  (multiple-value-bind (from to)
      (lookup-converter-alias from to) 
-  (let ((key (cons from to)))
+  (let ((key (converter-key from to)))
     (cond
       ((member key *built-in-converters* :test #'equal)
        (mtell (intl:gettext "Cannot delete built-in converter ~M ~M ~M. ~%") from (get *function-convert-infix-op* 'op) to))
@@ -693,7 +693,7 @@ The function returns the symbol $done."
 
       ;; Optional documentation
       (when doc
-        (setf (gethash (cons from to) *function-convert-doc*) doc))
+        (setf (gethash (converter-key from to) *function-convert-doc*) doc))
 
       '$done))))
 
