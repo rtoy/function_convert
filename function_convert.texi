@@ -27,7 +27,7 @@ the @emph{target function} @code{g} is either:
 @end itemize
 
 Multiple converters may be applied in sequence.  When the user supplies a list of converters, they are applied 
-from left to right.  When the system searches for a path automatically (via @code{make_conversion_path}), 
+from left to right.  When the system searches for a path automatically (via @code{find_conversion_path}), 
 it uses a breadth-first search of the converter graph to find a shortest path.
 
 The converter system does not modify Maxima’s simplifier; all conversions occur only when explicitly requested 
@@ -61,10 +61,10 @@ See @ref{delete_converter}.
 Remove all user-defined converters at once.  
 See @ref{delete_all_user_converters}.
 
-@item @code{make_conversion_path(from, to)}  
+@item @code{find_conversion_path(from, to)}  
 Construct a list of adjacent conversion steps forming a path from
 @code{from} to @code{to}.  
-See @ref{make_conversion_path}.
+See @ref{find_conversion_path}.
 
 @item @code{register_converter(spec, fn, doc)}  
 Register a new converter, optionally with an alias and documentation.  
@@ -251,9 +251,9 @@ All user-defined converters deleted.
 @end defun
 
 
-@node make_conversion_path
-@section make_conversion_path
-@deffn {Function} make_conversion_path (@var{from}, @var{to})
+@node find_conversion_path
+@section find_conversion_path
+@deffn {Function} find_conversion_path (@var{from}, @var{to})
 
 
 Find a shortest conversion path from @var{from} to @var{to}.  The
@@ -264,13 +264,13 @@ according to the system's internal graph-traversal order; the choice
 among equal-length paths is not user-configurable.  All properly
 registered user-level converters may appear as links in a path.
 
-The function @code{make_conversion_path} does not perform any
+The function @code{find_conversion_path} does not perform any
 conversions.  To apply the path, call @code{function_convert} with the
-list returned by @code{make_conversion_path}.  If no path exists, the
+list returned by @code{find_conversion_path}.  If no path exists, the
 empty list @code{[]} is returned.
 
 @example
-(%i1) path : make_conversion_path(sin, gamma);
+(%i1) path : find_conversion_path(sin, gamma);
 (%o1) [sin = sinc, sinc = gamma]
 
 (%i2) function_convert(path, sin(x));
