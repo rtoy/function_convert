@@ -1,26 +1,30 @@
 (in-package :maxima)
 
-;; Define the infix operator that is used to display a function converter. Thus a converter from
-;; function f to function g displays as f *function-convert-infix-op* g. 
-
-;; To be consistent with substitute, we use “=” as the infix operator for semantic conversion. 
-;; An arrow-like operator (say “=>”) might clarify the distinction between the source and target functions, 
-;; but using “=” is consistent with substitute and it preserves the freedom for users to define “=>” 
-;; for other purposes. 
-
-;; The source code comments sometimes use “=>” as the infix operator for a converter. I think this notation 
-;; helps distinguish the source and target functions. Anyone wishing to rename the semantic conversion operator 
-;; may redefine *function-convert-infix-op*. Example:
-;;    ($infix "=>" 80 80)
-;;    (defvar *function-convert-infix-op* '$=>)
-
-;; Here “=” indicates a semantic conversion, not a literal renaming. For example, “sinc = sin” does not 
-;; mean “replace the name sinc with sin”. Instead, it applies the built‑in identity sinc(x) = sin(x)/x.
-;; Specifically
-
-;; (a) f = g where both f and g are symbols means “use the built‑in conversion from f to g.” When there
-;;     is no such built-in conversion, do nothing.
-;; (b) f = lambda(...) means “use this explicit conversion instead.”
+;; Define the infix operator used to display a function converter. A converter from
+;; function f to function g is printed as:
+;;
+;;     f *function-convert-infix-op* g
+;;
+;; To remain consistent with SUBSTITUTE, we use "=" as the infix operator for semantic
+;; conversion. An arrow-like operator (such as "=>") might make the direction of
+;; conversion more visually explicit, but "=" matches SUBSTITUTE’s conventions and
+;; leaves users free to define "=>" for other purposes.
+;;
+;; Some source-code comments use "=>" when discussing converters. This notation can
+;; make the source and target functions visually distinct. Users who prefer this style
+;; may redefine *function-convert-infix-op*. For example:
+;;
+;;     ($infix "=>" 80 80)
+;;     (defvar *function-convert-infix-op* '$=>)
+;;
+;; Here "=" denotes a semantic conversion, not a literal renaming. For example,
+;; "sinc = sin" does not mean “replace the name sinc with sin.” Instead, it invokes the
+;; built‑in identity sinc(x) = sin(x)/x. More generally:
+;;
+;;   (a) f = g, where both f and g are symbols, means “apply the built‑in conversion
+;;       from f to g,” if one exists. If no such conversion exists, no action is taken.
+;;
+;;   (b) f = lambda(...) means “use this explicit conversion instead.”
 
 (defmvar *function-convert-infix-op* 'mequal)
 
