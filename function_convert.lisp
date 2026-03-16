@@ -118,26 +118,6 @@ present in the table."
    *function-convert-hash-alias*))
 
 ;; This code doesn't look up aliases. The alias lookup happens before this code is called.
-(defun lookup-converter-old (operator op-new)
-  "Return a converter operator => op-new function for expression whose operator is OPERATOR. Tries exact match, 
-   noun/verb, and class-key match."
-
-  (flet
-      ;; Try to find a converter for FROM => OP-NEW
-      ((try (from) (gethash (cons from op-new) *function-convert-hash*)))
-    
-    (or
-     ;; 1. exact operator
-     (try operator)
-
-     ;; 2. verb variant of operator
-     (try ($verbify operator))
-
-     ;; 3. class-key match
-     (let ((class (converter-class-of operator)))
-       (when class
-         (try class))))))
-
 (defun lookup-converter (op from to)
   "Return a converter from => to function for expression whose operator is OP. Tries exact match,
    noun/verb, and class-key match."
@@ -516,44 +496,6 @@ Return the final transformed expression."
             ((and aa bb)
              (setq e (function-convert e aa bb))))))
       e)))
-
-#| 
-(defun function-convert (e op-old op-new)
-   (let ((fn (if (and (consp e) (symbolp op-new) (symbolp op-old))
-                 (lookup-converter (caar e) op-new)
-                 nil)))
-   (cond 
-       ;; Case 0: e is a mapatom--return e
-       (($mapatom e)  e)
-       ;; Case 1: User supplied lambda form; for example
-       ;; function_convert(sin = lambda([s], fff(s)), sin(sin(x)));
-       ((and (consp e) 
-             (lambda-p op-new) 
-             (eq (mop e) op-old))
-          (apply 'mfuncall (cons op-new 
-              (mapcar #'(lambda (q) (function-convert q op-old op-new)) (cdr e)))))
-
-        ;; Case 2: rule defined via register_converter; here fn is a Maxima lambda form
-        ((and (lambda-p fn))
-          (apply 'mfuncall (cons fn 
-              (mapcar #'(lambda (q) (function-convert q op-old op-new)) (cdr e)))))
-       
-         ;; Case 3: fn is a CL function
-         ((and (consp e)
-               (symbolp op-new)
-               (symbolp op-old)
-               fn)
-               (funcall fn (caar e) (mapcar (lambda (q) (function-convert q op-old op-new)) (cdr e))))
-
-        (($subvarp (mop e)) ;subscripted function
-		      (subfunmake 
-		       (subfunname e) 
-			       (subfunsubs e) ;don't convert subscripts, but map over arguments
-			       (mapcar #'(lambda (q) (function-convert q op-old op-new)) (subfunargs e))))
-
-		    (t (fapply (mop e) 
-            (mapcar #'(lambda (q) (function-convert q op-old op-new)) (cdr e)))))))
-|#
 
 (defun function-convert (e from to)
   (let ((fn (if (and (consp e) (symbolp to) (symbolp from))
