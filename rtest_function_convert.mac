@@ -412,6 +412,16 @@ true$
 (remvalue(xxx,yyy),0);
 0$
 
+/* class-key lookup hicup #7 */
+function_convert(sin = exp, cos(x));
+cos(x)$
+
+function_convert(sin = exp, cos(x) + sin(x));
+cos(x)-((%e^(%i*x)-%e^-(%i*x))*%i)/2$
+
+function_convert(trig = exp, cos(x) + sin(x));
+(%e^(%i*x)+%e^-(%i*x))/2-((%e^(%i*x)-%e^-(%i*x))*%i)/2$
+
 values;
 []$
 

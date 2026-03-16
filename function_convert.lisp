@@ -118,7 +118,7 @@ present in the table."
    *function-convert-hash-alias*))
 
 ;; This code doesn't look up aliases. The alias lookup happens before this code is called.
-(defun lookup-converter (operator op-new)
+(defun lookup-converter-old (operator op-new)
   "Return a converter operator => op-new function for expression whose operator is OPERATOR. Tries exact match, 
    noun/verb, and class-key match."
 
@@ -137,6 +137,34 @@ present in the table."
      (let ((class (converter-class-of operator)))
        (when class
          (try class))))))
+
+(defun lookup-converter (op from to)
+  "Return a converter from => to function for expression whose operator is OP. Tries exact match,
+   noun/verb, and class-key match."
+  (flet
+      ;; Try to find a converter for FROM => OP-NEW
+      ((try (a b) (gethash (converter-key a b) *function-convert-hash*)))
+
+    (let ((class (converter-class-of op)))
+
+      (or
+       ;; 1. exact operator
+       (try op to)
+
+       ;; 2. verb variant of operator
+       (try ($verbify op) to)
+
+       (and (member from (mapcar #'car *converter-class-table*))
+            (member op (class-table-members from))
+            (try from to))
+
+       (and (eq op from)
+            class
+            (try class to))
+
+       (and (eq from '%exp)
+            class
+            (try class to))))))
 
 (defun lookup-converter-alias (from to) 
   (let ((primary (gethash (converter-key from to) *function-convert-hash-alias*)))
@@ -489,6 +517,7 @@ Return the final transformed expression."
              (setq e (function-convert e aa bb))))))
       e)))
 
+#| 
 (defun function-convert (e op-old op-new)
    (let ((fn (if (and (consp e) (symbolp op-new) (symbolp op-old))
                  (lookup-converter (caar e) op-new)
@@ -524,6 +553,53 @@ Return the final transformed expression."
 
 		    (t (fapply (mop e) 
             (mapcar #'(lambda (q) (function-convert q op-old op-new)) (cdr e)))))))
+|#
+
+(defun function-convert (e from to)
+  (let ((fn (if (and (consp e) (symbolp to) (symbolp from))
+                (lookup-converter (caar e) from to)
+                nil)))
+    (cond
+      ;; Case 0: e is a mapatom--return e
+      (($mapatom e)  e)
+
+      ;; Case 1: User supplied lambda form; for example
+      ;; function_convert(sin = lambda([s], fff(s)), sin(sin(x)));
+      ((and (consp e)
+            (lambda-p to)
+            (eq (mop e) from))
+       (apply 'mfuncall
+              (cons to
+                    (mapcar #'(lambda (q) (function-convert q from to))
+                            (cdr e)))))
+
+      ;; Case 2: rule defined via register_converter; here fn is a Maxima lambda form
+      ((and (lambda-p fn) (eq (mop e) from)) ;should this check that (eq (mop e) from)???????
+       (apply 'mfuncall
+              (cons fn
+                    (mapcar #'(lambda (q) (function-convert q from to))
+                            (cdr e)))))
+
+      ;; Case 3: fn is a CL function
+      ((and (consp e)
+            (symbolp to)
+            (symbolp from)
+            fn)
+       (funcall fn (caar e)
+                (mapcar (lambda (q) (function-convert q from to))
+                        (cdr e))))
+
+      (($subvarp (mop e)) ;subscripted function
+       (subfunmake
+        (subfunname e)
+        (subfunsubs e) ;don't convert subscripts, but map over arguments
+        (mapcar #'(lambda (q) (function-convert q from to))
+                (subfunargs e))))
+
+      (t
+       (fapply (mop e)
+               (mapcar #'(lambda (q) (function-convert q from to))
+                       (cdr e)))))))
 
 (defmfun $describe_converter (eq)
 "Describe the converter specified by EQ.
@@ -1101,9 +1177,10 @@ subexpression."
                (setq e ee))))
       e))
 
-(define-function-converter ((:algebraic $hyperbolic) (%exp %hyperbolic)) (op x)
+(define-function-converter ((:algebraic $hyperbolic) ($exp $hyperbolic)) (op x)
   :builtin
   (setq x (fapply op x))
+  (mtell "x = ~M ~%" x)
   (let ((ll (xgather-args-of x 'mexpt)) (g (gensym)))
     (dolist (lx ll)
       (when (eq '$%e (first lx))
@@ -1202,12 +1279,14 @@ subexpression."
                  2) (ftake '%log 2)))
         (t e))))
 
+(define-function-converter (mexpt $trig) (op x)
+  ($demoivre (fapply op x)))
 ;;; for debugging work only:
 (defun show-rules ()
   (format t "~%Converters:~%")
   (maphash (lambda (a b) (declare (ignore b)) (print a)) *function-convert-hash*)
   (format t "~%Aliases:~%")
-  (maphash (lambda (a b) (declare (ignore b)) (print a)) *function-convert-hash-alias*))
+  (maphash (lambda (a b) (print `(a = ,a b = ,b))) *function-convert-hash-alias*))
 
 
  
