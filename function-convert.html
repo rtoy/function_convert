@@ -221,7 +221,7 @@ hr {
 <li><a href="#describe_005fconverter" accesskey="5">describe_converter</a></li>
 <li><a href="#delete_005fconverter" accesskey="6">delete_converter</a></li>
 <li><a href="#delete_005fall_005fuser_005fconverters" accesskey="7">delete_all_user_converters</a></li>
-<li><a href="#make_005fconversion_005fpath" accesskey="8">make_conversion_path</a></li>
+<li><a href="#find_005fconversion_005fpath" accesskey="8">find_conversion_path</a></li>
 <li><a href="#register_005fconverter" accesskey="9">register_converter</a></li>
 <li><a href="#Built_002din-Converters">Built-in Converters</a></li>
 </ul>
@@ -245,11 +245,98 @@ the <em>target function</em> <code>g</code> is either:
 <ul class="no-bullet">
 <li>- the name of a target function,
 </li><li>- a Maxima lambda expression, or
-</li><li>- the name of a  Maxima function, possibly user-defined.
+</li><li>- the name of a Maxima function, possibly user-defined.
 </li></ul>
 
+<span id="Specific-and-General-Conversion-Rules"></span><h4 class="subheading">Specific and General Conversion Rules</h4>
+
+<p>A rule of the form <code>f = g</code>, where <code>f</code> is the name of a Maxima function,
+applies only to calls of the specific function <code>f</code>.  For example,
+</p>
+<div class="example">
+<pre class="example">(%i1) function_convert(sin = exp, sin(x));
+(%o1) -(((%e^(%i*x)-%e^-(%i*x))*%i)/2)
+</pre></div>
+<p>converts <code>sin(x)</code> to its exponential form, while
+</p>
+<div class="example">
+<pre class="example">(%i2) function_convert(sin = exp, cos(x));
+(%o2) cos(x)
+</pre></div>
+<p>leaves <code>cos(x)</code> unchanged.  No other functions are affected by a
+rule that names a single function.
+</p>
+<p>More general rules, such as <code>trig = exp</code>, apply to all functions
+in the corresponding family.  Thus
+</p>
+<div class="example">
+<pre class="example">(%i3) function_convert(trig = exp, cos(x) + sin(x));
+(%o3) (%e^(%i*x)+%e^-(%i*x))/2-((%e^(%i*x)-%e^-(%i*x))*%i)/2
+</pre></div>
+<p>converts all trigonometric functions to their exponential representation.
+</p>
+<span id="Available-Conversion-Classes"></span><h4 class="subheading">Available Conversion Classes</h4>
+
+<p>As we have seen, some conversion rules apply not only to a single function but to an
+entire family of related functions.  The following class names may be
+used on the left-hand side of a rule such as <code>trig = exp</code>.
+</p>
+<dl compact="compact">
+<dt><span><code>trig</code></span></dt>
+<dd><p>The six trigonometric functions:
+<code>sin</code>, <code>cos</code>, <code>tan</code>, <code>sec</code>, <code>csc</code>, <code>cot</code>.
+</p>
+</dd>
+<dt><span><code>hyperbolic</code></span></dt>
+<dd><p>The six hyperbolic functions:
+<code>sinh</code>, <code>cosh</code>, <code>tanh</code>, <code>sech</code>, <code>csch</code>, <code>coth</code>.
+</p>
+</dd>
+<dt><span><code>inv_trig</code></span></dt>
+<dd><p>The six inverse trigonometric functions:
+<code>asin</code>, <code>acos</code>, <code>atan</code>, <code>asec</code>, <code>acsc</code>, <code>acot</code>.
+</p>
+</dd>
+<dt><span><code>inv_hyperbolic</code></span></dt>
+<dd><p>The six inverse hyperbolic functions:
+<code>asinh</code>, <code>acosh</code>, <code>atanh</code>, <code>asech</code>, <code>acsch</code>, <code>acoth</code>.
+</p>
+</dd>
+<dt><span><code>exp</code></span></dt>
+<dd><p>The exponential operator <code>exp</code> (including expressions of the form
+<code>a^b</code>).
+</p>
+</dd>
+<dt><span><code>gamma_like</code></span></dt>
+<dd><p>Gamma-related special functions:
+<code>gamma</code>, <code>beta</code>, <code>binomial</code>, <code>double_factorial</code>,
+<code>factorial</code>, and <code>pochhammer</code>.
+</p>
+</dd>
+<dt><span><code>bessel</code></span></dt>
+<dd><p>The Bessel family:
+<code>bessel_j</code>, <code>bessel_y</code>, <code>bessel_i</code>, <code>bessel_k</code>,
+<code>hankel_1</code>, <code>hankel_2</code>.
+</p>
+</dd>
+<dt><span><code>algebraic</code></span></dt>
+<dd><p>Basic algebraic operators:
+<code>+</code>, <code>*</code>, and exponentiation.
+</p>
+</dd>
+<dt><span><code>inequation</code></span></dt>
+<dd><p>Relational operators:
+<code>=</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>/=</code>, <code>&gt;</code>, <code>&gt;=</code>.
+</p>
+</dd>
+<dt><span><code>logarithmic</code></span></dt>
+<dd><p>The natural logarithm <code>log</code>.
+</p></dd>
+</dl>
+
+
 <p>Multiple converters may be applied in sequence.  When the user supplies a list of converters, they are applied 
-from left to right.  When the system searches for a path automatically (via <code>make_conversion_path</code>), 
+from left to right.  When the system searches for a path automatically (via <code>find_conversion_path</code>), 
 it uses a breadth-first search of the converter graph to find a shortest path.
 </p>
 <p>The converter system does not modify Maxima’s simplifier; all conversions occur only when explicitly requested 
@@ -285,10 +372,10 @@ See <a href="#delete_005fconverter">delete_converter</a>.
 Remove all user-defined converters at once.  
 See <a href="#delete_005fall_005fuser_005fconverters">delete_all_user_converters</a>.
 
-</li><li> <code>make_conversion_path(from, to)</code>  
+</li><li> <code>find_conversion_path(from, to)</code>  
 Construct a list of adjacent conversion steps forming a path from
 <code>from</code> to <code>to</code>.  
-See <a href="#make_005fconversion_005fpath">make_conversion_path</a>.
+See <a href="#find_005fconversion_005fpath">find_conversion_path</a>.
 
 </li><li> <code>register_converter(spec, fn, doc)</code>  
 Register a new converter, optionally with an alias and documentation.  
@@ -488,7 +575,7 @@ Deleted converter ^ = radcan.
 <div class="section" id="delete_005fall_005fuser_005fconverters">
 <div class="header">
 <p>
-Next: <a href="#make_005fconversion_005fpath" accesskey="n" rel="next">make_conversion_path</a>, Previous: <a href="#delete_005fconverter" accesskey="p" rel="prev">delete_converter</a>, Up: <a href="#function_005fconvert_005foverview" accesskey="u" rel="up">Function Convert</a> &nbsp; </p>
+Next: <a href="#find_005fconversion_005fpath" accesskey="n" rel="next">find_conversion_path</a>, Previous: <a href="#delete_005fconverter" accesskey="p" rel="prev">delete_converter</a>, Up: <a href="#function_005fconvert_005foverview" accesskey="u" rel="up">Function Convert</a> &nbsp; </p>
 </div>
 <span id="delete_005fall_005fuser_005fconverters-1"></span><h3 class="section">1.7 delete_all_user_converters</h3>
 <dl class="def">
@@ -511,14 +598,14 @@ All user-defined converters deleted.
 
 <hr>
 </div>
-<div class="section" id="make_005fconversion_005fpath">
+<div class="section" id="find_005fconversion_005fpath">
 <div class="header">
 <p>
 Next: <a href="#register_005fconverter" accesskey="n" rel="next">register_converter</a>, Previous: <a href="#delete_005fall_005fuser_005fconverters" accesskey="p" rel="prev">delete_all_user_converters</a>, Up: <a href="#function_005fconvert_005foverview" accesskey="u" rel="up">Function Convert</a> &nbsp; </p>
 </div>
-<span id="make_005fconversion_005fpath-1"></span><h3 class="section">1.8 make_conversion_path</h3>
+<span id="find_005fconversion_005fpath-1"></span><h3 class="section">1.8 find_conversion_path</h3>
 <dl class="def">
-<dt id="index-make_005fconversion_005fpath"><span class="category">Function: </span><span><strong>make_conversion_path</strong> <em>(<var>from</var>, <var>to</var>)</em><a href='#index-make_005fconversion_005fpath' class='copiable-anchor'> &para;</a></span></dt>
+<dt id="index-find_005fconversion_005fpath"><span class="category">Function: </span><span><strong>find_conversion_path</strong> <em>(<var>from</var>, <var>to</var>)</em><a href='#index-find_005fconversion_005fpath' class='copiable-anchor'> &para;</a></span></dt>
 <dd>
 
 <p>Find a shortest conversion path from <var>from</var> to <var>to</var>.  The
@@ -529,13 +616,13 @@ according to the system&rsquo;s internal graph-traversal order; the choice
 among equal-length paths is not user-configurable.  All properly
 registered user-level converters may appear as links in a path.
 </p>
-<p>The function <code>make_conversion_path</code> does not perform any
+<p>The function <code>find_conversion_path</code> does not perform any
 conversions.  To apply the path, call <code>function_convert</code> with the
-list returned by <code>make_conversion_path</code>.  If no path exists, the
+list returned by <code>find_conversion_path</code>.  If no path exists, the
 empty list <code>[]</code> is returned.
 </p>
 <div class="example">
-<pre class="example">(%i1) path : make_conversion_path(sin, gamma);
+<pre class="example">(%i1) path : find_conversion_path(sin, gamma);
 (%o1) [sin = sinc, sinc = gamma]
 
 (%i2) function_convert(path, sin(x));
@@ -549,7 +636,7 @@ empty list <code>[]</code> is returned.
 <div class="section" id="register_005fconverter">
 <div class="header">
 <p>
-Previous: <a href="#make_005fconversion_005fpath" accesskey="p" rel="prev">make_conversion_path</a>, Up: <a href="#function_005fconvert_005foverview" accesskey="u" rel="up">Function Convert</a> &nbsp; </p>
+Previous: <a href="#find_005fconversion_005fpath" accesskey="p" rel="prev">find_conversion_path</a>, Up: <a href="#function_005fconvert_005foverview" accesskey="u" rel="up">Function Convert</a> &nbsp; </p>
 </div>
 <span id="register_005fconverter-1"></span><h3 class="section">1.9 register_converter</h3>
 <dl class="def">

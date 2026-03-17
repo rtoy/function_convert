@@ -23,8 +23,85 @@ the @emph{target function} @code{g} is either:
 @itemize @minus
 @item the name of a target function,
 @item a Maxima lambda expression, or
-@item the name of a  Maxima function, possibly user-defined.
+@item the name of a Maxima function, possibly user-defined.
 @end itemize
+
+@subheading  Specific and General Conversion Rules
+
+A rule of the form @code{f = g}, where @code{f} is the name of a Maxima function,
+applies only to calls of the specific function @code{f}.  For example,
+
+@example
+(%i1) function_convert(sin = exp, sin(x));
+(%o1) -(((%e^(%i*x)-%e^-(%i*x))*%i)/2)
+@end example
+converts @code{sin(x)} to its exponential form, while
+
+@example 
+(%i2) function_convert(sin = exp, cos(x));
+(%o2) cos(x)
+@end example
+leaves @code{cos(x)} unchanged.  No other functions are affected by a
+rule that names a single function.
+
+More general rules, such as @code{trig = exp}, apply to all functions
+in the corresponding family.  Thus
+
+@example
+(%i3) function_convert(trig = exp, cos(x) + sin(x));
+(%o3) (%e^(%i*x)+%e^-(%i*x))/2-((%e^(%i*x)-%e^-(%i*x))*%i)/2
+@end example
+converts all trigonometric functions to their exponential representation.
+
+@subheading  Available Conversion Classes
+
+As we have seen, some conversion rules apply not only to a single function but to an
+entire family of related functions.  The following class names may be
+used on the left-hand side of a rule such as @code{trig = exp}.
+
+@table @code
+@item trig
+The six trigonometric functions:
+@code{sin}, @code{cos}, @code{tan}, @code{sec}, @code{csc}, @code{cot}.
+
+@item hyperbolic
+The six hyperbolic functions:
+@code{sinh}, @code{cosh}, @code{tanh}, @code{sech}, @code{csch}, @code{coth}.
+
+@item inv_trig
+The six inverse trigonometric functions:
+@code{asin}, @code{acos}, @code{atan}, @code{asec}, @code{acsc}, @code{acot}.
+
+@item inv_hyperbolic
+The six inverse hyperbolic functions:
+@code{asinh}, @code{acosh}, @code{atanh}, @code{asech}, @code{acsch}, @code{acoth}.
+
+@item exp
+The exponential operator @code{exp} (including expressions of the form
+@code{a^b}).
+
+@item gamma_like
+Gamma-related special functions:
+@code{gamma}, @code{beta}, @code{binomial}, @code{double_factorial},
+@code{factorial}, and @code{pochhammer}.
+
+@item bessel
+The Bessel family:
+@code{bessel_j}, @code{bessel_y}, @code{bessel_i}, @code{bessel_k},
+@code{hankel_1}, @code{hankel_2}.
+
+@item algebraic
+Basic algebraic operators:
+@code{+}, @code{*}, and exponentiation.
+
+@item inequation
+Relational operators:
+@code{=}, @code{<}, @code{<=}, @code{/=}, @code{>}, @code{>=}.
+
+@item logarithmic
+The natural logarithm @code{log}.
+@end table
+
 
 Multiple converters may be applied in sequence.  When the user supplies a list of converters, they are applied 
 from left to right.  When the system searches for a path automatically (via @code{find_conversion_path}), 
